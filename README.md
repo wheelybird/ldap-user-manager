@@ -52,8 +52,10 @@ Mandatory:
 Optional:
 ----
 
+* `SERVER_HOSTNAME` (default: *example.com*):  The hostname that this interface will be served from.
+   
 * `LDAP_USER_OU` (default: *people*):  The name of the OU used to store user accounts (without the base DN appended).
-
+   
 * `LDAP_GROUP_OU` (default: *groups*):  The name of the OU used to store groups (without the base DN appended).
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *uniqueMember*):  The attribute used when adding a user to a group.
 * `LDAP_GROUP_MEMBERSHIP_USES_UID`(default: *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.
@@ -61,18 +63,38 @@ Optional:
 * `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The attribute used to identify account usernames.
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
-
+   
 * `DEFAULT_USER_GROUP` (default: *everybody*):  The group that new accounts are automatically added to when created.  *NOTE*: If this group doesn't exist then a group is created with the same name as the username and the user is added to that group.
 * `DEFAULT_USER_SHELL` (default: */bin/bash*):  The shell that will be launched when the user logs into a server.
 * `EMAIL_DOMAIN` (no default):  The domain name to append to the email address when creating an account (username@email_domain).  If unset then the mail attribute won't be set.
-
-* `USERNAME_FORMAT` (default: *{first_name}.{last_name}*):  The template used to dynamically generate usernames.  See the _Usernames_ section below.
+   
+* `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See the _Usernames_ section below.
 * `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See the _Usernames_ section below.
    
 * `LOGIN_TIMEOUT_MINS` (default: 10 minutes):  How long before an idle session will be timed out.
    
 * `SITE_NAME` (default: *LDAP user manager*):  Change this to replace the title in the menu.  e.g. "My Company"
 
+
+Webserver SSL setup
+---
+
+The webserver (Apache HTTPD) expects to find `/opt/ssl/server.key` and `/opt/ssl/server.crt`, and these certificates should match `SERVER_HOSTNAME`.   
+If those files aren't found then the startup script will create self-signed certificates based on `SERVER_HOSTNAME`.  To use your own key and certificate then you need to bind-mount a directory containing them to `/opt/ssl`.  The script will also look for `/opt/ssl/chain.pem` if you need to add a certificate chain file (the Apache `SSLCertificateChainFile` option).
+   
+e.g.:
+```
+docker run \
+           --detach \
+           --name=lum \
+           -p 80:80 \
+           -p 443:443 \
+           -e SERVER_HOSTNAME=lum.example.com \
+           -v /your/ssl/cert/dir:/opt/ssl \
+           ...
+           ...
+
+```
 
 Initial setup
 ---
