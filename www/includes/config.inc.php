@@ -15,19 +15,19 @@
  $LDAP['user_ou'] = (getenv('LDAP_USER_OU') ? getenv('LDAP_USER_OU') : 'people');
 
  $LDAP['group_membership_attribute'] = (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') ? getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') : 'uniquemember');
- $LDAP['group_membership_uses_uid'] = (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID') ? TRUE : FALSE);
+ $LDAP['group_membership_uses_uid'] = ((strcmp(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID'),'TRUE') == 0) ? TRUE : FALSE);
 
  $LDAP['account_attribute'] = (getenv('LDAP_ACCOUNT_ATTRIBUTE') ? getenv('LDAP_ACCOUNT_ATTRIBUTE') : 'uid');
- $LDAP['starttls'] = (getenv('LDAP_STARTTLS') ? TRUE : FALSE);
+ $LDAP['require_starttls'] = ((strcmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : FALSE);
 
  $DEFAULT_USER_GROUP = (getenv('DEFAULT_USER_GROUP') ? getenv('DEFAULT_USER_GROUP') : 'everybody');
  $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_SHELL') : '/bin/bash');
  $EMAIL_DOMAIN = (getenv('EMAIL_DOMAIN') ? getenv('EMAIL_DOMAIN') : Null);
 
  $LOGIN_TIMEOUT_MINS = (getenv('SESSION_TIMEOUT') ? getenv('SESSION_TIMEOUT') : 10);
- $WEBSITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : 'LDAP user manager');
+ $SITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : 'LDAP user manager');
 
- $USERNAME_FORMAT = (getenv('USERNAME_SEPARATOR') ? getenv('USERNAME_SEPARATOR') : '{first_name}.{last_name}');
+ $USERNAME_FORMAT = (getenv('USERNAME+FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
  $USERNAME_REGEX = '^[a-z][a-zA-Z0-9\._-]{3,32}$';
  #We'll use the username regex for groups too.
 

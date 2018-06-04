@@ -10,7 +10,7 @@
  $MODULES = array(  
                     'log_in'          => 'hidden_on_login',
                     'change_password' => 'auth',
-                    'ldap_manager'    => 'admin',
+                    'account_manager'    => 'admin',
                     'log_out'         => 'auth'
                   );
 

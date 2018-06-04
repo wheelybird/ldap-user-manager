@@ -7,12 +7,12 @@ validate_setup_cookie();
 
 set_page_access("setup");
 
-render_header($WEBSITE_NAME);
+render_header();
 
 $ldap_connection = open_ldap_connection();
 
-$no_errors = True;
-$show_create_admin_button = False;
+$no_errors = TRUE;
+$show_create_admin_button = FALSE;
 
 # Set up missing stuff
 
@@ -34,26 +34,26 @@ if (isset($_POST['fix_problems'])) {
 
  if (isset($_POST['setup_group_ou'])) {
   $ou_add = ldap_add($ldap_connection, $LDAP['group_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['group_ou'] ));
-  if ($ou_add == True) {
+  if ($ou_add == TRUE) {
    print "$li_good Created OU <strong>${LDAP['group_dn']}</strong></li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
    print "$li_fail Couldn't create ${LDAP['group_dn']}: <pre>$error</pre></li>\n";
-   $no_errors = False;
+   $no_errors = FALSE;
   }
  }
 
 
  if (isset($_POST['setup_user_ou'])) {
   $ou_add = ldap_add($ldap_connection, $LDAP['user_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['user_ou'] ));
-  if ($ou_add == True) {
+  if ($ou_add == TRUE) {
    print "$li_good Created OU <strong>${LDAP['user_dn']}</strong></li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
    print "$li_fail Couldn't create ${LDAP['user_dn']}: <pre>$error</pre></li>\n";
-   $no_errors = False;
+   $no_errors = FALSE;
   }
  }
 
@@ -68,13 +68,13 @@ if (isset($_POST['fix_problems'])) {
                                                                                 'description' => $description )
                      );
 
-  if ($gid_add == True) {
+  if ($gid_add == TRUE) {
    print "$li_good Created <strong>cn=lastGID,${LDAP['base_dn']}</strong></li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
    print "$li_fail Couldn't create cn=lastGID,${LDAP['base_dn']}: <pre>$error</pre></li>\n";
-   $no_errors = False;
+   $no_errors = FALSE;
   }
  }
 
@@ -89,13 +89,13 @@ if (isset($_POST['fix_problems'])) {
                                                                                 'description' => $description )
                     );
 
-  if ($uid_add == True) {
+  if ($uid_add == TRUE) {
    print "$li_good Created <strong>cn=lastUID,${LDAP['base_dn']}</strong></li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
    print "$li_fail Couldn't create cn=lastUID,${LDAP['base_dn']}: <pre>$error</pre></li>\n";
-   $no_errors = False;
+   $no_errors = FALSE;
   }
  }
 
@@ -104,13 +104,13 @@ if (isset($_POST['fix_problems'])) {
 
   $group_add = ldap_new_group($ldap_connection,$DEFAULT_USER_GROUP);
   
-  if ($group_add == True) {
+  if ($group_add == TRUE) {
    print "$li_good Created default group: <strong>$DEFAULT_USER_GROUP</strong></li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
    print "$li_fail Couldn't create default group: <pre>$error</pre></li>\n";
-   $no_errors = False;
+   $no_errors = FALSE;
   }
  }
 
@@ -118,13 +118,13 @@ if (isset($_POST['fix_problems'])) {
 
   $group_add = ldap_new_group($ldap_connection,$LDAP['admins_group']);
   
-  if ($group_add == True) {
+  if ($group_add == TRUE) {
    print "$li_good Created LDAP administrators group: <strong>${LDAP['admins_group']}</strong></li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
    print "$li_fail Couldn't create LDAP administrators group: <pre>$error</pre></li>\n";
-   $no_errors = False;
+   $no_errors = FALSE;
   }
  }
 
@@ -143,7 +143,7 @@ if (isset($_POST['fix_problems'])) {
   print "'>What's this?</a>";
   print "<label class='pull-right'><input type='checkbox' name='setup_admin_account' class='pull-right' checked>Create a new account and add it to the admin group?&nbsp;</label>";
   print "</li>\n";
-  $show_create_admin_button = True;
+  $show_create_admin_button = TRUE;
 
  }
  else {
@@ -159,8 +159,8 @@ if (isset($_POST['fix_problems'])) {
 
 ##############
 
- if ($no_errors == True) {
-  if ($show_create_admin_button == False) {
+ if ($no_errors == TRUE) {
+  if ($show_create_admin_button == FALSE) {
  ?>
  <div class='well'>
   <form action="/">

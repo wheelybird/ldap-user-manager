@@ -3,15 +3,15 @@
 include_once("web_functions.inc.php");
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
-
 set_page_access("admin");
 
-render_header($WEBSITE_NAME);
+render_header();
+render_submenu();
 
-$invalid_password = False;
-$mismatched_passwords = False;
-$invalid_username = False;
-$weak_password = False;
+$invalid_password = FALSE;
+$mismatched_passwords = FALSE;
+$invalid_username = FALSE;
+$weak_password = FALSE;
 
 $attribute_map = array( "givenname"      => "First name",
                         "sn"             => "Last name",
@@ -78,10 +78,10 @@ if ($ldap_search) {
     
     $password = $_POST['password'];
     
-    if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $weak_password = True; }
-    if (preg_match("/\"|'/",$password)) { $invalid_password = True; }
-    if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = True; }
-    if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = True; }
+    if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $weak_password = TRUE; }
+    if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
+    if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
+    if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }
 
    if ( !$mismatched_passwords
        and !$weak_password
@@ -102,7 +102,7 @@ if ($ldap_search) {
                                   }, 4000);
    </script>
    <div class="alert alert-success" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
     <strong>Success!</strong> The group has been updated.
    </div>
   <?php
@@ -115,7 +115,7 @@ if ($ldap_search) {
                                   }, 4000);
    </script>
    <div class="alert alert-success" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
     <strong>Success!</strong> The group has been updated.
    </div>
   <?php
@@ -191,7 +191,7 @@ if ($ldap_search) {
                                   }, 4000);
    </script>
    <div class="alert alert-success" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
     <strong>Success!</strong> The group has been updated.
    </div>
 
@@ -288,7 +288,7 @@ if ($ldap_search) {
             $('.list-right ul li.active').removeClass('active');
             actives.remove();
         }
-        $("#submit_members").prop("disabled", false);
+        $("#submit_members").prop("disabled", FALSE);
     });
     $('.dual-list .selector').click(function () {
         var $checkBox = $(this);

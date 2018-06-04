@@ -6,7 +6,7 @@ $log_prefix = date('Y-m-d H:i:s') . " - LDAP manager - $USER_ID - ";
 
 function open_ldap_connection() {
 
- global $log_prefix, $LDAP, $ENCRYPTED;
+ global $log_prefix, $LDAP, $LDAP_CONNECTION_WARNING;
 
  $ldap_connection = ldap_connect($LDAP['uri']);
 
@@ -18,22 +18,35 @@ function open_ldap_connection() {
 
  ldap_set_option($ldap_connection, LDAP_OPT_PROTOCOL_VERSION, 3);
 
+ 
+ if (!preg_match("/^ldaps:/", $LDAP['uri'])) {
+
+  $tls_result = ldap_start_tls($ldap_connection);
+
+  if ($tls_result != TRUE) {
+
+   error_log("$log_prefix Failed to start STARTTLS connection to ${LDAP['uri']}",0);
+
+   if ($LDAP["require_starttls"] == TRUE) {
+    print "<div style='position: fixed;bottom: 0;width: 100%;' class='alert alert-danger'>Fatal:  Couldn't create a secure connection to ${LDAP['uri']} and LDAP_REQUIRE_STARTTLS is TRUE.</div>";
+    exit(0);
+   }
+   else {
+    print "<div style='position: fixed;bottom: 0;width: 100%;' class='alert alert-warning'>WARNING: Insecure LDAP connection to ${LDAP['uri']}</div>";
+
+    ldap_close($ldap_connection);
+    $ldap_connection = ldap_connect($LDAP['uri']);
+    ldap_set_option($ldap_connection, LDAP_OPT_PROTOCOL_VERSION, 3);
+   }
+  }
+ }
+
  $bind_result = ldap_bind( $ldap_connection, $LDAP['admin_bind_dn'], $LDAP['admin_bind_pwd']);
 
  if ($bind_result != TRUE) {
   print "Problem: Failed to bind as ${LDAP['admin_bind_dn']}";
   error_log("$log_prefix Failed to bind as ${LDAP['admin_bind_dn']}",0);
   exit(1);
- }
-
- if ($LDAP["starttls"]) {
-  $tls_result = ldap_start_tls($ldap_connection);
-  if ($tls_result != TRUE) {
-   error_log("$log_prefix Failed to start STARTTLS connection to ${LDAP['uri']}",0);
-  }
-  else {
-   $ENCRYPTED=TRUE;
-  }
  }
 
  return $ldap_connection;
@@ -93,30 +106,6 @@ function ldap_setup_auth($ldap_connection, $password) {
   if ($can_bind) { return TRUE; } else { return FALSE; }
 
 
-}
-
-
-###################################
-
-function ldap_check_is_admin($username, $ldap_connection) {
-
- #Checks to see if $username is in the group defined by $LDAP['admins_group']
-
- global $log_prefix, $LDAP;
-
- ##Check via memberOf.
- ##TODO: check via parsing group membership otherwise.
-
- $this_filter="(&(${LDAP['account_attribute']}=${username})(memberOf=cn=${LDAP['admins_group']},${LDAP['group_dn']}))";
- $ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], $this_filter);
- $no_results = ldap_count_entries($ldap_connection,$ldap_search);
-
- if ($no_results == 1) {
-  return TRUE;
- }
- else {
-  return FALSE;
- }
 }
 
 

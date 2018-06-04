@@ -3,15 +3,15 @@
 include_once("web_functions.inc.php");
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
-
 set_page_access("admin");
 
-render_header($WEBSITE_NAME);
+render_header();
+render_submenu();
 
-$invalid_password = False;
-$mismatched_passwords = False;
-$invalid_username = False;
-$weak_password = False;
+$invalid_password = FALSE;
+$mismatched_passwords = FALSE;
+$invalid_username = FALSE;
+$weak_password = FALSE;
 
 if (isset($_POST['create_account'])) {
 
@@ -22,10 +22,10 @@ if (isset($_POST['create_account'])) {
  $username = stripslashes($_POST['username']);
  $password = $_POST['password'];
 
- if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $weak_password = True; }
- if (preg_match("/\"|'/",$password)) { $invalid_password = True; }
- if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = True; }
- if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = True; }
+ if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $weak_password = TRUE; }
+ if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
+ if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
+ if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }
 
  if (     isset($first_name)
       and isset($last_name)

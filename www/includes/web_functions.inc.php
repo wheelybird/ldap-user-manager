@@ -2,10 +2,9 @@
 
 #Security level vars
 
-$VALIDATED = False;
-$IS_ADMIN = False;
-$IS_SETUP_ADMIN = False;
-$ENCRYPTED = False;
+$VALIDATED = FALSE;
+$IS_ADMIN = FALSE;
+$IS_SETUP_ADMIN = FALSE;
 $ACCESS_LEVEL_NAME = array('account','admin');
 unset($USER_ID);
 $CURRENT_PAGE=htmlentities($_SERVER['PHP_SELF']);
@@ -30,7 +29,7 @@ function generate_passkey() {
  $rnd2 = rand(10000000,100000000000);
  $rnd3 = rand(10000000,100000000000);
  return sprintf("%0x",$rnd1) . sprintf("%0x",$rnd2) . sprintf("%0x",$rnd3);
- 
+
 }
 
 
@@ -42,20 +41,20 @@ function set_passkey_cookie($user_id,$is_admin) {
 
  global $LOGIN_TIMEOUT_MINS, $VALIDATED, $USER_ID, $IS_ADMIN;
 
- 
+
  $passkey = generate_passkey();
  $this_time=time();
  $admin_val = 0;
 
- if ($is_admin == True ) {
+ if ($is_admin == TRUE ) {
   $admin_val = 1;
-  $IS_ADMIN = True;
+  $IS_ADMIN = TRUE;
  }
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
  file_put_contents("/tmp/$filename","$passkey:$admin_val:$this_time");
  setcookie('orf_cookie', "$user_id:$passkey", $this_time+(60 * $LOGIN_TIMEOUT_MINS), '/', $_SERVER["HTTP_HOST"]);
 
- $VALIDATED = True;
+ $VALIDATED = TRUE;
 
 }
 
@@ -71,15 +70,21 @@ function validate_passkey_cookie() {
   list($user_id,$c_passkey) = explode(":",$_COOKIE['orf_cookie']);
   $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
   $session_file = file_get_contents("/tmp/$filename");
-  list($f_passkey,$f_is_admin,$f_time) = explode(":",$session_file);
-  $this_time=time();
-  if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $LOGIN_TIMEOUT_MINS)) {
-   if ($f_is_admin == 1) { $IS_ADMIN = True; }
-   $VALIDATED = True;
-   $USER_ID=$user_id;
-   set_passkey_cookie($USER_ID,$IS_ADMIN);
+  if (!$session_file) {
+   $VALIDATED = FALSE;
+   unset($USER_ID);
+   $IS_ADMIN = FALSE;
   }
-
+  else {
+   list($f_passkey,$f_is_admin,$f_time) = explode(":",$session_file);
+   $this_time=time();
+   if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $LOGIN_TIMEOUT_MINS)) {
+    if ($f_is_admin == 1) { $IS_ADMIN = TRUE; }
+    $VALIDATED = TRUE;
+    $USER_ID=$user_id;
+    set_passkey_cookie($USER_ID,$IS_ADMIN);
+   }
+  }
  }
 }
 
@@ -95,7 +100,7 @@ function set_setup_cookie() {
  $passkey = generate_passkey();
  $this_time=time();
 
- $IS_SETUP_ADMIN = True;
+ $IS_SETUP_ADMIN = TRUE;
 
  file_put_contents("/tmp/ldap_setup","$passkey:$this_time");
  setcookie('setup_cookie', "$passkey", $this_time+(60 * $LOGIN_TIMEOUT_MINS), '/', $_SERVER["HTTP_HOST"]);
@@ -113,10 +118,13 @@ function validate_setup_cookie() {
 
   $c_passkey = $_COOKIE['setup_cookie'];
   $session_file = file_get_contents("/tmp/ldap_setup");
+  if (!$session_file) {
+   $IS_SETUP_ADMIN = FALSE;
+  }
   list($f_passkey,$f_time) = explode(":",$session_file);
   $this_time=time();
   if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $LOGIN_TIMEOUT_MINS)) {
-   $IS_SETUP_ADMIN = True;
+   $IS_SETUP_ADMIN = TRUE;
    set_setup_cookie();
   }
 
@@ -148,9 +156,9 @@ function log_out($method='normal') {
 
 function render_header($title="",$menu=TRUE) {
 
- global $WEBSITE_NAME, $IS_ADMIN;
+ global $SITE_NAME, $IS_ADMIN, $LDAP_CONNECTION_WARNING;
 
- if (empty($title)) { $title = $WEBSITE_NAME; }
+ if (empty($title)) { $title = $SITE_NAME; }
 
  #Initialise the HTML output for the page.
 
@@ -167,7 +175,7 @@ function render_header($title="",$menu=TRUE) {
 <BODY>
 <?php
 
- if ($menu == True) {
+ if ($menu == TRUE) {
   render_menu();
  }
 
@@ -181,13 +189,13 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $WEBSITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN;
+ global $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN;
 
  ?>
   <nav class="navbar navbar-default">
    <div class="container-fluid">
    <div class="navbar-header">
-     <a class="navbar-brand" href="#"><?php print $WEBSITE_NAME ?></a>
+     <a class="navbar-brand" href="#"><?php print $SITE_NAME ?></a>
    </div>
      <ul class="nav navbar-nav">
      <?php
@@ -195,16 +203,16 @@ function render_menu() {
 
       $this_module_name=stripslashes(ucwords(preg_replace('/_/',' ',$module)));
 
-      $show_this_module = True;
-      if ($VALIDATED == True) {
-       if ($access == 'hidden_on_login') { $show_this_module = False; }
-       if ($IS_ADMIN == False and $access == 'admin' ){ $show_this_module = False; }
+      $show_this_module = TRUE;
+      if ($VALIDATED == TRUE) {
+       if ($access == 'hidden_on_login') { $show_this_module = FALSE; }
+       if ($IS_ADMIN == FALSE and $access == 'admin' ){ $show_this_module = FALSE; }
       }
       else {
-       if ($access != 'hidden_on_login') { $show_this_module = False; }
+       if ($access != 'hidden_on_login') { $show_this_module = FALSE; }
       }
       #print "<p>$module - access is $access & show is $show_this_module</p>";
-      if ($show_this_module == True ) {
+      if ($show_this_module == TRUE ) {
        if ($module == $THIS_MODULE_PATH) {
         print "<li class='active'>";
        }
@@ -248,7 +256,7 @@ function set_page_access($level) {
  #Either 'setup', 'admin' or 'user'.
 
  if ($level == "setup") {
-  if ($IS_SETUP_ADMIN == True) {
+  if ($IS_SETUP_ADMIN == TRUE) {
    return;
   }
   else {
@@ -256,9 +264,9 @@ function set_page_access($level) {
    exit(0);
   }
  }
- 
+
  if ($level == "admin") {
-  if ($IS_ADMIN == True and $VALIDATED == True) {
+  if ($IS_ADMIN == TRUE and $VALIDATED == TRUE) {
    return;
   }
   else {
@@ -266,9 +274,9 @@ function set_page_access($level) {
    exit(0);
   }
  }
- 
+
  if ($level == "user") {
-  if ($VALIDATED == True){
+  if ($VALIDATED == TRUE){
    return;
   }
   else {
@@ -276,7 +284,7 @@ function set_page_access($level) {
    exit(0);
   }
  }
- 
+
 }
 
 
@@ -285,10 +293,10 @@ function set_page_access($level) {
 function is_valid_email($email) {
 
  if (ereg('^[-!#$%&\'*+\\./0-9=?A-Z^_`a-z{|}~]+'.'@'.'[-!#$%&\'*+\\/0-9=?A-Z^_`a-z{|}~]+\.'.'[-!#$%&\'*+\\./0-9=?A-Z^_`a-z{|}~]+$', $email)) {
-   return true;
+   return TRUE;
   }
   else {
-   return false;
+   return FALSE;
   }
 
 }
@@ -301,7 +309,7 @@ function render_js_username_check(){
  print <<<EoCheckJS
 
 <script>
- 
+
  function check_entity_name_validity(name,div_id) {
 
   var check_regex = /$USERNAME_REGEX/;
@@ -331,7 +339,7 @@ function render_js_username_generator($firstname_field_id,$lastname_field_id,$us
  global $USERNAME_FORMAT, $USERNAME_REGEX;
 
   render_js_username_check();
-  
+
   print <<<EoRenderJS
 <script>
 
@@ -340,16 +348,16 @@ function render_js_username_generator($firstname_field_id,$lastname_field_id,$us
   var first_name = document.getElementById('$firstname_field_id').value;
   var last_name  = document.getElementById('$lastname_field_id').value;
   var template = '$USERNAME_FORMAT';
-    
+
   var actual_username = template;
 
   actual_username = actual_username.replace('{first_name}', first_name.toLowerCase() );
-  actual_username = actual_username.replace('{first_initial}', first_name.charAt(0).toLowerCase() );
+  actual_username = actual_username.replace('{first_name_initial}', first_name.charAt(0).toLowerCase() );
   actual_username = actual_username.replace('{last_name}', last_name.toLowerCase() );
-  actual_username = actual_username.replace('{last_initial}', last_name.charAt(0).toLowerCase() );
-  
+  actual_username = actual_username.replace('{last_name_initial}', last_name.charAt(0).toLowerCase() );
+
   check_entity_name_validity(actual_username,'$username_div_id');
-  
+
   document.getElementById('$username_field_id').value = actual_username;
 
  }

@@ -7,9 +7,9 @@ validate_setup_cookie();
 
 set_page_access("setup");
 
-render_header($WEBSITE_NAME);
+render_header();
 
-$show_finish_button = True;
+$show_finish_button = TRUE;
 
 $ldap_connection = open_ldap_connection();
 
@@ -36,7 +36,7 @@ $ldap_connection = open_ldap_connection();
 print "$li_good Connected to ${LDAP['uri']}</li>\n";
 
 #TLS?
-if ($LDAP['starttls'] && $ENCRYPTED == True) {
+if ($LDAP['starttls'] && $ENCRYPTED == TRUE) {
  print "$li_good Encrypted connection to ${LDAP['uri']} via STARTTLS</li>\n";
 }
 else {
@@ -70,7 +70,7 @@ if ($group_result['count'] != 1) {
  print "'>What's this?</a>";
  print "<label class='pull-right'><input type='checkbox' name='setup_group_ou' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
- $show_finish_button = False;
+ $show_finish_button = FALSE;
  
 }
 else {
@@ -89,7 +89,7 @@ if ($user_result['count'] != 1) {
  print "'>What's this?</a>";
  print "<label class='pull-right'><input type='checkbox' name='setup_user_ou' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
- $show_finish_button = False;
+ $show_finish_button = FALSE;
  
 }
 else {
@@ -119,7 +119,7 @@ if ($gid_result['count'] != 1) {
  print "'>What's this?</a>";
  print "<label class='pull-right'><input type='checkbox' name='setup_last_gid' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
- $show_finish_button = False;
+ $show_finish_button = FALSE;
  
 }
 else {
@@ -139,7 +139,7 @@ if ($uid_result['count'] != 1) {
  print "'>What's this?</a>";
  print "<label class='pull-right'><input type='checkbox' name='setup_last_uid' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
- $show_finish_button = False;
+ $show_finish_button = FALSE;
  
 }
 else {
@@ -159,7 +159,7 @@ if ($defgroup_result['count'] != 1) {
  print "'>What's this?</a>";
  print "<label class='pull-right'><input type='checkbox' name='setup_default_group' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
- $show_finish_button = False;
+ $show_finish_button = FALSE;
  
 }
 else {
@@ -179,7 +179,7 @@ if ($adminsgroup_result['count'] != 1) {
  print "'>What's this?</a>";
  print "<label class='pull-right'><input type='checkbox' name='setup_admins_group' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
- $show_finish_button = False;
+ $show_finish_button = FALSE;
  
 }
 else {
@@ -189,7 +189,7 @@ else {
  
  if (count($admins) < 1) {
   print "$li_fail The LDAP administration group is empty. You can add an admin account in the next section.</li>";
-  $show_finish_button = False;
+  $show_finish_button = FALSE;
  }
 }
 
@@ -205,7 +205,7 @@ else {
 
 ##############
 
-if ($show_finish_button == True) {
+if ($show_finish_button == TRUE) {
 ?>
      </form>
      <div class='well'>

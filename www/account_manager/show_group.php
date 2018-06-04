@@ -1,10 +1,9 @@
 <?php
 
 include_once("web_functions.inc.php");
-set_page_access("admin");
-
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
+set_page_access("admin");
 
 render_header("LDAP manager");
 render_submenu();
@@ -97,7 +96,7 @@ if (isset($_POST["update_members"])) {
                                  }, 4000);
   </script>
   <div class="alert alert-success" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
    <strong>Success!</strong> The group has been updated.
   </div>
  
@@ -161,7 +160,7 @@ ldap_close($ldap_connection);
             $('.list-right ul li.active').removeClass('active');
             actives.remove();
         }
-        $("#submit_members").prop("disabled", false);
+        $("#submit_members").prop("disabled", FALSE);
     });
     $('.dual-list .selector').click(function () {
         var $checkBox = $(this);

@@ -1,7 +1,7 @@
 <?php
 
 include_once("web_functions.inc.php");
-render_header($WEBSITE_NAME);
+render_header();
 
  if (isset($_GET['logged_out'])) {
  ?>

@@ -1,0 +1,88 @@
+#!/bin/sh
+set -e
+
+if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME=example.com; fi
+
+########################
+#If there aren't any SSL certs then create a self-signed certificate.
+
+if [ ! -f "/opt/ssl/server.key" ] && [ ! -f "/opt/ssl/server.crt" ]; then
+
+
+ ########################
+ #Create self-signed cert
+
+ mkdir -p /opt/ssl
+
+ cat <<EoS >/opt/ssl/config
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+C = GB
+ST = London
+L = London
+O = LUM
+OU = LUM
+CN = $SERVER_HOSTNAME
+[v3_req]
+keyUsage = critical, digitalSignature, keyAgreement
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = $SERVER_HOSTNAME
+EoS
+
+ /usr/bin/openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /opt/ssl/server.key -out /opt/ssl/server.crt -config /opt/ssl/config -sha256
+
+fi
+
+########################
+#Create Apache config
+
+
+if [ -f "/opt/tls/chain.pem" ]; then $ssl_chain="SSLCertificateChainFile /opt/tls/chain.pem"; fi
+
+cat <<EoC >/etc/apache2/sites-enabled/lum.conf
+
+Listen 443
+
+<VirtualHost *:80> 
+
+ RewriteEngine On 
+ RewriteRule ^/?(.*) https://%{SERVER_NAME}/\$1 [R,L]
+
+</VirtualHost>
+
+<VirtualHost _default_:443>
+ 
+ ServerName $SERVER_HOSTNAME
+ DocumentRoot /opt/ldap_user_manager
+
+ DirectoryIndex index.php index.html
+ 
+ <Directory /opt/ldap_user_manager>
+   Require all granted
+ </Directory>
+ 
+ SSLEngine On
+ SSLCertificateFile /opt/ssl/server.crt
+ SSLCertificateKeyFile /opt/ssl/server.key
+ $ssl_chain
+ 
+ php_value include_path "/opt/ldap_user_manager/includes"
+ 
+</VirtualHost>
+EoC
+
+
+########################
+#Run Apache
+
+# first arg is `-f` or `--some-option`
+if [ "${1#-}" != "$1" ]; then
+	set -- apache2-foreground "$@"
+fi
+
+exec "$@"

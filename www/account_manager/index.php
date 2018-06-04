@@ -3,7 +3,6 @@
 include_once("web_functions.inc.php");
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
-
 set_page_access("admin");
 
 render_header("LDAP manager");
@@ -29,7 +28,7 @@ if (isset($_POST['delete_user'])) {
   if ($del_user) {
   ?>
   <div class="alert alert-success" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
    <strong>Success!</strong> User <strong><?php print $this_user; ?> was deleted.
   </div>
   <?php
@@ -37,7 +36,7 @@ if (isset($_POST['delete_user'])) {
   else {
   ?>
   <div class="alert alert-danger" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
    <strong>Problem!</strong> User <strong><?php print $this_user; ?></strong> wasn't deleted.
   </div>
   <?php

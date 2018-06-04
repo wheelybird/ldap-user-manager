@@ -1,10 +1,9 @@
 <?php
 
 include_once("web_functions.inc.php");
-set_page_access("admin");
-
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
+set_page_access("admin");
 
 render_header("LDAP manager");
 render_submenu();
@@ -29,7 +28,7 @@ if (isset($_POST['delete_group'])) {
   if ($del_group) {
   ?>
   <div class="alert alert-success" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
    <strong>Success!</strong> Group <strong><?php print $this_group; ?> was deleted.
   </div>
   <?php
@@ -37,7 +36,7 @@ if (isset($_POST['delete_group'])) {
   else {
   ?>
   <div class="alert alert-danger" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
    <strong>Problem!</strong> Group <strong><?php print $this_group; ?></strong> wasn't deleted.
   </div>
   <?php

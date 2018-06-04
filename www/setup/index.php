@@ -9,7 +9,7 @@ if (isset($_POST["admin_password"])) {
  $user_auth = ldap_setup_auth($ldap_connection,$_POST["admin_password"]);
  ldap_close($ldap_connection);
  
- if ($user_auth != False) {
+ if ($user_auth != FALSE) {
   set_setup_cookie($user_auth);
   header("Location: //${_SERVER["HTTP_HOST"]}/${THIS_MODULE_PATH}/run_checks.php\n\n");
  }
