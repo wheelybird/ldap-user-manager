@@ -288,7 +288,7 @@ if ($ldap_search) {
             $('.list-right ul li.active').removeClass('active');
             actives.remove();
         }
-        $("#submit_members").prop("disabled", FALSE);
+        $("#submit_members").prop("disabled", false);
     });
     $('.dual-list .selector').click(function () {
         var $checkBox = $(this);
