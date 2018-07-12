@@ -27,7 +27,7 @@
  $LOGIN_TIMEOUT_MINS = (getenv('SESSION_TIMEOUT') ? getenv('SESSION_TIMEOUT') : 10);
  $SITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : 'LDAP user manager');
 
- $USERNAME_FORMAT = (getenv('USERNAME+FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
+ $USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
  $USERNAME_REGEX = '^[a-z][a-zA-Z0-9\._-]{3,32}$';
  #We'll use the username regex for groups too.
 
