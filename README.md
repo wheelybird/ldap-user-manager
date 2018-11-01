@@ -8,6 +8,8 @@ Quick start
 ---
 
 ```
+docker build -t lum .
+
 docker run \
            --detach \
            --name=lum \
@@ -20,7 +22,7 @@ docker run \
            -e LDAP_ADMINS_GROUP=admins \
            -e LDAP_ADMIN_BIND_DN="cn=admin,dc=example,dc=com" \
            -e LDAP_ADMIN_BIND_PWD=secret\
-           otrl/ldap-user-manager
+           lum
 ```
 Now go to https://lum.example.com/setup.
 
