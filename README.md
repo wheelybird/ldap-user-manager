@@ -48,7 +48,7 @@ Mandatory:
 * `LDAP_URI`:  The URI of the LDAP server.  e.g. *ldap://ldap.example.com* or *ldaps://ldap.example.com*
 * `LDAP_BASE_DN`:  The base DN for your organisation.  e.g. *dc=example,dc=com`
 * `LDAP_ADMIN_BIND_DN`: The DN for the user with permission to modify all records under `LDAP_BASE_DN`. e.g. `cn=admin,dc=example,dc=com`
-* `LDAPADMIN_BIND_PWD`: The password for `LDAP_ADMIN_BIND_DN`
+* `LDAP_ADMIN_BIND_PWD`: The password for `LDAP_ADMIN_BIND_DN`
 * `LDAP_ADMINS_GROUP`: The name of the group used to define accounts that can use this tool to manage LDAP accounts.  e.g. `admins`
 
 Optional:
