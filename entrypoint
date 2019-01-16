@@ -3,6 +3,16 @@ set -e
 
 if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME=example.com; fi
 
+
+#If LDAP_TLS_CACERT is set then write it out as a file
+#and set up the LDAP client conf to use it.
+
+if [ "$LDAP_TLS_CACERT" ]; then
+  echo "$LDAP_TLS_CACERT" >/opt/ca.crt
+  sed -i "s/TLS_CACERT.*/TLS_CACERT /opt/ca.crt/" /etc/ldap/ldap.conf
+fi
+
+
 ########################
 #If there aren't any SSL certs then create a self-signed certificate.
 

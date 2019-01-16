@@ -8,8 +8,6 @@ Quick start
 ---
 
 ```
-docker build -t lum .
-
 docker run \
            --detach \
            --name=lum \
@@ -22,7 +20,7 @@ docker run \
            -e LDAP_ADMINS_GROUP=admins \
            -e LDAP_ADMIN_BIND_DN="cn=admin,dc=example,dc=com" \
            -e LDAP_ADMIN_BIND_PWD=secret\
-           lum
+           wheelybird/ldap-user-manager
 ```
 Now go to https://lum.example.com/setup.
 
@@ -65,6 +63,8 @@ Optional:
 * `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The attribute used to identify account usernames.
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
+   
+* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CERT=$(</path/to/ca.crt)`
    
 * `DEFAULT_USER_GROUP` (default: *everybody*):  The group that new accounts are automatically added to when created.  *NOTE*: If this group doesn't exist then a group is created with the same name as the username and the user is added to that group.
 * `DEFAULT_USER_SHELL` (default: */bin/bash*):  The shell that will be launched when the user logs into a server.
@@ -115,7 +115,7 @@ Currently the available macros are:
 * `{first_name}` : the first name in lowercase
 * `{first_name_initial}` : the first letter of the first name in lowercase
 * `{last_name}`: the last name in lowercase
-* '{last_name_initial}`: the first initial of the last name in lowercase
+* `{last_name_initial}`: the first initial of the last name in lowercase
 
 Anything else in the `USERNAME_FORMAT` string is left as defined, but the username is also checked for validity against `USERNAME_REGEX`.  This is to ensure that there aren't any characters forbidden by other systems (i.e. email or Linux/Unix accounts).
 
