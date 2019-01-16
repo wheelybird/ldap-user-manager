@@ -9,7 +9,7 @@ if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME=example.com; fi
 
 if [ "$LDAP_TLS_CACERT" ]; then
   echo "$LDAP_TLS_CACERT" >/opt/ca.crt
-  sed -i "s/TLS_CACERT.*/TLS_CACERT /opt/ca.crt/" /etc/ldap/ldap.conf
+  sed -i "s/TLS_CACERT.*/TLS_CACERT \/opt\/ca.crt/" /etc/ldap/ldap.conf
 fi
 
 
