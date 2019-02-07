@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+ssl_dir="/opt/ssl"
+
 if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME=example.com; fi
 
 
@@ -14,39 +16,70 @@ fi
 
 
 ########################
-#If there aren't any SSL certs then create a self-signed certificate.
+#If there aren't any SSL certs then create a CA and then CA-signed certificate
 
-if [ ! -f "/opt/ssl/server.key" ] && [ ! -f "/opt/ssl/server.crt" ]; then
+if [ ! -f "${ssl_dir}/server.key" ] && [ ! -f "${ssl_dir}/server.crt" ]; then
 
+  mkdir -p $ssl_dir
+  confout="${ssl_dir}/conf"
+  keyout="${ssl_dir}/server.key"
+  certout="${ssl_dir}/server.crt"
+  cakey="${ssl_dir}/ca.key"
+  cacert="${ssl_dir}/ca.crt"
+  serialfile="${ssl_dir}/serial"
 
- ########################
- #Create self-signed cert
+  echo "Generating CA key"
+  openssl genrsa -out $cakey 2048
+  if [ $? -ne 0 ]; then exit 1 ; fi
 
- mkdir -p /opt/ssl
+  echo "Generating CA certificate"
+  openssl req \
+          -x509 \
+          -new \
+          -nodes \
+          -subj "/C=GB/ST=GB/L=GB/O=CA/OU=CA/CN=Wheelybird" \
+          -key $cakey \
+          -sha256 \
+          -days 7300 \
+          -out $cacert
+  if [ $? -ne 0 ]; then exit 1 ; fi
 
- cat <<EoS >/opt/ssl/config
-[req]
-distinguished_name = req_distinguished_name
-x509_extensions = v3_req
-prompt = no
-[req_distinguished_name]
-C = GB
-ST = London
-L = London
-O = LUM
-OU = LUM
-CN = $SERVER_HOSTNAME
-[v3_req]
-keyUsage = critical, digitalSignature, keyAgreement
+  echo "Generating openssl configuration"
+
+  cat <<EoCertConf>$confout
+subjectAltName = DNS:${SERVER_HOSTNAME},IP:127.0.0.1
 extendedKeyUsage = serverAuth
-subjectAltName = @alt_names
-[alt_names]
-DNS.1 = $SERVER_HOSTNAME
-EoS
+EoCertConf
 
- /usr/bin/openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /opt/ssl/server.key -out /opt/ssl/server.crt -config /opt/ssl/config -sha256
+  echo "Generating server key..."
+  openssl genrsa -out $keyout 2048
+  if [ $? -ne 0 ]; then exit 1 ; fi
+
+  echo "Generating server signing request..."
+  openssl req \
+               -subj "/CN=${SERVER_HOSTNAME}" \
+               -sha256 \
+               -new \
+               -key $keyout \
+               -out /tmp/server.csr
+  if [ $? -ne 0 ]; then exit 1 ; fi
+
+  echo "Generating server cert..."
+  openssl x509 \
+                -req \
+                -days 7300 \
+                -sha256 \
+                -in /tmp/server.csr \
+                -CA $cacert \
+                -CAkey $cakey \
+                -CAcreateserial \
+                -CAserial $serialfile \
+                -out $certout \
+                -extfile $confout
+  if [ $? -ne 0 ]; then exit 1 ; fi
 
 fi
+
 
 ########################
 #Create Apache config
@@ -58,31 +91,31 @@ cat <<EoC >/etc/apache2/sites-enabled/lum.conf
 
 Listen 443
 
-<VirtualHost *:80> 
+<VirtualHost *:80>
 
- RewriteEngine On 
+ RewriteEngine On
  RewriteRule ^/?(.*) https://%{SERVER_NAME}/\$1 [R,L]
 
 </VirtualHost>
 
 <VirtualHost _default_:443>
- 
+
  ServerName $SERVER_HOSTNAME
  DocumentRoot /opt/ldap_user_manager
 
  DirectoryIndex index.php index.html
- 
+
  <Directory /opt/ldap_user_manager>
    Require all granted
  </Directory>
- 
+
  SSLEngine On
  SSLCertificateFile /opt/ssl/server.crt
  SSLCertificateKeyFile /opt/ssl/server.key
  $ssl_chain
- 
+
  php_value include_path "/opt/ldap_user_manager/includes"
- 
+
 </VirtualHost>
 EoC
 
