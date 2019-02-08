@@ -292,12 +292,7 @@ function set_page_access($level) {
 
 function is_valid_email($email) {
 
- if (ereg('^[-!#$%&\'*+\\./0-9=?A-Z^_`a-z{|}~]+'.'@'.'[-!#$%&\'*+\\/0-9=?A-Z^_`a-z{|}~]+\.'.'[-!#$%&\'*+\\./0-9=?A-Z^_`a-z{|}~]+$', $email)) {
-   return TRUE;
-  }
-  else {
-   return FALSE;
-  }
+ return (!preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $email)) ? FALSE : TRUE;
 
 }
 
@@ -366,5 +361,28 @@ EoRenderJS;
 
 }
 
+
+######################################################
+
+function render_js_email_generator($username_field_id,$email_field_id) {
+
+ global $EMAIL_DOMAIN;
+
+  print <<<EoRenderEmailJS
+<script>
+
+ var auto_email_update = true;
+
+ function update_email() {
+
+  if ( auto_email_update == true && "$EMAIL_DOMAIN" != ""  ) {
+    var username = document.getElementById('$username_field_id').value;
+    document.getElementById('$email_field_id').value = username + '@' + "$EMAIL_DOMAIN";
+  }
+ }
+</script>
+EoRenderEmailJS;
+
+}
 
 ?>

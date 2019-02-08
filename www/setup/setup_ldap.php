@@ -3,8 +3,8 @@
 include_once("web_functions.inc.php");
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
-validate_setup_cookie();
 
+validate_setup_cookie();
 set_page_access("setup");
 
 render_header();
@@ -134,8 +134,8 @@ if (isset($_POST['fix_problems'])) {
 
   ?>
   <div class="form-group">
-  <form action="<?php print "/$THIS_MODULE_PATH/setup_admin_account.php"; ?>" method="post">
-  <input type="hidden" name="setup_account">
+  <form action="<?php print "/account_manager/new_user.php"; ?>" method="post">
+  <input type="hidden" name="setup_admin_account">
   <?php
   print "$li_fail The LDAP administration group is empty. ";
   print "<a href='#' data-toggle='popover' title='LDAP account administrators' data-content='";

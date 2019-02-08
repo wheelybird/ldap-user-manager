@@ -18,7 +18,8 @@ $attribute_map = array( "givenname"      => "First name",
                         "uidnumber"      => "UID",
                         "gidnumber"      => "GID",
                         "loginshell"     => "Login shell",
-                        "homedirectory"  => "Home directory"
+                        "homedirectory"  => "Home directory",
+                        "mail"           => "Email"
                        );
 
 

@@ -3,15 +3,34 @@
 include_once("web_functions.inc.php");
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
-set_page_access("admin");
 
-render_header();
-render_submenu();
+if ( $_POST['setup_admin_account'] ) {
+ $admin_setup = TRUE;
+ 
+ validate_setup_cookie();
+ set_page_access("setup");
+ 
+ $completed_action="/log_in";
+ $page_title="New administrator account";
+
+ render_header("Setup administrator account", FALSE);
+
+}
+else {
+ set_page_access("admin");
+
+ $completed_action="/$THIS_MODULE_PATH/";
+ $page_title="New account";
+
+ render_header();
+ render_submenu();
+}
 
 $invalid_password = FALSE;
 $mismatched_passwords = FALSE;
 $invalid_username = FALSE;
 $weak_password = FALSE;
+$invalid_email = FALSE;
 
 if (isset($_POST['create_account'])) {
 
@@ -21,8 +40,12 @@ if (isset($_POST['create_account'])) {
  $last_name = stripslashes($_POST['last_name']);
  $username = stripslashes($_POST['username']);
  $password = $_POST['password'];
+ 
+ if ($_POST['email']) { $email = stripslashes($_POST['email']); }
+
 
  if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $weak_password = TRUE; }
+ if (isset($email) and !is_valid_email($email)) { $invalid_email = TRUE; }
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
  if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
  if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }
@@ -34,18 +57,30 @@ if (isset($_POST['create_account'])) {
       and !$mismatched_passwords
       and !$weak_password
       and !$invalid_password
-      and !$invalid_username ) {
+      and !$invalid_username
+      and !$invalid_email) {
 
   $ldap_connection = open_ldap_connection();
 
-  $new_account = ldap_new_account($ldap_connection, $first_name, $last_name, $username, $password);
-  
+  $new_account = ldap_new_account($ldap_connection, $first_name, $last_name, $username, $password, $email);
+
   if ($new_account) {
+
+    if ($admin_setup == TRUE) {
+      $member_add = ldap_add_member_to_group($ldap_connection, $LDAP['admins_group'], $username);
+      if (!$member_add) { ?>
+       <div class="alert alert-warning">
+        <p class="text-center">The account was created but adding it to the admin group failed.</p>
+       </div>
+       <?php
+      }
+    }
+
    ?>
    <div class="alert alert-success">
    <p class="text-center">Account created.</p>
    </div>
-   <form action='/<?php print $THIS_MODULE_PATH; ?>/'>
+   <form action='<?php print $completed_action; ?>'>
     <p align="center">
      <input type='submit' class="btn btn-success" value='Finished'>
     </p>
@@ -57,9 +92,9 @@ if (isset($_POST['create_account'])) {
   else {
    if (!$new_account) { ?>
     <div class="alert alert-warning">
-     <p class="text-center">Couldn't create the account.</p>
+     <p class="text-center">Failed to create the account.</p>
     </div>
-    <?php 
+    <?php
    }
 
    render_footer();
@@ -73,7 +108,7 @@ if (isset($_POST['create_account'])) {
 
 if ($weak_password) { ?>
 <div class="alert alert-warning">
- <p class="text-center">The password wasn't strong enough.</p>
+ <p class="text-center">The password is too weak.</p>
 </div>
 <?php }
 
@@ -83,12 +118,17 @@ if ($invalid_password) {  ?>
 </div>
 <?php }
 
-if ($mismatched_passwords) {  ?>
+if ($invalid_email) {  ?>
 <div class="alert alert-warning">
- <p class="text-center">The passwords didn't match.</p>
+ <p class="text-center">The email address is invalid.</p>
 </div>
 <?php }
 
+if ($mismatched_passwords) {  ?>
+<div class="alert alert-warning">
+ <p class="text-center">The passwords are mismatched.</p>
+</div>
+<?php }
 
 if ($invalid_username) {  ?>
 <div class="alert alert-warning">
@@ -97,19 +137,20 @@ if ($invalid_username) {  ?>
 <?php }
 
 render_js_username_generator('first_name','last_name','username','username_div');
+render_js_email_generator('username','email');
 
 ?>
 <script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
 <script type="text/javascript" src="/js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">
- $(document).ready(function(){	
+ $(document).ready(function(){
    $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
  });
 </script>
 <script type="text/javascript" src="/js/generate_passphrase.js"></script>
 <script type="text/javascript" src="/js/wordlist.js"></script>
 <script>
- 
+
  function check_passwords_match() {
 
    if (document.getElementById('password').value != document.getElementById('confirm').value ) {
@@ -123,11 +164,11 @@ render_js_username_generator('first_name','last_name','username','username_div')
   }
 
  function random_password() {
-  
+
   generatePassword(4,'-','password','confirm');
   $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
  }
- 
+
  function back_to_hidden(passwordField,confirmField) {
 
   var passwordField = document.getElementById(passwordField).type = 'password';
@@ -135,46 +176,54 @@ render_js_username_generator('first_name','last_name','username','username_div')
 
  }
 
- 
+
 </script>
-     
+
 <div class="container">
  <div class="col-sm-7">
 
   <div class="panel panel-default">
-   <div class="panel-heading text-center">New account</div>
+   <div class="panel-heading text-center"><?php print $page_title; ?></div>
    <div class="panel-body text-center">
 
     <form class="form-horizontal" action="" method="post">
 
+     <?php if ($admin_setup == TRUE) { ?><input type="hidden" name="setup_admin_account" value="true"><?php } ?>
      <input type="hidden" name="create_account">
      <input type="hidden" id="pass_score" value="0" name="pass_score">
 
      <div class="form-group">
       <label for="first_name" class="col-sm-2 control-label">First name</label>
       <div class="col-sm-6">
-       <input type="text" class="form-control" id="first_name" name="first_name" <?php if (isset($first_name)){ print " value='$first_name'"; } ?> onkeyup="update_username()">
+       <input type="text" class="form-control" id="first_name" name="first_name" <?php if (isset($first_name)){ print " value='$first_name'"; } ?> onkeyup="update_username(); update_email();">
       </div>
      </div>
 
      <div class="form-group">
       <label for="last_name" class="col-sm-2 control-label">Last name</label>
       <div class="col-sm-6">
-       <input type="text" class="form-control" id="last_name" name="last_name" <?php if (isset($last_name)){ print " value='$last_name'"; } ?> onkeyup="update_username()">
+       <input type="text" class="form-control" id="last_name" name="last_name" <?php if (isset($last_name)){ print " value='$last_name'"; } ?> onkeyup="update_username(); update_email();">
       </div>
      </div>
 
      <div class="form-group" id="username_div">
       <label for="username" class="col-sm-2 control-label">Username</label>
       <div class="col-sm-6">
-       <input type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_username_validity(document.getElementById('username').value)">
+       <input type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_username_validity(document.getElementById('username').value); update_email();">
+      </div>
+     </div>
+
+     <div class="form-group" id="email_div">
+      <label for="username" class="col-sm-2 control-label">Email</label>
+      <div class="col-sm-6">
+       <input type="text" class="form-control" id="email" name="email" <?php if (isset($email)){ print " value='$email'"; } ?> onkeyup="auto_email_update = false;">
       </div>
      </div>
 
      <div class="form-group" id="password_div">
       <label for="password" class="col-sm-2 control-label">Password</label>
       <div class="col-sm-6">
-       <input type="password" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm');">
+       <input type="text" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm');">
       </div>
       <div class="col-sm-1">
        <input type="button" class="btn btn-sm" id="password_generator" onclick="random_password();" value="Generate password">

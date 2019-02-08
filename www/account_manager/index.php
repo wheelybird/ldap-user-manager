@@ -59,6 +59,7 @@ ldap_close($ldap_connection);
      <th>Username</th>
      <th>First name</th>
      <th>Last name</th>
+     <th>Email</th>
    </tr>
   </thead>
  <tbody>
@@ -67,6 +68,7 @@ foreach ($people as $username => $attribs){
  print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_user.php?username=$username'>$username</a></td>\n";
  print "   <td>" . $people[$username]['givenname'] . "</td>\n";
  print "   <td>" . $people[$username]['sn'] . "</td>\n";
+ print "   <td>" . $people[$username]['mail'] . "</td>\n";
  print " </tr>\n";
 }
 ?>

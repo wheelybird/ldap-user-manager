@@ -127,7 +127,7 @@ function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",
 
  global $log_prefix, $LDAP;
 
- if (!isset($fields)) { $fields = array("uid", "givenname", "sn"); }
+ if (!isset($fields)) { $fields = array("uid", "givenname", "sn", "mail"); }
  if (!isset($sort_key)) { $sort_key = $LDAP['account_attribute']; }
 
  $ldap_search = ldap_search($ldap_connection, "${LDAP['user_dn']}", "(&(${LDAP['account_attribute']}=*)$filters)", $fields);
@@ -383,7 +383,7 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
 ##################################
 
-function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$password) {
+function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$password,$email) {
 
  global $log_prefix, $LDAP, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP, $EMAIL_DOMAIN;
 
@@ -424,8 +424,8 @@ function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$pas
                          'userPassword' => $hashed_pass
                       );
 
-    if (isset($EMAIL_DOMAIN)) {
-     array_push($user_info, ['mail' => "$username@$EMAIL_DOMAIN"]);
+    if (isset($email) and $email != "") {
+     array_push($user_info, ['mail' => $email]);
     }
 
     $add_account = ldap_add($ldap_connection,

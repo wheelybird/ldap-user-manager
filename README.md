@@ -13,13 +13,14 @@ docker run \
            --name=lum \
            -p 80:80 \
            -p 443:443 \
-           -e SERVER_HOSTNAME=lum.example.com \
-           -e LDAP_URI=ldap://ldap.example.com \
-           -e LDAP_BASE_DN=dc=example,dc=com \
-           -e LDAP_STARTTLS=TRUE \
-           -e LDAP_ADMINS_GROUP=admins \
-           -e LDAP_ADMIN_BIND_DN="cn=admin,dc=example,dc=com" \
-           -e LDAP_ADMIN_BIND_PWD=secret\
+           -e "SERVER_HOSTNAME=lum.example.com" \
+           -e "LDAP_URI=ldap://ldap.example.com" \
+           -e "LDAP_BASE_DN=dc=example,dc=com" \
+           -e "LDAP_STARTTLS=TRUE" \
+           -e "LDAP_ADMINS_GROUP=admins" \
+           -e "LDAP_ADMIN_BIND_DN=cn=admin,dc=example,dc=com" \
+           -e "LDAP_ADMIN_BIND_PWD=secret"\
+           -e "EMAIL_DOMAIN=example.com"\
            wheelybird/ldap-user-manager
 ```
 Now go to https://lum.example.com/setup.
@@ -68,7 +69,7 @@ Optional:
    
 * `DEFAULT_USER_GROUP` (default: *everybody*):  The group that new accounts are automatically added to when created.  *NOTE*: If this group doesn't exist then a group is created with the same name as the username and the user is added to that group.
 * `DEFAULT_USER_SHELL` (default: */bin/bash*):  The shell that will be launched when the user logs into a server.
-* `EMAIL_DOMAIN` (no default):  The domain name to append to the email address when creating an account (username@email_domain).  If unset then the mail attribute won't be set.
+* `EMAIL_DOMAIN` (no default):  If set then the email address field will be automatically populated in the form of `username@email_domain`).
    
 * `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See the _Usernames_ section below.
 * `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See the _Usernames_ section below.
@@ -118,6 +119,8 @@ Currently the available macros are:
 * `{last_name_initial}`: the first initial of the last name in lowercase
 
 Anything else in the `USERNAME_FORMAT` string is left as defined, but the username is also checked for validity against `USERNAME_REGEX`.  This is to ensure that there aren't any characters forbidden by other systems (i.e. email or Linux/Unix accounts).
+
+If `EMAIL_DOMAIN` is set then the email address field will be automatically updated in the form of `username@email_domain`.  Entering anything manually in that field will stop the automatic update of the email field.
 
 
 Details on accounts and groups

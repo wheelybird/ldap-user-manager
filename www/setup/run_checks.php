@@ -3,8 +3,8 @@
 include_once("web_functions.inc.php");
 include_once("ldap_functions.inc.php");
 include_once("module_functions.inc.php");
-validate_setup_cookie();
 
+validate_setup_cookie();
 set_page_access("setup");
 
 render_header();
