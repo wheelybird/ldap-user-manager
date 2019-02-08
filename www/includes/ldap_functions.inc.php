@@ -385,7 +385,7 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
 function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$password,$email) {
 
- global $log_prefix, $LDAP, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP, $EMAIL_DOMAIN;
+ global $log_prefix, $LDAP, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP;
 
  if (isset($first_name) and isset($last_name) and isset($username) and isset($password)) {
 
@@ -421,12 +421,9 @@ function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$pas
                          'gidNumber' => $gid,
                          'loginShell' => $DEFAULT_USER_SHELL,
                          'homeDirectory' => "/home/$username",
-                         'userPassword' => $hashed_pass
+                         'userPassword' => $hashed_pass,
+                         'mail' => $email
                       );
-
-    if (isset($email) and $email != "") {
-     array_push($user_info, ['mail' => $email]);
-    }
 
     $add_account = ldap_add($ldap_connection,
                           "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}",
