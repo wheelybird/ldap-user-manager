@@ -31,6 +31,9 @@ Screenshots
 **Edit accounts***:   
 ![account_overview](https://user-images.githubusercontent.com/17613683/59344255-9c692480-8d05-11e9-9207-051291bafd91.png)
 
+**Self-service password change***:   
+![self_service_password_change](https://user-images.githubusercontent.com/17613683/59344258-9ffcab80-8d05-11e9-9dc2-27dfd373fcc8.png)
+
 
 Quick start
 ---
