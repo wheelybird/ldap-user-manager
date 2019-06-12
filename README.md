@@ -4,6 +4,34 @@ LDAP User Manager
 A PHP web-based interface for LDAP user account management and self-service password change.
 
 
+Purpose
+---
+
+This presents a simple-to-use interface for setting up a new LDAP directory and managing user accounts and groups, as well as providing a way for users to change their own password.  It's designed to complement OpenLDAP servers such as *osixia/openldap* (https://hub.docker.com/r/osixia/openldap/).   
+
+ * Setup wizard: this will create the necessary structure to allow you to add users and groups and will set up an initial admin user that can log into the user manager.
+ * Group creation and management.
+ * User account creation and management.
+ * Secure password auto-generator: click the button to generate a secure password.
+ * Password strength indicator.
+ * Self-service password change: non-admin users can log in to change their password.
+
+Screenshots
+---
+
+**Initial setup: add an administrator account**:   
+![administrator_setup](https://user-images.githubusercontent.com/17613683/59344224-8bb8ae80-8d05-11e9-869b-d08a44f4939d.png)
+
+**Add a new group**:   
+![new_group](https://user-images.githubusercontent.com/17613683/59344242-95421680-8d05-11e9-9a72-1f55c06dd43d.png)
+
+**Manage group membership**:   
+![group_membership](https://user-images.githubusercontent.com/17613683/59344247-97a47080-8d05-11e9-8606-0bcc40471458.png)
+
+**Edit accounts***:   
+![account_overview](https://user-images.githubusercontent.com/17613683/59344255-9c692480-8d05-11e9-9207-051291bafd91.png)
+
+
 Quick start
 ---
 
@@ -26,20 +54,13 @@ docker run \
 Now go to https://lum.example.com/setup.
 
 
-Purpose
----
-
-This presents a simple-to-use interface for setting up a new LDAP directory and managing user accounts and groups, as well as providing a way for users to change their own password.  It's designed to complement OpenLDAP servers such as *osixia/openldap* (https://hub.docker.com/r/osixia/openldap/).   
-
-*WARNING*: This interface should be used with populated LDAP directories with caution and at your own risk.   
-
-This tool needs to bind to LDAP as a user with permissions to modify everything under the base DN.  However, only members of a specific LDAP group will be able to access the management module.  Other users will be able to change their LDAP password.
-
-
 Configuration
 ---
 
 Configuration is via environmental variables.
+
+**Note**: This tool needs to bind to LDAP as a user with permissions to modify everything under the base DN.
+**WARNING**: This interface is designed to work with a fresh LDAP server and should be used with populated LDAP directories with caution and at your own risk.
 
 Mandatory:
 ----
@@ -102,8 +123,10 @@ docker run \
 Initial setup
 ---
 
-Ideally you'll be using this against an empty LDAP directory.  You can use the setup utility to create the LDAP structures that this tool needs in order to create accounts and groups.   Go to https://_website-hostname_/setup to get started.   You need to log in with the password for the admin user as set by `LDAP_ADMIN_BIND_DN`.   
+Ideally you'll be using this against an empty LDAP directory.  You can use the setup utility to create the LDAP structures that this tool needs in order to create accounts and groups.   Go to `https://_website-hostname_/setup` to get started.   You need to log in with the password for the admin user as set by `LDAP_ADMIN_BIND_DN`.   
 The setup utility will create the user and account trees, records that store the last UID and GID used when creating a user account or group, a group for admins and the initial admin account.
+
+![initial_setup](https://user-images.githubusercontent.com/17613683/59344213-865b6400-8d05-11e9-9d86-381d59671530.png)
 
 
 Username format
