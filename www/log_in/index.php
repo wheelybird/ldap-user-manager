@@ -1,7 +1,7 @@
 <?php
 
-include __DIR__ . "/web_functions.inc.php";
-include __DIR__ . "/ldap_functions.inc.php";
+include __DIR__ . "/../includes/web_functions.inc.php";
+include __DIR__ . "/../includes/ldap_functions.inc.php";
 
 if (isset($_POST["user_id"]) and isset($_POST["password"])) {
 
