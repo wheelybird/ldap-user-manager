@@ -1,8 +1,8 @@
 <?php
 
-include_once("web_functions.inc.php");
-include_once("ldap_functions.inc.php");
-include_once("module_functions.inc.php");
+include_once __DIR__ . "/../includes/web_functions.inc.php";
+include_once __DIR__ . "/../includes/ldap_functions.inc.php";
+include_once __DIR__ . "/../includes/module_functions.inc.php";
 set_page_access("admin");
 
 render_header("LDAP manager");

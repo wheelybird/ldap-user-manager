@@ -1,6 +1,6 @@
 <?php
 
-include_once("web_functions.inc.php");
+include_once __DIR__ . "/includes/web_functions.inc.php";
 render_header();
 
  if (isset($_GET['logged_out'])) {
