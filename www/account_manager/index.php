@@ -1,8 +1,10 @@
 <?php
 
-include_once __DIR__ . "/../includes/web_functions.inc.php";
-include_once __DIR__ . "/../includes/ldap_functions.inc.php";
-include_once __DIR__ . "/../includes/module_functions.inc.php";
+set_include_path( ".:" . __DIR__ . "/../includes/");
+
+include_once "web_functions.inc.php";
+include_once "ldap_functions.inc.php";
+include_once "module_functions.inc.php";
 set_page_access("admin");
 
 render_header("LDAP manager");
@@ -11,7 +13,7 @@ render_submenu();
 $ldap_connection = open_ldap_connection();
 
 if (isset($_POST['delete_user'])) {
- 
+
  ?>
  <script>
     window.setTimeout(function() {
@@ -19,12 +21,14 @@ if (isset($_POST['delete_user'])) {
                                  }, 4000);
  </script>
  <?php
- 
+
  $this_user = $_POST['delete_user'];
+ $this_user = urldecode($this_user);
+
  if (preg_match("/$USERNAME_REGEX/",$this_user)) {
- 
+
   $del_user = ldap_delete_account($ldap_connection,$this_user);
-  
+
   if ($del_user) {
   ?>
   <div class="alert alert-success" role="alert">
@@ -65,7 +69,7 @@ ldap_close($ldap_connection);
  <tbody>
 <?php
 foreach ($people as $username => $attribs){
- print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_user.php?username=$username'>$username</a></td>\n";
+ print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_user.php?username=" . urlencode($username) . "'>$username</a></td>\n";
  print "   <td>" . $people[$username]['givenname'] . "</td>\n";
  print "   <td>" . $people[$username]['sn'] . "</td>\n";
  print "   <td>" . $people[$username]['mail'] . "</td>\n";

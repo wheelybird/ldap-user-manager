@@ -47,7 +47,7 @@ docker run \
            -e "SERVER_HOSTNAME=lum.example.com" \
            -e "LDAP_URI=ldap://ldap.example.com" \
            -e "LDAP_BASE_DN=dc=example,dc=com" \
-           -e "LDAP_STARTTLS=TRUE" \
+           -e "LDAP_REQUIRE_STARTTLS=TRUE" \
            -e "LDAP_ADMINS_GROUP=admins" \
            -e "LDAP_ADMIN_BIND_DN=cn=admin,dc=example,dc=com" \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
@@ -78,14 +78,13 @@ Optional:
 ----
 
 * `SERVER_HOSTNAME` (default: *example.com*):  The hostname that this interface will be served from.
+* `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.
    
 * `LDAP_USER_OU` (default: *people*):  The name of the OU used to store user accounts (without the base DN appended).
    
 * `LDAP_GROUP_OU` (default: *groups*):  The name of the OU used to store groups (without the base DN appended).
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *uniqueMember*):  The attribute used when adding a user to a group.
 * `LDAP_GROUP_MEMBERSHIP_USES_UID`(default: *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.
-   
-* `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The attribute used to identify account usernames.
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
    
@@ -106,8 +105,7 @@ Optional:
 Webserver SSL setup
 ---
 
-The webserver (Apache HTTPD) expects to find `/opt/ssl/server.key` and `/opt/ssl/server.crt`, and these certificates should match `SERVER_HOSTNAME`.   
-If those files aren't found then the startup script will create self-signed certificates based on `SERVER_HOSTNAME`.  To use your own key and certificate then you need to bind-mount a directory containing them to `/opt/ssl`.  The script will also look for `/opt/ssl/chain.pem` if you need to add a certificate chain file (the Apache `SSLCertificateChainFile` option).
+When `NO_HTTPS` is set to **false** (the default), the webserver (Apache HTTPD) expects to find `/opt/ssl/server.key` and `/opt/ssl/server.crt`, and these certificates should match `SERVER_HOSTNAME`.  If these files aren't found then the startup script will create self-signed certificates based on `SERVER_HOSTNAME`.  To use your own key and certificate then you need to bind-mount a directory containing them to `/opt/ssl`.  The script will also look for `/opt/ssl/chain.pem` if you need to add a certificate chain file (the Apache `SSLCertificateChainFile` option).
    
 e.g.:
 ```
@@ -152,5 +150,5 @@ If `EMAIL_DOMAIN` is set then the email address field will be automatically upda
 Details on accounts and groups
 ---
 
-This interface will create POSIX user accounts and groups, which allows you to use your LDAP directory for Linux/Unix accounts.   
-Groups are also created as a `groupOfUniqueNames` type in case you want to use the `memberOf` LDAP module.
+This interface will create POSIX user accounts and groups, which allows you to use your LDAP directory for Linux/Unix accounts.   The accounts created use `person`, `inetOrgPerson` & `posixAccount` objectClasses.  Usernames are defined via the `uid` attribute and groups are created as with `posixGroup` and `groupOfUniqueNames` objectClasses (the latter in case you want to use the `memberOf` LDAP module).
+
