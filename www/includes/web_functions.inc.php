@@ -8,6 +8,7 @@ $IS_SETUP_ADMIN = FALSE;
 $ACCESS_LEVEL_NAME = array('account','admin');
 unset($USER_ID);
 $CURRENT_PAGE=htmlentities($_SERVER['PHP_SELF']);
+$SENT_HEADERS = FALSE;
 
 $paths=explode('/',getcwd());
 $THIS_MODULE_PATH=end($paths);
@@ -69,7 +70,7 @@ function validate_passkey_cookie() {
 
   list($user_id,$c_passkey) = explode(":",$_COOKIE['orf_cookie']);
   $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
-  $session_file = file_get_contents("/tmp/$filename");
+  $session_file = @ file_get_contents("/tmp/$filename");
   if (!$session_file) {
    $VALIDATED = FALSE;
    unset($USER_ID);
@@ -156,7 +157,7 @@ function log_out($method='normal') {
 
 function render_header($title="",$menu=TRUE) {
 
- global $SITE_NAME, $IS_ADMIN, $LDAP_CONNECTION_WARNING;
+ global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS;
 
  if (empty($title)) { $title = $SITE_NAME; }
 
@@ -178,6 +179,8 @@ function render_header($title="",$menu=TRUE) {
  if ($menu == TRUE) {
   render_menu();
  }
+
+ $SENT_HEADERS = TRUE;
 
 }
 

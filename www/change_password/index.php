@@ -1,7 +1,9 @@
 <?php
 
-include_once __DIR__ . "/../includes/web_functions.inc.php";
-include_once __DIR__ . "/../includes/ldap_functions.inc.php";
+set_include_path( ".:" . __DIR__ . "/../includes/");
+
+include_once "web_functions.inc.php";
+include_once "ldap_functions.inc.php";
 
 set_page_access("user");
 

@@ -1,8 +1,10 @@
 <?php
 
-include_once __DIR__ . "/../includes/web_functions.inc.php";
-include_once __DIR__ . "/../includes/ldap_functions.inc.php";
-include_once __DIR__ . "/../includes/module_functions.inc.php";
+set_include_path( ".:" . __DIR__ . "/../includes/");
+
+include_once "web_functions.inc.php";
+include_once "ldap_functions.inc.php";
+include_once "module_functions.inc.php";
 set_page_access("admin");
 
 render_header();
@@ -37,20 +39,21 @@ exit(0);
 }
 else {
  $username =  (isset($_POST['username']) ? $_POST['username'] : $_GET['username']);
+ $username = urldecode($username);
 }
 
 if (!preg_match("/$USERNAME_REGEX/",$username)) {
 ?>
  <div class="alert alert-danger">
-  <p class="text-center">The username is invalid.</p>
+  <p class="text-center">The username <b><?php print "$username"; ?></b> is invalid.</p>
  </div>
 <?php
 render_footer();
 exit(0);
 }
 
-
-$ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], "(${LDAP['account_attribute']}=$username)" );
+$ldap_search_query="(${LDAP['account_attribute']}=". ldap_escape($username, "", LDAP_ESCAPE_FILTER) . ")";
+$ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query);
 
  
 if ($ldap_search) {
@@ -325,7 +328,7 @@ if ($ldap_search) {
     <div class="panel-heading clearfix">
      <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $user[0]['uid'][0]; ?></h3>
      <button class="btn btn-warning pull-right" onclick="show_delete_user_button();">Delete account</button>
-     <form action="/<?php print $THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print $username; ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
+     <form action="/<?php print $THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($username); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
     </div>
     <div class="panel-body">
      <form class="form-horizontal" action="" method="post">

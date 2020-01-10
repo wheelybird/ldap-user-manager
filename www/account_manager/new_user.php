@@ -1,8 +1,10 @@
 <?php
 
-include_once __DIR__ . "/../includes/web_functions.inc.php";
-include_once __DIR__ . "/../includes/ldap_functions.inc.php";
-include_once __DIR__ . "/../includes/module_functions.inc.php";
+set_include_path( ".:" . __DIR__ . "/../includes/");
+
+include_once "web_functions.inc.php";
+include_once "ldap_functions.inc.php";
+include_once "module_functions.inc.php";
 
 if ( $_POST['setup_admin_account'] ) {
  $admin_setup = TRUE;
@@ -180,7 +182,7 @@ render_js_email_generator('username','email');
 </script>
 
 <div class="container">
- <div class="col-sm-7">
+ <div class="col-sm-8">
 
   <div class="panel panel-default">
    <div class="panel-heading text-center"><?php print $page_title; ?></div>
@@ -193,35 +195,35 @@ render_js_email_generator('username','email');
      <input type="hidden" id="pass_score" value="0" name="pass_score">
 
      <div class="form-group">
-      <label for="first_name" class="col-sm-2 control-label">First name</label>
+      <label for="first_name" class="col-sm-3 control-label">First name</label>
       <div class="col-sm-6">
        <input type="text" class="form-control" id="first_name" name="first_name" <?php if (isset($first_name)){ print " value='$first_name'"; } ?> onkeyup="update_username(); update_email();">
       </div>
      </div>
 
      <div class="form-group">
-      <label for="last_name" class="col-sm-2 control-label">Last name</label>
+      <label for="last_name" class="col-sm-3 control-label">Last name</label>
       <div class="col-sm-6">
        <input type="text" class="form-control" id="last_name" name="last_name" <?php if (isset($last_name)){ print " value='$last_name'"; } ?> onkeyup="update_username(); update_email();">
       </div>
      </div>
 
      <div class="form-group" id="username_div">
-      <label for="username" class="col-sm-2 control-label">Username</label>
+      <label for="username" class="col-sm-3 control-label">Username</label>
       <div class="col-sm-6">
        <input type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_username_validity(document.getElementById('username').value); update_email();">
       </div>
      </div>
 
      <div class="form-group" id="email_div">
-      <label for="username" class="col-sm-2 control-label">Email</label>
+      <label for="username" class="col-sm-3 control-label">Email</label>
       <div class="col-sm-6">
        <input type="text" class="form-control" id="email" name="email" <?php if (isset($email)){ print " value='$email'"; } ?> onkeyup="auto_email_update = false;">
       </div>
      </div>
 
      <div class="form-group" id="password_div">
-      <label for="password" class="col-sm-2 control-label">Password</label>
+      <label for="password" class="col-sm-3 control-label">Password</label>
       <div class="col-sm-6">
        <input type="text" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm');">
       </div>
@@ -231,7 +233,7 @@ render_js_email_generator('username','email');
      </div>
 
      <div class="form-group" id="confirm_div">
-      <label for="confirm" class="col-sm-2 control-label">Confirm</label>
+      <label for="confirm" class="col-sm-3 control-label">Confirm</label>
       <div class="col-sm-6">
        <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
       </div>

@@ -1,8 +1,10 @@
 <?php
 
-include_once __DIR__ . "/../includes/web_functions.inc.php";
-include_once __DIR__ . "/../includes/ldap_functions.inc.php";
-include_once __DIR__ . "/../includes/module_functions.inc.php";
+set_include_path( ".:" . __DIR__ . "/../includes/");
+
+include_once "web_functions.inc.php";
+include_once "ldap_functions.inc.php";
+include_once "module_functions.inc.php";
 set_page_access("admin");
 
 render_header("LDAP manager");
@@ -22,6 +24,7 @@ exit(0);
 }
 else {
  $group_cn =  (isset($_POST['group_name']) ? $_POST['group_name'] : $_GET['group_name']);
+ $group_cn = urldecode($group_cn);
 }
 
 if (!preg_match("/$USERNAME_REGEX/",$group_cn)) {
@@ -41,8 +44,8 @@ if (isset($_POST['new_group'])) {
 
 ######################################################################################
 
-
-$ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", "cn=$group_cn");
+$ldap_search_query="cn=" . ldap_escape($group_cn, "", LDAP_ESCAPE_FILTER);
+$ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
 $result = ldap_get_entries($ldap_connection, $ldap_search);
 
 $current_members = array();
@@ -260,7 +263,7 @@ ldap_close($ldap_connection);
          </button>
          <form id="group_members" action="<?php print $CURRENT_PAGE; ?>" method="post">
           <input type="hidden" name="update_members">
-          <input type="hidden" name="group_name" value="<?php print $group_cn; ?>">
+          <input type="hidden" name="group_name" value="<?php print urlencode($group_cn); ?>">
          </form>
          <button id="submit_members" class="btn btn-info" disabled type="submit" onclick="update_form_with_users()">Save</button>
         </div>
