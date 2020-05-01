@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 ssl_dir="/opt/ssl"
@@ -13,8 +13,7 @@ if [ "$LDAP_TLS_CACERT" ]; then
   sed -i "s/TLS_CACERT.*/TLS_CACERT \/opt\/ca.crt/" /etc/ldap/ldap.conf
 fi
 
-
-if [ "$NO_HTTPS" = "TRUE" ]; then
+if [ "${NO_HTTPS,,}" == "true" ]; then
 
   cat <<EoHTTPC >/etc/apache2/sites-enabled/lum.conf
 
@@ -104,7 +103,7 @@ EoCertConf
   ########################
   #Create Apache config
 
-  if [ -f "/opt/tls/chain.pem" ]; then $ssl_chain="SSLCertificateChainFile /opt/tls/chain.pem"; fi
+  if [ -f "/opt/tls/chain.pem" ]; then ssl_chain="SSLCertificateChainFile /opt/tls/chain.pem"; fi
 
   cat <<EoHTTPSC >/etc/apache2/sites-enabled/lum.conf
 

@@ -101,6 +101,7 @@ Optional:
    
 * `SITE_NAME` (default: *LDAP user manager*):  Change this to replace the title in the menu.  e.g. "My Company"
 
+* `LDAP_DEBUG` (default: *FALSE*): Set to TRUE to increase the logging level.  This will output passwords to the error log - don't enable this in a production environment.
 
 Webserver SSL setup
 ---
