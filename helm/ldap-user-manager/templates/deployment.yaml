@@ -1,0 +1,82 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ldap-user-manager
+  labels:
+    app: ldap-user-manager
+    chart: ldap-user-manager-v0.9.34
+    release: ldap-user-manager
+    heritage: Tiller
+spec:
+  selector:
+    matchLabels:
+      app: ldap-user-manager
+      release: ldap-user-manager
+  template:
+    metadata:
+      labels:
+        app: ldap-user-manager
+        release: ldap-user-manager
+    spec:
+      containers:
+        - name: ldap-user-manager
+          image: {{ .Values.image.repository | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.httpPort }}
+              protocol: TCP
+            - name: https
+              containerPort: {{ .Values.service.httpsPort }}
+              protocol: TCP
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+          env:
+            - name: LDAP_URI
+              value: {{ .Values.ldap.URI | quote }}
+            - name: LDAP_BASE_DN
+              value: {{ .Values.ldap.baseDN | quote }}
+            - name: LDAP_ADMIN_BIND_DN
+              value: {{ .Values.ldap.adminBindDN | quote }}
+            - name: LDAP_ADMIN_BIND_PWD
+              value: {{ .Values.ldap.adminBindPassword | quote }}
+            - name: LDAP_ADMINS_GROUP
+              value: {{ .Values.ldap.adminGroups | quote }}
+            - name: LDAP_USER_OU
+              value: {{ .Values.ldap.userOU | quote }}
+            - name: LDAP_GROUP_OU
+              value: {{ .Values.ldap.groupOU | quote }}
+            - name: LDAP_GROUP_MEMBERSHIP_ATTRIBUTE
+              value: {{ .Values.ldap.groupMemAttr | quote }}
+            - name: LDAP_GROUP_MEMBERSHIP_USES_UID
+              value: {{ .Values.ldap.groupMemUID | quote }}
+            - name: DEFAULT_USER_GROUP
+              value: {{ .Values.ldap.defaultGroup | quote }}
+            - name: DEFAULT_USER_SHELL
+              value: {{ .Values.ldap.userShell | quote }}
+            - name: EMAIL_DOMAIN
+              value: {{ .Values.ldap.emailDomain | quote }}
+            - name: USERNAME_FORMAT
+              value: {{ .Values.ldap.usernameFormat | quote }}
+            - name: USERNAME_REGEX
+              value: {{ .Values.ldap.usernameRegex | quote }}
+            - name: LOGIN_TIMEOUT_MINS
+              value: {{ .Values.ldap.loginTimeout | quote }}
+
+            - name: LDAP_REQUIRE_STARTTLS
+              value: {{ .Values.cert.startTLS | quote }}
+            - name: LDAP_TLS_CACERT
+              value: {{ .Values.cert.cacert | quote }}
+
+            - name: SERVER_HOSTNAME
+              value: {{ .Values.service.hostname | quote }}
+            - name: NO_HTTPS
+              value: {{ .Values.service.noHttps | quote }}
+            - name: SITE_NAME
+              value: {{ .Values.service.siteName | quote }}
