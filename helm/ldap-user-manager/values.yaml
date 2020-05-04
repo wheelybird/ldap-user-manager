@@ -7,7 +7,8 @@ service:
   httpsPort: 5557
   # Optional:
   # The hostname that this interface will be served from.
-  hostname: ""
+  # hostname: ""
+
   # If you set this to TRUE then the server will run in HTTP mode, without any encryption. This is insecure and should only be used for testing.
   noHttps: "FALSE"
   # Change this to replace the title in the menu. e.g. "My Company"
@@ -39,22 +40,29 @@ ldap:
   userOU: "ou=people,dc=example,dc=org"
   #  The name of the OU used to store groups (without the base DN appended).
   groupOU: "ou=groups,dc=example,dc=org"
+
   # The attribute used when adding a user to a group.
-  groupMemAttr: ""
+  groupMemAttr: "uniqueid"
+
   # If TRUE then the entry for a member of a group will be just the username. Otherwise it's the member's full DN.
-  groupMemUID: ""
+  # groupMemUID: ""
   # The group that new accounts are automatically added to when created. 
   # NOTE: If this group doesn't exist then a group is created with the same name as the username and the user is added to that group.
-  defaultGroup: ""
+
+  # defaultGroup: ""
   # The shell that will be launched when the user logs into a server.
-  userShell: ""
+
+  # userShell: ""
   # If set then the email address field will be automatically populated in the form of username@email_domain).
-  emailDomain: ""
+  # emailDomain: ""
   # The template used to dynamically generate usernames. See the Usernames section below.
-  usernameFormat: ""
+
+  # usernameFormat: ""
   # The regular expression used to ensure a username (and group name) is valid. See the Usernames section below.
-  usernameRegex: ""
+
+  # usernameRegex: ""
   # How long before an idle session will be timed out.
+
   loginTimeout: "30"
 
 cert:
@@ -65,4 +73,5 @@ cert:
   startTLS: "FALSE"
   # If you need to use a specific CA certificate for TLS connections to the LDAP server (when LDAP_REQUIRE_STARTTLS is set),
   # then assign the contents of the CA certificate to this variable. e.g. -e LDAP_TLS_CERT=$(</path/to/ca.crt)
-  cacert:
+
+  # cacert:
