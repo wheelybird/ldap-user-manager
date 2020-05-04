@@ -40,7 +40,7 @@ function set_passkey_cookie($user_id,$is_admin) {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $LOGIN_TIMEOUT_MINS, $VALIDATED, $USER_ID, $IS_ADMIN, $SESSION_DEBUG;
+ global $LOGIN_TIMEOUT_MINS, $VALIDATED, $USER_ID, $IS_ADMIN, $log_prefix, $SESSION_DEBUG;
 
 
  $passkey = generate_passkey();
@@ -64,7 +64,7 @@ function set_passkey_cookie($user_id,$is_admin) {
 
 function validate_passkey_cookie() {
 
- global $LOGIN_TIMEOUT_MINS, $IS_ADMIN, $USER_ID, $VALIDATED, $SESSION_DEBUG;
+ global $LOGIN_TIMEOUT_MINS, $IS_ADMIN, $USER_ID, $VALIDATED, $log_prefix, $SESSION_DEBUG;
 
  if (isset($_COOKIE['orf_cookie'])) {
 
@@ -110,7 +110,7 @@ function set_setup_cookie() {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN, $SESSION_DEBUG;
+ global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN, $log_prefix, $SESSION_DEBUG;
 
  $passkey = generate_passkey();
  $this_time=time();
@@ -128,7 +128,7 @@ function set_setup_cookie() {
 
 function validate_setup_cookie() {
 
- global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN, $SESSION_DEBUG;
+ global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN, $log_prefix, $SESSION_DEBUG;
 
  if (isset($_COOKIE['setup_cookie'])) {
 
@@ -278,7 +278,7 @@ function render_footer() {
 
 function set_page_access($level) {
 
- global $IS_ADMIN, $IS_SETUP_ADMIN, $VALIDATED, $SESSION_DEBUG;
+ global $IS_ADMIN, $IS_SETUP_ADMIN, $VALIDATED, $log_prefix, $SESSION_DEBUG;
 
  #Set the security level needed to view a page.
  #This should be one of the first pieces of code
