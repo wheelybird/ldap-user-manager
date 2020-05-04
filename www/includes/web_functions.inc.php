@@ -40,7 +40,7 @@ function set_passkey_cookie($user_id,$is_admin) {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $LOGIN_TIMEOUT_MINS, $VALIDATED, $USER_ID, $IS_ADMIN;
+ global $LOGIN_TIMEOUT_MINS, $VALIDATED, $USER_ID, $IS_ADMIN, $SESSION_DEBUG;
 
 
  $passkey = generate_passkey();
@@ -54,7 +54,7 @@ function set_passkey_cookie($user_id,$is_admin) {
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
  file_put_contents("/tmp/$filename","$passkey:$admin_val:$this_time");
  setcookie('orf_cookie', "$user_id:$passkey", $this_time+(60 * $LOGIN_TIMEOUT_MINS), '/', $_SERVER["HTTP_HOST"]);
-
+ if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: user $user_id validated (IS_ADMIN=${IS_ADMIN}), sent orf_cookie to the browser.",0); }
  $VALIDATED = TRUE;
 
 }
@@ -64,7 +64,7 @@ function set_passkey_cookie($user_id,$is_admin) {
 
 function validate_passkey_cookie() {
 
- global $LOGIN_TIMEOUT_MINS, $IS_ADMIN, $USER_ID, $VALIDATED;
+ global $LOGIN_TIMEOUT_MINS, $IS_ADMIN, $USER_ID, $VALIDATED, $SESSION_DEBUG;
 
  if (isset($_COOKIE['orf_cookie'])) {
 
@@ -75,6 +75,7 @@ function validate_passkey_cookie() {
    $VALIDATED = FALSE;
    unset($USER_ID);
    $IS_ADMIN = FALSE;
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: orf_cookie was sent by the client but the session file wasn't found at /tmp/$filename",0); }
   }
   else {
    list($f_passkey,$f_is_admin,$f_time) = explode(":",$session_file);
@@ -83,10 +84,23 @@ function validate_passkey_cookie() {
     if ($f_is_admin == 1) { $IS_ADMIN = TRUE; }
     $VALIDATED = TRUE;
     $USER_ID=$user_id;
+    if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: Cookie and session file values match for user ${user_id} - VALIDATED (ADMIN = ${IS_ADMIN})",0); }
     set_passkey_cookie($USER_ID,$IS_ADMIN);
+   }
+   elseif ( $SESSION_DEBUG == TRUE ) {
+     $this_error="$log_prefix Session: orf_cookie was sent by the client and the session file was found at /tmp/$filename, but";
+     if ($this_time < $f_time+(60 * $LOGIN_TIMEOUT_MINS)) { $this_error .= " the timestamp was older than the login timeout ($LOGIN_TIMEOUT_MINS);"; }
+     if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
+     if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
+     $this_error += " Cookie: ${_COOKIE['orf_cookie']} - Session file contents: $session_file";
+     error_log($this_error,0);
    }
   }
  }
+ elseif ( $SESSION_DEBUG == TRUE) {
+   error_log("$log_prefix Session: orf_cookie wasn't sent by the client.",0);
+ }
+
 }
 
 
@@ -96,7 +110,7 @@ function set_setup_cookie() {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN;
+ global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN, $SESSION_DEBUG;
 
  $passkey = generate_passkey();
  $this_time=time();
@@ -105,6 +119,7 @@ function set_setup_cookie() {
 
  file_put_contents("/tmp/ldap_setup","$passkey:$this_time");
  setcookie('setup_cookie', "$passkey", $this_time+(60 * $LOGIN_TIMEOUT_MINS), '/', $_SERVER["HTTP_HOST"]);
+ if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: sent setup_cookie to the client.",0); }
 
 }
 
@@ -113,7 +128,7 @@ function set_setup_cookie() {
 
 function validate_setup_cookie() {
 
- global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN;
+ global $LOGIN_TIMEOUT_MINS, $IS_SETUP_ADMIN, $SESSION_DEBUG;
 
  if (isset($_COOKIE['setup_cookie'])) {
 
@@ -121,14 +136,26 @@ function validate_setup_cookie() {
   $session_file = file_get_contents("/tmp/ldap_setup");
   if (!$session_file) {
    $IS_SETUP_ADMIN = FALSE;
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: setup_cookie was sent by the client but the session file wasn't found at /tmp/ldap_setup",0); }
   }
   list($f_passkey,$f_time) = explode(":",$session_file);
   $this_time=time();
   if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $LOGIN_TIMEOUT_MINS)) {
    $IS_SETUP_ADMIN = TRUE;
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: Cookie and session file values match - VALIDATED ",0); }
    set_setup_cookie();
   }
-
+  elseif ( $SESSION_DEBUG == TRUE) {
+   $this_error="$log_prefix Setup session: setup_cookie was sent by the client and the session file was found at /tmp/ldap_setup, but";
+   if ($this_time < $f_time+(60 * $LOGIN_TIMEOUT_MINS)) { $this_error .= " the timestamp was older than the login timeout ($LOGIN_TIMEOUT_MINS);"; }
+   if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
+   if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
+   $this_error += " Cookie: ${_COOKIE['setup_cookie']} - Session file contents: $session_file";
+   error_log($this_error,0);
+  }
+ }
+ elseif ( $SESSION_DEBUG == TRUE) {
+   error_log("$log_prefix Session: setup_cookie wasn't sent by the client.",0);
  }
 
 }
@@ -251,7 +278,7 @@ function render_footer() {
 
 function set_page_access($level) {
 
- global $IS_ADMIN, $IS_SETUP_ADMIN, $VALIDATED;
+ global $IS_ADMIN, $IS_SETUP_ADMIN, $VALIDATED, $SESSION_DEBUG;
 
  #Set the security level needed to view a page.
  #This should be one of the first pieces of code
@@ -264,6 +291,7 @@ function set_page_access($level) {
   }
   else {
    header("Location: //" . $_SERVER["HTTP_HOST"] . "/setup/index.php?unauthorised\n\n");
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: UNAUTHORISED: page security level is 'setup' but IS_SETUP_ADMIN isn't TRUE",0); }
    exit(0);
   }
  }
@@ -274,6 +302,7 @@ function set_page_access($level) {
   }
   else {
    header("Location: //" . $_SERVER["HTTP_HOST"] . "/index.php?unauthorised\n\n");
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: UNAUTHORISED: page security level is 'admin' but IS_ADMIN = '${IS_ADMIN}' and VALIDATED = '${VALIDATED}' (user) ",0); }
    exit(0);
   }
  }
@@ -284,6 +313,7 @@ function set_page_access($level) {
   }
   else {
    header("Location: //" . $_SERVER["HTTP_HOST"] . "/index.php?unauthorised\n\n");
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: UNAUTHORISED: page security level is 'user' but VALIDATED = '${VALIDATED}'",0); }
    exit(0);
   }
  }
