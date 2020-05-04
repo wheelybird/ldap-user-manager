@@ -101,6 +101,8 @@ Optional:
    
 * `SITE_NAME` (default: *LDAP user manager*):  Change this to replace the title in the menu.  e.g. "My Company"
 
+* `LDAP_DEBUG` (default: *FALSE*): Set to TRUE to increase the logging level for LDAP connections.  This will output passwords to the error log - don't enable this in a production environment.
+* `SESSION_DEBUG` (default: *FALSE*): Set to TRUE to increase the logging level for sessions and user authorisation.  This will output cookie passkeys to the error log - don't enable this in a production environment.
 
 Webserver SSL setup
 ---

@@ -7,7 +7,7 @@ $LDAP_CONNECTION_WARNING = FALSE;
 
 function open_ldap_connection() {
 
- global $log_prefix, $LDAP, $SENT_HEADERS;
+ global $log_prefix, $LDAP, $SENT_HEADERS, $LDAP_DEBUG;
 
  $ldap_connection = @ ldap_connect($LDAP['uri']);
 
@@ -40,14 +40,24 @@ function open_ldap_connection() {
     ldap_set_option($ldap_connection, LDAP_OPT_PROTOCOL_VERSION, 3);
    }
   }
+  elseif ($LDAP_DEBUG == TRUE) {
+    error_log("$log_prefix Start STARTTLS connection to ${LDAP['uri']}",0);
+  }
  }
 
  $bind_result = @ ldap_bind( $ldap_connection, $LDAP['admin_bind_dn'], $LDAP['admin_bind_pwd']);
 
  if ($bind_result != TRUE) {
-  print "Problem: Failed to bind as ${LDAP['admin_bind_dn']}";
-  error_log("$log_prefix Failed to bind as ${LDAP['admin_bind_dn']}",0);
-  exit(1);
+
+   $this_error = "Failed to bind to ${LDAP['uri']} as ${LDAP['admin_bind_dn']}";
+   print "Problem: Failed to bind as ${LDAP['admin_bind_dn']}";
+   if ($LDAP_DEBUG == TRUE) { $this_error .= " with password ${LDAP['admin_bind_pwd']}"; }
+   error_log("$log_prefix $this_error",0);
+   exit(1);
+
+ }
+ elseif ($LDAP_DEBUG == TRUE) {
+   error_log("$log_prefix Bound to ${LDAP['uri']} as ${LDAP['admin_bind_dn']}",0);
  }
 
  return $ldap_connection;
@@ -62,10 +72,12 @@ function ldap_auth_username($ldap_connection,$username, $password) {
  # Search for the DN for the given username.  If found, try binding with the DN and user's password.
  # If the binding succeeds, return the DN.
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  $ldap_search_query="${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER);
  $ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query );
+
+ if ($LDAP_DEBUG == TRUE) { "$log_prefix Running LDAP search: $ldap_search_query"; }
 
  if (!$ldap_search) {
   error_log("$log_prefix Couldn't search for $username",0);
@@ -73,6 +85,8 @@ function ldap_auth_username($ldap_connection,$username, $password) {
  }
 
  $result = ldap_get_entries($ldap_connection, $ldap_search);
+ if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP search returned ${result["count"]} records for $username",0); }
+
  if ($result["count"] == 1) {
 
   $auth_ldap_connection = open_ldap_connection();
@@ -83,8 +97,10 @@ function ldap_auth_username($ldap_connection,$username, $password) {
    preg_match("/{$LDAP['account_attribute']}=(.*?),/",$result[0]['dn'],$dn_match);
    return $dn_match[1];
    ldap_unbind($auth_ldap_connection);
+   if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Able to bind as $username",0); }
   }
   else {
+   if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Unable to bind as $username",0); }
    return FALSE;
   }
 
@@ -100,12 +116,23 @@ function ldap_setup_auth($ldap_connection, $password) {
 
  #For the initial setup we need to make sure that whoever's running it has the default admin user
  #credentials as passed in ADMIN_BIND_*
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
+  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Initial setup: opening another LDAP connection to test authentication as ${LDAP['admin_bind_dn']}.",0); }
   $auth_ldap_connection = open_ldap_connection();
   $can_bind = @ldap_bind($auth_ldap_connection, $LDAP['admin_bind_dn'], $password);
   ldap_close($auth_ldap_connection);
-  if ($can_bind) { return TRUE; } else { return FALSE; }
+  if ($can_bind) {
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Initial setup: able to authenticate as ${LDAP['admin_bind_dn']}.",0); }
+    return TRUE;
+  }
+  else {
+    $this_error="Initial setup: Unable to authenticate as ${LDAP['admin_bind_dn']}";
+    if ($LDAP_DEBUG == TRUE) { $this_error .= " with password $password"; }
+    $this_error .= ". The password used to authenticate for /setup should be the same as set by LDAP_ADMIN_BIND_PWD.";
+    error_log("$log_prefix $this_error",0);
+    return FALSE;
+  }
 
 
 }
@@ -127,15 +154,17 @@ function ldap_hashed_password($password) {
 
 function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",$sort_key=NULL,$filters=NULL,$fields=NULL) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  if (!isset($fields)) { $fields = array_unique( array("${LDAP['account_attribute']}", "givenname", "sn", "mail")); }
 
  if (!isset($sort_key)) { $sort_key = $LDAP['account_attribute']; }
 
- $ldap_search = ldap_search($ldap_connection, "${LDAP['user_dn']}", "(&(${LDAP['account_attribute']}=*)$filters)", $fields);
+ $this_filter = "(&(${LDAP['account_attribute']}=*)$filters)";
 
+ $ldap_search = ldap_search($ldap_connection, "${LDAP['user_dn']}", $this_filter, $fields);
  $result = ldap_get_entries($ldap_connection, $ldap_search);
+ if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} users for ${LDAP['user_dn']} when using this filter: $this_filter",0); }
 
  $records = array();
  foreach ($result as $record) {
@@ -164,7 +193,7 @@ function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",
 
 function ldap_get_highest_id($ldap_connection,$type="uid") {
 
- global $log_prefix, $LDAP, $min_uid, $min_gid;
+ global $log_prefix, $LDAP, $LDAP_DEBUG, $min_uid, $min_gid;
 
  if ($type == "uid") {
   $this_id = $min_uid;
@@ -214,11 +243,13 @@ function ldap_get_highest_id($ldap_connection,$type="uid") {
 
 function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",$filters=NULL) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", "(&(objectclass=*)$filters)");
+ $this_filter = "(&(objectclass=*)$filters)";
+ $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter);
 
  $result = ldap_get_entries($ldap_connection, $ldap_search);
+ if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
 
  $records = array();
  foreach ($result as $record) {
@@ -242,12 +273,13 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
 
 function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=NULL,$sort="asc") {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  $ldap_search_query = "(cn=". ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
  $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array($LDAP['group_membership_attribute']));
 
  $result = ldap_get_entries($ldap_connection, $ldap_search);
+ if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} members of ${group_name} when using this search: $ldap_search_query",0); }
 
  $records = array();
  foreach ($result[0][$LDAP['group_membership_attribute']] as $record => $value) {
@@ -269,7 +301,7 @@ function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=N
 
 function ldap_is_group_member($ldap_connection,$group_name,$username) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  $ldap_search_query = "(cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
  $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
@@ -293,7 +325,7 @@ function ldap_is_group_member($ldap_connection,$group_name,$username) {
 
 function ldap_new_group($ldap_connection,$group_name) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  if (isset($group_name)) {
 
@@ -345,7 +377,7 @@ function ldap_new_group($ldap_connection,$group_name) {
 
 function ldap_delete_group($ldap_connection,$group_name) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  if (isset($group_name)) {
 
@@ -370,7 +402,7 @@ function ldap_delete_group($ldap_connection,$group_name) {
 
 function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  if (isset($group_name)) {
 
@@ -393,7 +425,7 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
 function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$password,$email) {
 
- global $log_prefix, $LDAP, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP;
 
  if (isset($first_name) and isset($last_name) and isset($username) and isset($password)) {
 
@@ -476,7 +508,7 @@ function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$pas
 
 function ldap_delete_account($ldap_connection,$username) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  if (isset($username)) {
 
@@ -501,7 +533,7 @@ function ldap_delete_account($ldap_connection,$username) {
 
 function ldap_add_member_to_group($ldap_connection,$group_name,$username) {
 
-  global $log_prefix, $LDAP;
+  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
   $group_dn = "cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
 
@@ -528,7 +560,7 @@ function ldap_add_member_to_group($ldap_connection,$group_name,$username) {
 
 function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
 
-  global $log_prefix, $LDAP;
+  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
   $group_dn = "cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
 
@@ -555,7 +587,7 @@ function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
 
 function ldap_change_password($ldap_connection,$username,$new_password) {
 
- global $log_prefix, $LDAP;
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  #Find DN of user
 
