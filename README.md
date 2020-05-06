@@ -60,10 +60,19 @@ Now go to https://lum.example.com/setup.
 Configuration
 ---
 
-Configuration is via environmental variables.
+Configuration is via environmental variables.  Please bear the following in mind:
 
-**Note**: This tool needs to bind to LDAP as a user with permissions to modify everything under the base DN.
-**WARNING**: This interface is designed to work with a fresh LDAP server and should be used with populated LDAP directories with caution and at your own risk.
+ * This tool needs to bind to LDAP as a user with permissions to modify everything under the base DN.
+ * This interface is designed to work with a fresh LDAP server and should be used with populated LDAP directories with caution and at your own risk.
+
+###When using **osixia/openldap**
+
+By default the user manager will expect that the LDAP server is using the **RFC2307BIS** schema.  Unfortunately by default the **osixia/openldap** image uses the old NIS schema.  The user manager will work with either, but RFC2307BIS is recommended as it allows you to use **memberOf** searches.  You can enable RFC2307BIS in **osixia/openldap** by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.   
+
+If you prefer not to use RFC2307BIS then set `LDAP_USES_NIS_SCHEMA` to `TRUE`.  This will create groups solely as the **posixGroup** objectclass, and the default for `LDAP_GROUP_MEMBERSHIP_USES_UID` will `TRUE`.
+
+
+
 
 Mandatory:
 ----
@@ -82,9 +91,11 @@ Optional:
    
 * `LDAP_USER_OU` (default: *people*):  The name of the OU used to store user accounts (without the base DN appended).
    
+* `LDAP_USES_NIS_SCHEMA` (default: *FALSE*):  If you use the NIS schema instead of the (preferable) RFC2307BIS schema, set this to `TRUE`.  See [When using **osixia/openldap**](#When using **osixia/openldap**) for more information.
+   
 * `LDAP_GROUP_OU` (default: *groups*):  The name of the OU used to store groups (without the base DN appended).
-* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *uniqueMember*):  The attribute used when adding a user to a group.
-* `LDAP_GROUP_MEMBERSHIP_USES_UID`(default: *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.
+* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user to a group.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `memberUID', otherwise it's `uniqueMember`.  Explicitly setting this variable will override the default.
+* `LDAP_GROUP_MEMBERSHIP_USES_UID`(default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `TRUE', otherwise it's `FALSE`.  Explicitly setting this variable will override the default.
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
    
@@ -147,10 +158,4 @@ Currently the available macros are:
 Anything else in the `USERNAME_FORMAT` string is left as defined, but the username is also checked for validity against `USERNAME_REGEX`.  This is to ensure that there aren't any characters forbidden by other systems (i.e. email or Linux/Unix accounts).
 
 If `EMAIL_DOMAIN` is set then the email address field will be automatically updated in the form of `username@email_domain`.  Entering anything manually in that field will stop the automatic update of the email field.
-
-
-Details on accounts and groups
----
-
-This interface will create POSIX user accounts and groups, which allows you to use your LDAP directory for Linux/Unix accounts.   The accounts created use `person`, `inetOrgPerson` & `posixAccount` objectClasses.  Usernames are defined via the `uid` attribute and groups are created as with `posixGroup` and `groupOfUniqueNames` objectClasses (the latter in case you want to use the `memberOf` LDAP module).
 

@@ -1,6 +1,5 @@
 <?php
 
-$log_prefix = date('Y-m-d H:i:s') . " - LDAP manager - $USER_ID - ";
 $LDAP_CONNECTION_WARNING = FALSE;
 
 ###################################
@@ -25,7 +24,7 @@ function open_ldap_connection() {
 
   if ($tls_result != TRUE) {
 
-   error_log("$log_prefix Failed to start STARTTLS connection to ${LDAP['uri']}",0);
+   error_log("$log_prefix Failed to start STARTTLS connection to ${LDAP['uri']}: " . ldap_error($ldap_connection),0);
 
    if ($LDAP["require_starttls"] == TRUE) {
     print "<div style='position: fixed;bottom: 0;width: 100%;' class='alert alert-danger'>Fatal:  Couldn't create a secure connection to ${LDAP['uri']} and LDAP_REQUIRE_STARTTLS is TRUE.</div>";
@@ -50,9 +49,11 @@ function open_ldap_connection() {
  if ($bind_result != TRUE) {
 
    $this_error = "Failed to bind to ${LDAP['uri']} as ${LDAP['admin_bind_dn']}";
-   print "Problem: Failed to bind as ${LDAP['admin_bind_dn']}";
    if ($LDAP_DEBUG == TRUE) { $this_error .= " with password ${LDAP['admin_bind_pwd']}"; }
+   $this_error .= ": " . ldap_error($ldap_connection);
+   print "Problem: Failed to bind as ${LDAP['admin_bind_dn']}";
    error_log("$log_prefix $this_error",0);
+
    exit(1);
 
  }
@@ -75,12 +76,12 @@ function ldap_auth_username($ldap_connection,$username, $password) {
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  $ldap_search_query="${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER);
- $ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query );
+ $ldap_search = @ ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query );
 
  if ($LDAP_DEBUG == TRUE) { "$log_prefix Running LDAP search: $ldap_search_query"; }
 
  if (!$ldap_search) {
-  error_log("$log_prefix Couldn't search for $username",0);
+  error_log("$log_prefix Couldn't search for ${username}: " . ldap_error($ldap_connection),0);
   return FALSE;
  }
 
@@ -100,7 +101,7 @@ function ldap_auth_username($ldap_connection,$username, $password) {
    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Able to bind as $username",0); }
   }
   else {
-   if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Unable to bind as $username",0); }
+   if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Unable to bind as ${username}: " . ldap_error($ldap_connection),0); }
    return FALSE;
   }
 
@@ -129,7 +130,8 @@ function ldap_setup_auth($ldap_connection, $password) {
   else {
     $this_error="Initial setup: Unable to authenticate as ${LDAP['admin_bind_dn']}";
     if ($LDAP_DEBUG == TRUE) { $this_error .= " with password $password"; }
-    $this_error .= ". The password used to authenticate for /setup should be the same as set by LDAP_ADMIN_BIND_PWD.";
+    $this_error .= ". The password used to authenticate for /setup should be the same as set by LDAP_ADMIN_BIND_PWD. ";
+    $this_error .= ldap_error($ldap_connection);
     error_log("$log_prefix $this_error",0);
     return FALSE;
   }
@@ -162,8 +164,8 @@ function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",
 
  $this_filter = "(&(${LDAP['account_attribute']}=*)$filters)";
 
- $ldap_search = ldap_search($ldap_connection, "${LDAP['user_dn']}", $this_filter, $fields);
- $result = ldap_get_entries($ldap_connection, $ldap_search);
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['user_dn']}", $this_filter, $fields);
+ $result = @ ldap_get_entries($ldap_connection, $ldap_search);
  if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} users for ${LDAP['user_dn']} when using this filter: $this_filter",0); }
 
  $records = array();
@@ -173,7 +175,7 @@ function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",
 
    $add_these = array();
    foreach($fields as $this_attr) {
-    if ($this_attr != $sort_key) { $add_these[$this_attr] = $record[$this_attr][0]; }
+    if ($this_attr !== $sort_key) { $add_these[$this_attr] = $record[$this_attr][0]; }
    }
 
    $records[$record[$sort_key][0]] = $add_these;
@@ -248,7 +250,7 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
  $this_filter = "(&(objectclass=*)$filters)";
  $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter);
 
- $result = ldap_get_entries($ldap_connection, $ldap_search);
+ $result = @ ldap_get_entries($ldap_connection, $ldap_search);
  if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
 
  $records = array();
@@ -276,23 +278,40 @@ function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=N
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  $ldap_search_query = "(cn=". ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
- $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array($LDAP['group_membership_attribute']));
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array($LDAP['group_membership_attribute']));
 
- $result = ldap_get_entries($ldap_connection, $ldap_search);
- if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} members of ${group_name} when using this search: $ldap_search_query",0); }
+ $result = @ ldap_get_entries($ldap_connection, $ldap_search);
+ $result_count = $result[0]['count'];
 
  $records = array();
- foreach ($result[0][$LDAP['group_membership_attribute']] as $record => $value) {
 
-  if ($record != 'count' and isset($value)) {
-   array_push($records, $value);
+ if ($result_count > 0) {
+
+  foreach ($result[0][$LDAP['group_membership_attribute']] as $key => $value) {
+
+   if ($key !== 'count' and !empty($value)) {
+    $this_member = preg_replace("/^.*?=(.*?),.*/", "$1", $value);
+    array_push($records, $this_member);
+    if ($LDAP_DEBUG == TRUE) { error_log("${value} is a member",0); }
+   }
+
   }
+
+  $actual_result_count = count($records);
+  if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned $actual_result_count members of ${group_name} when using this search: $ldap_search_query and this filter: ${LDAP['group_membership_attribute']}",0); }
+
+  if ($actual_result_count > 0) {
+   if ($sort == "asc") { sort($records); } else { rsort($records); }
+   return(array_slice($records,$start,$entries));
+  }
+  else {
+   return array();
+  }
+
  }
-
- if ($sort == "asc") { sort($records); } else { rsort($records); }
-
- return(array_slice($records,$start,$entries));
-
+ else {
+  return array();
+ }
 
 }
 
@@ -330,32 +349,46 @@ function ldap_new_group($ldap_connection,$group_name) {
  if (isset($group_name)) {
 
   $ldap_search_query = "(cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']})";
-  $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
-  $result = ldap_get_entries($ldap_connection, $ldap_search);
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
+  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
   if ($result['count'] == 0) {
 
-    $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
-    $new_gid = $highest_gid + 1;
+   $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
+   $new_gid = $highest_gid + 1;
 
-    $add_group = ldap_add($ldap_connection,
-                          "cn=$group_name,${LDAP['group_dn']}",
-                          array(  'objectClass' => array( 'top', 'groupOfUniqueNames', 'posixGroup' ),
-                                  'cn' => $group_name,
-                                  'gidNumber' => $new_gid,
-                                  $LDAP['group_membership_attribute'] => ''
-                               )
-                         );
+   if ($LDAP['nis_schema'] == TRUE) {
+    $new_group_array=array( 'objectClass' => array('top','posixGroup'),
+                            'cn' => $group_name,
+                            'gidNumber' => $new_gid
+                          );
+   }
+   else {
+    $new_group_array=array( 'objectClass' => array('top','groupOfUniqueNames','posixGroup'),
+                            'cn' => $group_name,
+                            'gidNumber' => $new_gid,
+                            $LDAP['group_membership_attribute'] => ''
+                          );
+   }
 
-   if ($add_group) {
+   $group_dn="cn=$group_name,${LDAP['group_dn']}";
+
+   $add_group = @ ldap_add($ldap_connection, $group_dn, $new_group_array);
+
+   if (! $add_group ) {
+    $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: DEBUG add_group array: ". print_r($new_group_array,true)); }
+    error_log($this_error,0);
+   }
+   else {
     error_log("$log_prefix Added new group $group_name",0);
-    $update_gid = ldap_mod_replace($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", array( 'serialNumber' => $new_gid ));
+    $update_gid = @ ldap_mod_replace($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", array( 'serialNumber' => $new_gid ));
     if ($update_gid) {
      error_log("$log_prefix Updated cn=lastGID with $new_gid",0);
      return TRUE;
     }
     else {
-     error_log("$log_prefix Failed to update cn=lastGID",0);
+     error_log("$log_prefix Failed to update cn=lastGID: " . ldap_error($ldap_connection) ,0);
     }
    }
 
@@ -382,14 +415,14 @@ function ldap_delete_group($ldap_connection,$group_name) {
  if (isset($group_name)) {
 
   $delete_query = "cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
-  $delete = ldap_delete($ldap_connection, $delete_query);
+  $delete = @ ldap_delete($ldap_connection, $delete_query);
 
   if ($delete) {
    error_log("$log_prefix Deleted group $group_name",0);
    return TRUE;
   }
   else {
-   error_log("$log_prefix Couldn't delete group $group_name",0);
+   error_log("$log_prefix Couldn't delete group $group_name" . ldap_error($ldap_connection) ,0);
    return FALSE;
   }
 
@@ -407,8 +440,8 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
  if (isset($group_name)) {
 
   $ldap_search_query = "(cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
-  $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query , array("gidNumber"));
-  $result = ldap_get_entries($ldap_connection, $ldap_search);
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query , array("gidNumber"));
+  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
   if (isset($result[0]['gidnumber'][0]) and is_numeric($result[0]['gidnumber'][0])) {
     return $result[0]['gidnumber'][0];
@@ -430,8 +463,8 @@ function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$pas
  if (isset($first_name) and isset($last_name) and isset($username) and isset($password)) {
 
   $ldap_search_query = "(${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER) . ",${LDAP['user_dn']})";
-  $ldap_search = ldap_search($ldap_connection, "${LDAP['user_dn']}", $ldap_search_query);
-  $result = ldap_get_entries($ldap_connection, $ldap_search);
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['user_dn']}", $ldap_search_query);
+  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
   if ($result['count'] == 0) {
 
@@ -466,7 +499,7 @@ function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$pas
                          'mail' => $email
                       );
 
-      $add_account = ldap_add($ldap_connection,
+      $add_account = @ ldap_add($ldap_connection,
                           "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}",
                           $user_info
                          );
@@ -474,18 +507,18 @@ function ldap_new_account($ldap_connection,$first_name,$last_name,$username,$pas
    if ($add_account) {
     error_log("$log_prefix Created new account: $username",0);
     ldap_add_member_to_group($ldap_connection,$add_to_group,$username);
-    $update_uid = ldap_mod_replace($ldap_connection, "cn=lastUID,${LDAP['base_dn']}", array( 'serialNumber' => $new_uid ));
+    $update_uid = @ ldap_mod_replace($ldap_connection, "cn=lastUID,${LDAP['base_dn']}", array( 'serialNumber' => $new_uid ));
     if ($update_uid) {
      error_log("$log_prefix Create account; Updated cn=lastUID with $new_uid",0);
      return TRUE;
     }
     else {
-     error_log("$log_prefix Create account; Failed to update cn=lastUID",0);
+     error_log("$log_prefix Create account; Failed to update cn=lastUID: " . ldap_error($ldap_connection),0);
     }
 
    }
    else {
-    error_log("$log_prefix Create account; couldn't create the account for $username",0);
+    error_log("$log_prefix Create account; couldn't create the account for ${username}: " . ldap_error($ldap_connection),0);
    }
 
   }
@@ -513,14 +546,14 @@ function ldap_delete_account($ldap_connection,$username) {
  if (isset($username)) {
 
   $delete_query = "${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER) . ",${LDAP['user_dn']}";
-  $delete = ldap_delete($ldap_connection, $delete_query);
+  $delete = @ ldap_delete($ldap_connection, $delete_query);
 
   if ($delete) {
    error_log("$log_prefix Deleted account for $username",0);
    return TRUE;
   }
   else {
-   error_log("$log_prefix Couldn't delete account for $username",0);
+   error_log("$log_prefix Couldn't delete account for ${username}: " . ldap_error($ldap_connection),0);
    return FALSE;
   }
 
@@ -542,14 +575,14 @@ function ldap_add_member_to_group($ldap_connection,$group_name,$username) {
   }
 
   $group_update = array($LDAP['group_membership_attribute'] => $username);
-  $update = ldap_mod_add($ldap_connection,$group_dn,$group_update);
+  $update = @ ldap_mod_add($ldap_connection,$group_dn,$group_update);
 
   if ($update) {
    error_log("$log_prefix Added $username to $group_name",0);
    return TRUE;
   }
   else {
-   error_log("$log_prefix Couldn't add $username to $group_name",0);
+   error_log("$log_prefix Couldn't add $username to ${group_name}: " . ldap_error($ldap_connection),0);
    return FALSE;
   }
 
@@ -569,14 +602,14 @@ function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
   }
 
   $group_update = array($LDAP['group_membership_attribute'] => $username);
-  $update = ldap_mod_del($ldap_connection,$group_dn,$group_update);
+  $update = @ ldap_mod_del($ldap_connection,$group_dn,$group_update);
 
   if ($update) {
    error_log("$log_prefix Removed $username from $group_name",0);
    return TRUE;
   }
   else {
-   error_log("$log_prefix Couldn't remove $username from $group_name",0);
+   error_log("$log_prefix Couldn't remove $username from ${group_name}: " . ldap_error($ldap_connection),0);
    return FALSE;
   }
 
@@ -592,9 +625,9 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
  #Find DN of user
 
  $ldap_search_query = "${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER);
- $ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query);
+ $ldap_search = @ ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query);
  if ($ldap_search) {
-  $result = ldap_get_entries($ldap_connection, $ldap_search);
+  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
   if ($result["count"] == 1) {
   $this_dn=$result[0]['dn'];
   }
@@ -604,7 +637,7 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
   }
  }
  else {
-  error_log("$log_prefix Couldn't perform an LDAP search for ${LDAP['account_attribute']}=${username}",0);
+  error_log("$log_prefix Couldn't perform an LDAP search for ${LDAP['account_attribute']}=${username}: " . ldap_error($ldap_connection),0);
   return FALSE;
  }
 
@@ -613,14 +646,14 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
  $hashed_pass = ldap_hashed_password($new_password);
 
  $entries["userPassword"] = $new_password;
- $update = ldap_mod_replace($ldap_connection, $this_dn, $entries);
+ $update = @ ldap_mod_replace($ldap_connection, $this_dn, $entries);
 
  if ($update) {
-  error_log("$log_prefix Updated the password for $username");
+  error_log("$log_prefix Updated the password for $username",0);
   return TRUE;
  }
  else {
-  error_log("$log_prefix Couldn't update the password for $username");
+  error_log("$log_prefix Couldn't update the password for ${username}: " . ldap_error($ldap_connection),0);
   return TRUE;
  }
 

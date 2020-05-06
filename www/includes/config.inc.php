@@ -14,8 +14,19 @@
  $LDAP['group_ou'] = (getenv('LDAP_GROUP_OU') ? getenv('LDAP_GROUP_OU') : 'groups');
  $LDAP['user_ou'] = (getenv('LDAP_USER_OU') ? getenv('LDAP_USER_OU') : 'people');
 
- $LDAP['group_membership_attribute'] = (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') ? getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') : 'uniquemember');
- $LDAP['group_membership_uses_uid'] = ((strcasecmp(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID'),'TRUE') == 0) ? TRUE : FALSE);
+ $LDAP['nis_schema'] = ((strcasecmp(getenv('LDAP_USES_NIS_SCHEMA'),'TRUE') == 0) ? TRUE : FALSE);
+
+ if ($LDAP['nis_schema'] == TRUE) {
+  $default_membership_attribute = 'memberuid';
+  $default_group_membership_uses_uid = TRUE;
+ }
+ else {
+  $default_membership_attribute = 'uniquemember';
+  $default_group_membership_uses_uid = FALSE;
+ }
+
+ $LDAP['group_membership_attribute'] = (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') ? getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') : $default_membership_attribute);
+ $LDAP['group_membership_uses_uid'] = ((strcasecmp(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID'),'TRUE') == 0) ? TRUE : $default_group_membership_uses_uid);
 
  $LDAP['account_attribute'] = 'uid';
  $LDAP['require_starttls'] = ((strcasecmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : FALSE);
@@ -40,6 +51,8 @@
  $LDAP['user_dn'] = "ou=${LDAP['user_ou']},${LDAP['base_dn']}";
 
  ###
+
+ $log_prefix = date('Y-m-d H:i:s') . " - LDAP manager - $USER_ID - ";
 
  $errors = "";
 
@@ -69,6 +82,5 @@
  #POSIX accounts
  $min_uid = 2000;
  $min_gid = 2000;
-
 
 ?>

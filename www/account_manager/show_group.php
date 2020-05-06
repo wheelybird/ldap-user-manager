@@ -44,24 +44,11 @@ if (isset($_POST['new_group'])) {
 
 ######################################################################################
 
-$ldap_search_query="cn=" . ldap_escape($group_cn, "", LDAP_ESCAPE_FILTER);
-$ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
-$result = ldap_get_entries($ldap_connection, $ldap_search);
 
-$current_members = array();
-
-if ($result["count"] == 1) {
-
- foreach ($result[0][$LDAP['group_membership_attribute']] as $key => $value) {
-  if ($key != 'count') {
-   $this_member = preg_replace("/^.*?=(.*?),.*/", "$1", $value);
-   array_push($current_members, $this_member);
-  }
- }
-}
-
+$current_members = ldap_get_group_members($ldap_connection,$group_cn);
 $all_accounts = ldap_get_user_list($ldap_connection);
 $all_people = array();
+
 foreach ($all_accounts as $this_person => $attrs) {
  array_push($all_people, $this_person);
 }
