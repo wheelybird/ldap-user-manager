@@ -108,7 +108,7 @@ Optional:
 * `EMAIL_DOMAIN` (no default):  If set then the email address field will be automatically populated in the form of `username@email_domain`.
    
 * `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See [Username format](#username-format).
-* `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See (Username format)[#username-format).
+* `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See [Username format](#username-format).
    
 * `LOGIN_TIMEOUT_MINS` (default: 10 minutes):  How long before an idle session will be timed out.
    
