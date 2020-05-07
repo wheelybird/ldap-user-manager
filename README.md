@@ -51,8 +51,9 @@ docker run \
            -e "LDAP_ADMINS_GROUP=admins" \
            -e "LDAP_ADMIN_BIND_DN=cn=admin,dc=example,dc=com" \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
+           -e "LDAP_USES_NIS_SCHEMA=true" \
            -e "EMAIL_DOMAIN=example.com"\
-           wheelybird/ldap-user-manager
+           wheelybird/ldap-user-manager:v1.0
 ```
 Now go to https://lum.example.com/setup.
 
@@ -65,11 +66,12 @@ Configuration is via environmental variables.  Please bear the following in mind
  * This tool needs to bind to LDAP as a user with permissions to modify everything under the base DN.
  * This interface is designed to work with a fresh LDAP server and should be used with populated LDAP directories with caution and at your own risk.
 
-###When using **osixia/openldap**
+LDAP_USES_NIS_SCHEMA
+----
 
-By default the user manager will expect that the LDAP server is using the **RFC2307BIS** schema.  Unfortunately by default the **osixia/openldap** image uses the old NIS schema.  The user manager will work with either, but RFC2307BIS is recommended as it allows you to use **memberOf** searches.  You can enable RFC2307BIS in **osixia/openldap** by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.   
+By default this application will expect the LDAP server to be using the **RFC2307BIS** schema.  OpenLDAP (including the **osixia/openldap** image) uses the old NIS schema as its default schema.  The user manager will work with either, but RFC2307BIS is recommended as it allows you to use **memberOf** searches.  You can enable RFC2307BIS in **osixia/openldap** by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.   
 
-If you prefer not to use RFC2307BIS then set `LDAP_USES_NIS_SCHEMA` to `TRUE`.  This will create groups solely as the **posixGroup** objectclass, and the default for `LDAP_GROUP_MEMBERSHIP_USES_UID` will `TRUE`.
+If you prefer not to use RFC2307BIS then set `LDAP_USES_NIS_SCHEMA` to `TRUE`.  This will create groups solely as the **posixGroup** objectclass, and the default for `LDAP_GROUP_MEMBERSHIP_USES_UID` will `TRUE`.  The application is set to expect the BIS schema by default for backwards-compatibility with older releases.
 
 
 
@@ -77,8 +79,8 @@ If you prefer not to use RFC2307BIS then set `LDAP_USES_NIS_SCHEMA` to `TRUE`.  
 Mandatory:
 ----
 
-* `LDAP_URI`:  The URI of the LDAP server.  e.g. *ldap://ldap.example.com* or *ldaps://ldap.example.com*
-* `LDAP_BASE_DN`:  The base DN for your organisation.  e.g. *dc=example,dc=com`
+* `LDAP_URI`:  The URI of the LDAP server.  e.g. ldap://ldap.example.com or ldaps://ldap.example.com
+* `LDAP_BASE_DN`:  The base DN for your organisation.  e.g. `dc=example,dc=com`
 * `LDAP_ADMIN_BIND_DN`: The DN for the user with permission to modify all records under `LDAP_BASE_DN`. e.g. `cn=admin,dc=example,dc=com`
 * `LDAP_ADMIN_BIND_PWD`: The password for `LDAP_ADMIN_BIND_DN`
 * `LDAP_ADMINS_GROUP`: The name of the group used to define accounts that can use this tool to manage LDAP accounts.  e.g. `admins`
@@ -91,10 +93,10 @@ Optional:
    
 * `LDAP_USER_OU` (default: *people*):  The name of the OU used to store user accounts (without the base DN appended).
    
-* `LDAP_USES_NIS_SCHEMA` (default: *FALSE*):  If you use the NIS schema instead of the (preferable) RFC2307BIS schema, set this to `TRUE`.  See [When using **osixia/openldap**](#When using **osixia/openldap**) for more information.
+* `LDAP_USES_NIS_SCHEMA` (default: *FALSE*):  If you use the NIS schema instead of the (preferable) RFC2307BIS schema, set this to `TRUE`.  See [LDAP_USES_NIS_SCHEMA](#LDAP_USES_NIS_SCHEMA) for more information.
    
 * `LDAP_GROUP_OU` (default: *groups*):  The name of the OU used to store groups (without the base DN appended).
-* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user to a group.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `memberUID', otherwise it's `uniqueMember`.  Explicitly setting this variable will override the default.
+* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user to a group.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `memberUID`, otherwise it's `uniqueMember`.  Explicitly setting this variable will override the default.
 * `LDAP_GROUP_MEMBERSHIP_USES_UID`(default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `TRUE', otherwise it's `FALSE`.  Explicitly setting this variable will override the default.
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
@@ -103,10 +105,10 @@ Optional:
    
 * `DEFAULT_USER_GROUP` (default: *everybody*):  The group that new accounts are automatically added to when created.  *NOTE*: If this group doesn't exist then a group is created with the same name as the username and the user is added to that group.
 * `DEFAULT_USER_SHELL` (default: */bin/bash*):  The shell that will be launched when the user logs into a server.
-* `EMAIL_DOMAIN` (no default):  If set then the email address field will be automatically populated in the form of `username@email_domain`).
+* `EMAIL_DOMAIN` (no default):  If set then the email address field will be automatically populated in the form of `username@email_domain`.
    
-* `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See the _Usernames_ section below.
-* `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See the _Usernames_ section below.
+* `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See [Username format](#Username format).
+* `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See (Username format)[#Username format).
    
 * `LOGIN_TIMEOUT_MINS` (default: 10 minutes):  How long before an idle session will be timed out.
    
