@@ -52,59 +52,88 @@ spec:
             - name: LDAP_USER_OU
               value: {{ .Values.ldap.userOU | quote }}
             {{- end }}
+
             {{- if .Values.ldap.groupOU }}
             - name: LDAP_GROUP_OU
               value: {{ .Values.ldap.groupOU | quote }}
             {{- end }}
+
             {{- if .Values.ldap.groupMemAttr }}
             - name: LDAP_GROUP_MEMBERSHIP_ATTRIBUTE
               value: {{ .Values.ldap.groupMemAttr | quote }}
             {{- end }}
+
             {{- if .Values.ldap.groupMemUID }}
             - name: LDAP_GROUP_MEMBERSHIP_USES_UID
               value: {{ .Values.ldap.groupMemUID | quote }}
             {{- end }}
+
             {{- if .Values.ldap.defaultGroup }}
             - name: DEFAULT_USER_GROUP
               value: {{ .Values.ldap.defaultGroup | quote }}
             {{- end }}
+
             {{- if .Values.ldap.userShell }}
             - name: DEFAULT_USER_SHELL
               value: {{ .Values.ldap.userShell | quote }}
             {{- end }}
+
             {{- if .Values.ldap.emailDomain }}
             - name: EMAIL_DOMAIN
               value: {{ .Values.ldap.emailDomain | quote }}
             {{- end }}
+
             {{- if .Values.ldap.usernameFormat }}
             - name: USERNAME_FORMAT
               value: {{ .Values.ldap.usernameFormat | quote }}
             {{- end }}
+
             {{- if .Values.ldap.usernameRegex }}
             - name: USERNAME_REGEX
               value: {{ .Values.ldap.usernameRegex | quote }}
             {{- end }}
+
             {{- if .Values.ldap.loginTimeout }}
             - name: LOGIN_TIMEOUT_MINS
               value: {{ .Values.ldap.loginTimeout | quote }}
             {{- end }}
-            {{- if .Values.ldap.startTLS }}
+
+            {{- if .Values.ldap.nisSchema }}
+            - name: LDAP_USES_NIS_SCHEMA
+              value: {{ .Values.ldap.nisSchema | quote }}
+            {{- end }}
+
+            {{- if .Values.cert.startTLS }}
             - name: LDAP_REQUIRE_STARTTLS
               value: {{ .Values.cert.startTLS | quote }}
             {{- end }}
+
             {{- if .Values.ldap.cacert }}
             - name: LDAP_TLS_CACERT
               value: {{ .Values.cert.cacert | quote }}
             {{- end }}
+
             {{- if .Values.ldap.hostname }}
             - name: SERVER_HOSTNAME
               value: {{ .Values.service.hostname | quote }}
             {{- end }}
+
             {{- if .Values.ldap.noHttps }}
             - name: NO_HTTPS
               value: {{ .Values.service.noHttps | quote }}
             {{- end }}
+
             {{- if .Values.ldap.siteName }}
             - name: SITE_NAME
               value: {{ .Values.service.siteName | quote }}
+            {{- end }}
+
+            {{- if .Values.service.ldapDebug }}
+            - name: LDAP_DEBUG
+              value: {{ .Values.service.ldapDebug | quote }}
+            {{- end }}
+
+            {{- if .Values.service.sessionDebug }}
+            - name: SESSION_DEBUG
+              value: {{ .Values.service.sessionDebug | quote }}
             {{- end }}

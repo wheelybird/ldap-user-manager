@@ -1,13 +1,15 @@
 image:
   pullPolicy: "IfNotPresent"
-  repository: "wheelybird/ldap-user-manager"
+  repository: "wheelybird/ldap-user-manager:v1.0"
 
 service:
   httpPort: 5556
   httpsPort: 5557
   # Optional:
   # The hostname that this interface will be served from.
-  # hostname: ""
+  hostname: "lum.mycompany.com"
+  ldapDebug: "TRUE"
+  sessionDebug: "TRUE"
 
   # If you set this to TRUE then the server will run in HTTP mode, without any encryption. This is insecure and should only be used for testing.
   noHttps: "FALSE"
@@ -37,12 +39,12 @@ ldap:
 
   # Optional params
   # The name of the OU used to store user accounts (without the base DN appended).
-  userOU: "ou=people,dc=example,dc=org"
+  # userOU: "people"
   #  The name of the OU used to store groups (without the base DN appended).
-  groupOU: "ou=groups,dc=example,dc=org"
+  # groupOU: "groups"
 
   # The attribute used when adding a user to a group.
-  groupMemAttr: "uniqueid"
+  # groupMemAttr: "memberUID"
 
   # If TRUE then the entry for a member of a group will be just the username. Otherwise it's the member's full DN.
   # groupMemUID: ""
@@ -64,6 +66,7 @@ ldap:
   # How long before an idle session will be timed out.
 
   loginTimeout: "30"
+  nisSchema: "TRUE"
 
 cert:
   # Optional
