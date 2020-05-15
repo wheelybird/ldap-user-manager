@@ -97,7 +97,7 @@ Optional:
    
 * `LDAP_GROUP_OU` (default: *groups*):  The name of the OU used to store groups (without the base DN appended).
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user to a group.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `memberUID`, otherwise it's `uniqueMember`.  Explicitly setting this variable will override the default.
-* `LDAP_GROUP_MEMBERSHIP_USES_UID`(default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `TRUE', otherwise it's `FALSE`.  Explicitly setting this variable will override the default.
+* `LDAP_GROUP_MEMBERSHIP_USES_UID`(default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `TRUE`, otherwise it's `FALSE`.  Explicitly setting this variable will override the default.
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
    
