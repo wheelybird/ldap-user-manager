@@ -145,7 +145,35 @@ function ldap_setup_auth($ldap_connection, $password) {
 
 function ldap_hashed_password($password) {
 
- $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
+ global $PASSWORD_HASH;
+
+ $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+ $salt = substr(str_shuffle($permitted_chars), 0, 64);
+
+ switch (strtoupper($PASSWORD_HASH)) {
+
+  case 'MD5':
+   $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
+   break;
+
+  case 'SMD5':
+   $hashed_pwd = '{SMD5}' . base64_encode(md5($password.$salt,TRUE) . $salt);
+   break;
+
+  case 'SHA':
+   $hashed_pwd = '{SHA}' . base64_encode(sha1($password,TRUE));
+   break;
+
+  case 'SSHA':
+   $hashed_pwd = '{SSHA}' . base64_encode(sha1($password.$salt,TRUE) . $salt);
+   break;
+
+  case 'CRYPT':
+   $hashed_pwd = '{crypt}' . crypt($password, $salt);
+   break;
+
+ }
+
  return $hashed_pwd;
 
 }
@@ -166,7 +194,7 @@ function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",
 
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['user_dn']}", $this_filter, $fields);
  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
- if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} users for ${LDAP['user_dn']} when using this filter: $this_filter",0); }
+ if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: LDAP returned ${result['count']} users for ${LDAP['user_dn']} when using this filter: $this_filter",0); }
 
  $records = array();
  foreach ($result as $record) {
@@ -251,7 +279,7 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
  $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter);
 
  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
- if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
+ if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
 
  $records = array();
  foreach ($result as $record) {
@@ -292,13 +320,13 @@ function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=N
    if ($key !== 'count' and !empty($value)) {
     $this_member = preg_replace("/^.*?=(.*?),.*/", "$1", $value);
     array_push($records, $this_member);
-    if ($LDAP_DEBUG == TRUE) { error_log("${value} is a member",0); }
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: ${value} is a member",0); }
    }
 
   }
 
   $actual_result_count = count($records);
-  if ($LDAP_DEBUG == TRUE) { error_log("LDAP returned $actual_result_count members of ${group_name} when using this search: $ldap_search_query and this filter: ${LDAP['group_membership_attribute']}",0); }
+  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: LDAP returned $actual_result_count members of ${group_name} when using this search: $ldap_search_query and this filter: ${LDAP['group_membership_attribute']}",0); }
 
   if ($actual_result_count > 0) {
    if ($sort == "asc") { sort($records); } else { rsort($records); }

@@ -9,7 +9,7 @@ set_page_access("user");
 
 if (isset($_POST['change_password'])) {
 
- if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $not_strong_enough = 1; }
+ if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $not_strong_enough = 1; }
  if (preg_match("/\"|'/",$_POST['password'])) { $invalid_chars = 1; }
  if ($_POST['password'] != $_POST['password_match']) { $mismatched = 1; }
 
@@ -32,7 +32,7 @@ if (isset($_POST['change_password'])) {
 
 render_header('Change your LDAP password');
 
-if (isset($not_strong_enough)) { ?>
+if (isset($not_strong_enough)) {  ?>
 <div class="alert alert-warning">
  <p class="text-center">The password wasn't strong enough.</p>
 </div>

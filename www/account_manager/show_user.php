@@ -82,7 +82,7 @@ if ($ldap_search) {
     
     $password = $_POST['password'];
     
-    if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $weak_password = TRUE; }
+    if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
     if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
     if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
     if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }

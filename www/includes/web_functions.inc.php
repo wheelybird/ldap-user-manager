@@ -52,8 +52,7 @@ function set_passkey_cookie($user_id,$is_admin) {
   $IS_ADMIN = TRUE;
  }
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
- file_put_contents("/tmp/$filename","$passkey:$admin_val:$this_time");
-# setcookie('orf_cookie', "$user_id:$passkey", $this_time+(60 * $LOGIN_TIMEOUT_MINS), '/', $_SERVER["HTTP_HOST"]);
+ @ file_put_contents("/tmp/$filename","$passkey:$admin_val:$this_time");
  setcookie('orf_cookie', "$user_id:$passkey", $this_time+(60 * $LOGIN_TIMEOUT_MINS), '/', '', '', TRUE);
  if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: user $user_id validated (IS_ADMIN=${IS_ADMIN}), sent orf_cookie to the browser.",0); }
  $VALIDATED = TRUE;
@@ -171,11 +170,10 @@ function log_out($method='normal') {
 
  global $USER_ID;
 
-#setcookie('orf_cookie', "", time()-20000 , "/", $_SERVER["HTTP_HOST"], 0);
  setcookie('orf_cookie', "", time()-20000, '/', '', '', TRUE);
 
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $USER_ID);
- unlink("/tmp/$filename");
+ @ unlink("/tmp/$filename");
 
  if ($method == 'auto') { $options = "?logged_out"; } else { $options = ""; }
  header("Location:  //${_SERVER["HTTP_HOST"]}/index.php$options\n\n");
