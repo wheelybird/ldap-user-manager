@@ -53,7 +53,7 @@ docker run \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
            -e "LDAP_USES_NIS_SCHEMA=true" \
            -e "EMAIL_DOMAIN=example.com"\
-           wheelybird/ldap-user-manager:v1.0
+           wheelybird/ldap-user-manager:v1.1
 ```
 Now go to https://lum.example.com/setup.
 
