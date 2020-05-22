@@ -46,7 +46,7 @@ if (isset($_POST['create_account'])) {
  if ($_POST['email']) { $email = stripslashes($_POST['email']); }
 
 
- if (!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) { $weak_password = TRUE; }
+ if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
  if (isset($email) and !is_valid_email($email)) { $invalid_email = TRUE; }
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
  if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }

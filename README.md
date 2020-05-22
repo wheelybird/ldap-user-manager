@@ -109,6 +109,9 @@ Optional:
    
 * `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See [Username format](#username-format).
 * `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See [Username format](#username-format).
+
+* `PASSWORD_HASH` (default: *SSHA*):  Select which hashing method which will be used to store passwords in LDAP.  Options are `MD5`, `SHA`, `SMD5`, `SSHA` or `CRYPT`.
+* `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
    
 * `LOGIN_TIMEOUT_MINS` (default: 10 minutes):  How long before an idle session will be timed out.
    

@@ -32,7 +32,8 @@
  $LDAP['require_starttls'] = ((strcasecmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : FALSE);
 
  $DEFAULT_USER_GROUP = (getenv('DEFAULT_USER_GROUP') ? getenv('DEFAULT_USER_GROUP') : 'everybody');
- $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_SHELL') : '/bin/bash');
+ $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_USER_SHELL') : '/bin/bash');
+
  $EMAIL_DOMAIN = (getenv('EMAIL_DOMAIN') ? getenv('EMAIL_DOMAIN') : Null);
 
  $LOGIN_TIMEOUT_MINS = (getenv('SESSION_TIMEOUT') ? getenv('SESSION_TIMEOUT') : 10);
@@ -41,6 +42,11 @@
  $USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
  $USERNAME_REGEX = '^[a-z][a-zA-Z0-9\._-]{3,32}$';
  #We'll use the username regex for groups too.
+
+ $PASSWORD_HASH = (getenv('PASSWORD_HASH') ? getenv('PASSWORD_HASH') : 'SSHA');
+ if ( ! in_array($PASSWORD_HASH, array('MD5','SMD5','SHA','SSHA','CRYPT'))) { $PASSWORD_HASH = 'SSHA'; }
+
+ $ACCEPT_WEAK_PASSWORDS = ((strcasecmp(getenv('ACCEPT_WEAK_PASSWORDS'),'TRUE') == 0) ? TRUE : FALSE);
 
  $LDAP_DEBUG = ((strcasecmp(getenv('LDAP_DEBUG'),'TRUE') == 0) ? TRUE : FALSE);
  $SESSION_DEBUG = ((strcasecmp(getenv('SESSION_DEBUG'),'TRUE') == 0) ? TRUE : FALSE);
