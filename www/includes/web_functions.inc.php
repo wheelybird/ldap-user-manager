@@ -326,7 +326,7 @@ function set_page_access($level) {
 
 function is_valid_email($email) {
 
- return (!preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $email)) ? FALSE : TRUE;
+ return (!filter_var($email, FILTER_VALIDATE_EMAIL)) ? FALSE : TRUE;
 
 }
 
