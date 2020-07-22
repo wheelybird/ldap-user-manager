@@ -160,7 +160,7 @@ function generate_salt($length) {
 
 function ldap_hashed_password($password) {
 
- global $PASSWORD_HASH;
+ global $PASSWORD_HASH, $log_prefix;
  
  switch (strtoupper($PASSWORD_HASH)) {
 
@@ -223,11 +223,11 @@ function ldap_hashed_password($password) {
 
   case 'CRYPT':
     $salt = generate_salt(2);
-    $hashed_pwd = '{crypt}' . crypt($password, $salt);
+    $hashed_pwd = '{CRYPT}' . crypt($password, $salt);
     break;
   
   default:
-    trigger_error("Unknown or unsupported hash type $PASSWORD_HASH, falling back to SHA256CRYPT.", E_USER_WARNING);
+    error_log("$log_prefix: Unknown or unsupported hash type $PASSWORD_HASH, falling back to SHA512CRYPT.", E_USER_WARNING);
   case 'SHA512CRYPT':
     if (!defined('CRYPT_SHA512') || CRYPT_SHA512 == 0) {
       throw new RuntimeException('Your system does not support sha512crypt encryptions');
