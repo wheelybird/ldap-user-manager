@@ -205,6 +205,14 @@ function ldap_hashed_password($password) {
 
     $hashed_pwd = '{CRYPT}' . crypt($password, '$5$' . generate_salt(8));
     break;
+  
+  case 'SHA512CRYPT':
+    if (!defined('CRYPT_SHA512') || CRYPT_SHA512 == 0) {
+      throw new RuntimeException('Your system does not support sha512crypt encryptions');
+    }
+
+    $hashed_pwd = '{CRYPT}' . crypt($password, '$6$' . generate_salt(8));
+    break;
 
   case 'MD5':
    $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
