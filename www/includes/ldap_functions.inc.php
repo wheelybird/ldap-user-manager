@@ -182,6 +182,14 @@ function ldap_hashed_password($password) {
     $hashed_pwd = '{CRYPT}' .  crypt($password, '$2a$12$' . random_salt(13));
     break;
   
+  case 'EXT_DES':
+    if (!defined('CRYPT_EXT_DES') || CRYPT_EXT_DES == 0) {
+      throw new RuntimeException('Your system does not support extended DES encryptions');
+    }
+
+    $hashed_pwd = '{CRYPT}' .  crypt($password, '_' . random_salt(8));
+    break;
+  
   case 'MD5':
    $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
    break;
