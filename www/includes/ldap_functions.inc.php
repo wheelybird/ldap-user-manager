@@ -162,9 +162,6 @@ function ldap_hashed_password($password) {
 
  global $PASSWORD_HASH;
 
- $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
- $salt = substr(str_shuffle($permitted_chars), 0, 64);
-
  switch (strtoupper($PASSWORD_HASH)) {
 
   case 'CLEAR':
@@ -215,24 +212,27 @@ function ldap_hashed_password($password) {
     break;
 
   case 'MD5':
-   $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
-   break;
+    $hashed_pwd = '{MD5}' . base64_encode(md5($password, TRUE));
+    break;
 
   case 'SMD5':
-   $hashed_pwd = '{SMD5}' . base64_encode(md5($password.$salt,TRUE) . $salt);
-   break;
+    $salt = generate_salt(8);
+    $hashed_pwd = '{SMD5}' . base64_encode(md5($password . $salt, TRUE) . $salt);
+    break;
 
   case 'SHA':
-   $hashed_pwd = '{SHA}' . base64_encode(sha1($password,TRUE));
-   break;
+    $hashed_pwd = '{SHA}' . base64_encode(sha1($password, TRUE));
+    break;
 
   case 'SSHA':
-   $hashed_pwd = '{SSHA}' . base64_encode(sha1($password.$salt,TRUE) . $salt);
-   break;
+    $salt = generate_salt(8);
+    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
+    break;
 
   case 'CRYPT':
-   $hashed_pwd = '{crypt}' . crypt($password, $salt);
-   break;
+    $salt = generate_salt(2);
+    $hashed_pwd = '{crypt}' . crypt($password, $salt);
+    break;
 
  }
 
