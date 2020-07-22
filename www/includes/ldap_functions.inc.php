@@ -198,6 +198,14 @@ function ldap_hashed_password($password) {
     $hashed_pwd = '{CRYPT}' .  crypt($password, '$1$' . generate_salt(9));
     break;
   
+  case 'SHA256CRYPT':
+    if (!defined('CRYPT_SHA256') || CRYPT_SHA256 == 0) {
+      throw new RuntimeException('Your system does not support sha256crypt encryptions');
+    }
+
+    $hashed_pwd = '{CRYPT}' . crypt($password, '$5$' . generate_salt(8));
+    break;
+
   case 'MD5':
    $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
    break;
