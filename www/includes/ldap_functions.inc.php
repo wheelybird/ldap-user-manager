@@ -140,6 +140,21 @@ function ldap_setup_auth($ldap_connection, $password) {
 }
 
 
+#################################
+
+function generate_salt($length) {
+	$permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./';
+  
+	mt_srand((double)microtime() * 1000000);
+
+  $salt = '';
+	while (strlen($salt) < $length) {
+    $salt .= substr($permitted_chars, (rand() % strlen($permitted_chars)), 1);
+  }
+
+	return $salt;
+}
+
 
 ##################################
 
