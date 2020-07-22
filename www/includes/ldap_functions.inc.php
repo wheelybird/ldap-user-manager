@@ -161,12 +161,12 @@ function generate_salt($length) {
 function ldap_hashed_password($password) {
 
  global $PASSWORD_HASH;
-
+ 
  switch (strtoupper($PASSWORD_HASH)) {
 
   case 'CLEAR':
-    trigger_error('Saving password in cleartext. This is extremely bad pratice ' . 
-                  'and should never ever be done in a production environment.', E_USER_WARNING);
+    error_log("$log_prefix: Saving password in cleartext. This is extremely bad pratice " . 
+              'and should never ever be done in a production environment.');
     
     $hashed_pwd = $password;
     break;
@@ -202,14 +202,6 @@ function ldap_hashed_password($password) {
 
     $hashed_pwd = '{CRYPT}' . crypt($password, '$5$' . generate_salt(8));
     break;
-  
-  case 'SHA512CRYPT':
-    if (!defined('CRYPT_SHA512') || CRYPT_SHA512 == 0) {
-      throw new RuntimeException('Your system does not support sha512crypt encryptions');
-    }
-
-    $hashed_pwd = '{CRYPT}' . crypt($password, '$6$' . generate_salt(8));
-    break;
 
   case 'MD5':
     $hashed_pwd = '{MD5}' . base64_encode(md5($password, TRUE));
@@ -223,6 +215,11 @@ function ldap_hashed_password($password) {
   case 'SHA':
     $hashed_pwd = '{SHA}' . base64_encode(sha1($password, TRUE));
     break;
+  
+  case 'SSHA':
+    $salt = generate_salt(8);
+    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
+    break;
 
   case 'CRYPT':
     $salt = generate_salt(2);
@@ -230,14 +227,17 @@ function ldap_hashed_password($password) {
     break;
   
   default:
-    trigger_error("Unknown or unsupported hash type $PASSWORD_HASH, falling back to SSHA.", E_USER_WARNING);
-  case 'SSHA':
-    $salt = generate_salt(8);
-    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
+    trigger_error("Unknown or unsupported hash type $PASSWORD_HASH, falling back to SHA256CRYPT.", E_USER_WARNING);
+  case 'SHA512CRYPT':
+    if (!defined('CRYPT_SHA512') || CRYPT_SHA512 == 0) {
+      throw new RuntimeException('Your system does not support sha512crypt encryptions');
+    }
+
+    $hashed_pwd = '{CRYPT}' . crypt($password, '$6$' . generate_salt(8));
     break;
 
  }
-
+ 
  return $hashed_pwd;
 
 }
@@ -733,11 +733,7 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
   return FALSE;
  }
 
- #Hash password
-
- $hashed_pass = ldap_hashed_password($new_password);
-
- $entries["userPassword"] = $new_password;
+ $entries["userPassword"] = ldap_hashed_password($new_password);
  $update = @ ldap_mod_replace($ldap_connection, $this_dn, $entries);
 
  if ($update) {
