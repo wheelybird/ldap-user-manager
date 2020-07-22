@@ -167,6 +167,13 @@ function ldap_hashed_password($password) {
 
  switch (strtoupper($PASSWORD_HASH)) {
 
+  case 'CLEAR':
+    trigger_error('Saving password in cleartext. This is extremely bad pratice ' . 
+                  'and should never ever be done in a production environment.', E_USER_WARNING);
+    
+    $hashed_pwd = $password;
+    break;
+  
   case 'MD5':
    $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
    break;
