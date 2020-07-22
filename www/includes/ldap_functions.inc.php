@@ -227,7 +227,7 @@ function ldap_hashed_password($password) {
     break;
   
   default:
-    error_log("$log_prefix: Unknown or unsupported hash type $PASSWORD_HASH, falling back to SHA512CRYPT.", E_USER_WARNING);
+    error_log("$log_prefix: Unknown or unsupported hash type $PASSWORD_HASH, falling back to SHA512CRYPT", E_USER_WARNING);
   case 'SHA512CRYPT':
     if (!defined('CRYPT_SHA512') || CRYPT_SHA512 == 0) {
       throw new RuntimeException('Your system does not support sha512crypt encryptions');
