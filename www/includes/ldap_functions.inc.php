@@ -224,14 +224,16 @@ function ldap_hashed_password($password) {
     $hashed_pwd = '{SHA}' . base64_encode(sha1($password, TRUE));
     break;
 
-  case 'SSHA':
-    $salt = generate_salt(8);
-    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
-    break;
-
   case 'CRYPT':
     $salt = generate_salt(2);
     $hashed_pwd = '{crypt}' . crypt($password, $salt);
+    break;
+  
+  default:
+    trigger_error("Unknown or unsupported hash type $PASSWORD_HASH, falling back to SSHA.", E_USER_WARNING);
+  case 'SSHA':
+    $salt = generate_salt(8);
+    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
     break;
 
  }
