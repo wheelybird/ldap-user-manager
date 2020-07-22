@@ -179,7 +179,7 @@ function ldap_hashed_password($password) {
       throw new RuntimeException('Your system does not support blowfish encryptions');
     }
     
-    $hashed_pwd = '{CRYPT}' .  crypt($password, '$2a$12$' . random_salt(13));
+    $hashed_pwd = '{CRYPT}' .  crypt($password, '$2a$12$' . generate_salt(13));
     break;
   
   case 'EXT_DES':
@@ -187,7 +187,7 @@ function ldap_hashed_password($password) {
       throw new RuntimeException('Your system does not support extended DES encryptions');
     }
 
-    $hashed_pwd = '{CRYPT}' .  crypt($password, '_' . random_salt(8));
+    $hashed_pwd = '{CRYPT}' .  crypt($password, '_' . generate_salt(8));
     break;
   
   case 'MD5CRYPT':
@@ -195,7 +195,7 @@ function ldap_hashed_password($password) {
       throw new RuntimeException('Your system does not support md5crypt encryptions');
     }
 
-    $hashed_pwd = '{CRYPT}' .  crypt($password, '$1$' . random_salt(9));
+    $hashed_pwd = '{CRYPT}' .  crypt($password, '$1$' . generate_salt(9));
     break;
   
   case 'MD5':
