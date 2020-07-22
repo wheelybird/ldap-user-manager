@@ -174,6 +174,14 @@ function ldap_hashed_password($password) {
     $hashed_pwd = $password;
     break;
   
+  case 'BLOWFISH':
+    if (!defined('CRYPT_BLOWFISH') || CRYPT_BLOWFISH == 0) {
+      throw new RuntimeException('Your system does not support blowfish encryptions');
+    }
+    
+    $hashed_pwd = '{CRYPT}' .  crypt($password, '$2a$12$' . random_salt(13));
+    break;
+  
   case 'MD5':
    $hashed_pwd = '{MD5}' . base64_encode(md5($password,TRUE));
    break;
