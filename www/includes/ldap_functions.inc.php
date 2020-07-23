@@ -215,19 +215,12 @@ function ldap_hashed_password($password) {
   case 'SHA':
     $hashed_pwd = '{SHA}' . base64_encode(sha1($password, TRUE));
     break;
-  
-  case 'SSHA':
-    $salt = generate_salt(8);
-    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
-    break;
 
   case 'CRYPT':
     $salt = generate_salt(2);
     $hashed_pwd = '{CRYPT}' . crypt($password, $salt);
     break;
   
-  default:
-    error_log("$log_prefix: Unknown or unsupported hash type $PASSWORD_HASH, falling back to SHA512CRYPT", E_USER_WARNING);
   case 'SHA512CRYPT':
     if (!defined('CRYPT_SHA512') || CRYPT_SHA512 == 0) {
       throw new RuntimeException('Your system does not support sha512crypt encryptions');
@@ -236,6 +229,12 @@ function ldap_hashed_password($password) {
     $hashed_pwd = '{CRYPT}' . crypt($password, '$6$' . generate_salt(8));
     break;
 
+  default:
+    error_log("$log_prefix: Unknown or unsupported hash type $PASSWORD_HASH, falling back to SSHA", E_USER_WARNING);
+  case 'SSHA':
+    $salt = generate_salt(8);
+    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
+    break;
  }
  
  return $hashed_pwd;
