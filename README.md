@@ -53,9 +53,9 @@ docker run \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
            -e "LDAP_USES_NIS_SCHEMA=true" \
            -e "EMAIL_DOMAIN=example.com"\
-           wheelybird/ldap-user-manager:v1.1
+           wheelybird/ldap-user-manager:v1.2
 ```
-Now go to https://lum.example.com/setup.
+Change the variable values to suit your environment.  You might need to change `LDAP_USES_NIS_SCHEMA` if you're [using the BIS schema](#LDAP_USES_NIS_SCHEMA). Now go to https://lum.example.com/setup.
 
 
 Configuration
@@ -110,7 +110,7 @@ Optional:
 * `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See [Username format](#username-format).
 * `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See [Username format](#username-format).
 
-* `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are `CLEAR`, `BLOWFISH`, `EXT_DES`, `MD5CRYPT`, `SHA256CRYPT`, `SHA512CRYPT`, `MD5`, `SHA`, `SMD5`, `SSHA` or `CRYPT`.  Cleartext passwords should NEVER be used in any situation outside of a test. On a invalid hash type, a warning is thrown and `SSHA` is used as a fallback. It is strongly encouraged to use `SHA256CRYPT` or stronger and to explicitly set this instead of relying on the fallback.
+* `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are (in order of precedence) `SHA512CRYPT`, `SHA256CRYPT`, `BLOWFISH`, `EXT_DES`, `MD5CRYPT`, `SSHA`, `SHA`, `SMD5`, `MD5`, `CRYPT` & `CLEAR`.  If your chosen method isn't available on your system then the strongest available method will be automatically selected - `SSHA` is the strongest method guaranteed to be available.  Cleartext passwords should NEVER be used in any situation outside of a test.
 * `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
    
 * `LOGIN_TIMEOUT_MINS` (default: 10 minutes):  How long before an idle session will be timed out.

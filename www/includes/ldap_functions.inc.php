@@ -143,16 +143,18 @@ function ldap_setup_auth($ldap_connection, $password) {
 #################################
 
 function generate_salt($length) {
-	$permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./';
-  
-	mt_srand((double)microtime() * 1000000);
 
-  $salt = '';
-	while (strlen($salt) < $length) {
+ $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./';
+
+ mt_srand((double)microtime() * 1000000);
+
+ $salt = '';
+ while (strlen($salt) < $length) {
     $salt .= substr($permitted_chars, (rand() % strlen($permitted_chars)), 1);
   }
 
-	return $salt;
+ return $salt;
+
 }
 
 
@@ -161,46 +163,71 @@ function generate_salt($length) {
 function ldap_hashed_password($password) {
 
  global $PASSWORD_HASH, $log_prefix;
- 
- switch (strtoupper($PASSWORD_HASH)) {
 
-  case 'CLEAR':
-    error_log("$log_prefix: Saving password in cleartext. This is extremely bad pratice " . 
-              'and should never ever be done in a production environment.');
-    
-    $hashed_pwd = $password;
-    break;
-  
-  case 'BLOWFISH':
-    if (!defined('CRYPT_BLOWFISH') || CRYPT_BLOWFISH == 0) {
-      throw new RuntimeException('Your system does not support blowfish encryptions');
-    }
-    
-    $hashed_pwd = '{CRYPT}' .  crypt($password, '$2a$12$' . generate_salt(13));
-    break;
-  
-  case 'EXT_DES':
-    if (!defined('CRYPT_EXT_DES') || CRYPT_EXT_DES == 0) {
-      throw new RuntimeException('Your system does not support extended DES encryptions');
-    }
+ $check_algos = array (
+                       "SHA512CRYPT" => "CRYPT_SHA512",
+                       "SHA256CRYPT" => "CRYPT_SHA256",
+                       "BLOWFISH"    => "CRYPT_BLOWFISH",
+                       "EXT_DES"     => "CRYPT_EXT_DES",
+                       "MD5CRYPT"    => "CRYPT_MD5"
+                      );
 
-    $hashed_pwd = '{CRYPT}' .  crypt($password, '_' . generate_salt(8));
-    break;
-  
-  case 'MD5CRYPT':
-    if (!defined('CRYPT_MD5') || CRYPT_MD5 == 0) {
-      throw new RuntimeException('Your system does not support md5crypt encryptions');
-    }
+ $remaining_algos = array (
+                            "SSHA",
+                            "SHA",
+                            "SMD5",
+                            "MD5",
+                            "CRYPT",
+                            "CLEAR"
+                          );
 
-    $hashed_pwd = '{CRYPT}' .  crypt($password, '$1$' . generate_salt(9));
+ $available_algos = array();
+
+ foreach ($check_algos as $algo_name => $algo_function) {
+   if (defined($algo_function) and constant($algo_function) != 0) {
+     array_push($available_algos, $algo_name);
+     $count++;
+   }
+   else {
+     error_log("$log_prefix password hashing - the system doesn't support ${algo_name}");
+   }
+ }
+ $available_algos = array_merge($available_algos, $remaining_algos);
+
+ if (isset($PASSWORD_HASH)) {
+   if (!in_array($PASSWORD_HASH, $available_algos)) {
+     $hash_algo = $available_algos[0];
+     error_log("$log_prefix password hashing - the chosen hash method ($PASSWORD_HASH) wasn't available");
+   }
+   else {
+     $hash_algo = $PASSWORD_HASH;
+   }
+ }
+ else {
+   $hash_algo = $available_algos[0];
+ }
+ error_log("$log_prefix password hashing - using '${hash_algo}'");
+
+ switch ($hash_algo) {
+
+  case 'SHA512CRYPT':
+    $hashed_pwd = '{CRYPT}' . crypt($password, '$6$' . generate_salt(8));
     break;
-  
+
   case 'SHA256CRYPT':
-    if (!defined('CRYPT_SHA256') || CRYPT_SHA256 == 0) {
-      throw new RuntimeException('Your system does not support sha256crypt encryptions');
-    }
-
     $hashed_pwd = '{CRYPT}' . crypt($password, '$5$' . generate_salt(8));
+    break;
+
+  case 'BLOWFISH':
+    $hashed_pwd = '{CRYPT}' . crypt($password, '$2a$12$' . generate_salt(13));
+    break;
+
+  case 'EXT_DES':
+    $hashed_pwd = '{CRYPT}' . crypt($password, '_' . generate_salt(8));
+    break;
+
+  case 'MD5CRYPT':
+    $hashed_pwd = '{CRYPT}' . crypt($password, '$1$' . generate_salt(9));
     break;
 
   case 'MD5':
@@ -220,23 +247,20 @@ function ldap_hashed_password($password) {
     $salt = generate_salt(2);
     $hashed_pwd = '{CRYPT}' . crypt($password, $salt);
     break;
-  
-  case 'SHA512CRYPT':
-    if (!defined('CRYPT_SHA512') || CRYPT_SHA512 == 0) {
-      throw new RuntimeException('Your system does not support sha512crypt encryptions');
-    }
 
-    $hashed_pwd = '{CRYPT}' . crypt($password, '$6$' . generate_salt(8));
+  case 'CLEAR':
+    error_log("$log_prefix password hashing - WARNING - Saving password in cleartext. This is extremely bad practice and should never ever be done in a production environment.");
+    $hashed_pwd = $password;
     break;
 
-  default:
-    error_log("$log_prefix: Unknown or unsupported hash type $PASSWORD_HASH, falling back to SSHA", E_USER_WARNING);
+
   case 'SSHA':
     $salt = generate_salt(8);
     $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
     break;
+
  }
- 
+
  return $hashed_pwd;
 
 }

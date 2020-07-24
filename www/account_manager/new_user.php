@@ -211,7 +211,7 @@ render_js_email_generator('username','email');
      <div class="form-group" id="username_div">
       <label for="username" class="col-sm-3 control-label">Username</label>
       <div class="col-sm-6">
-       <input tabindex="3" type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_username_validity(document.getElementById('username').value); update_email();">
+       <input tabindex="3" type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_entity_name_validity(document.getElementById('username').value,'username_div'); update_email();">
       </div>
      </div>
 
