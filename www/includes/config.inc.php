@@ -43,8 +43,7 @@
  $USERNAME_REGEX = (getenv('USERNAME_REGEX') ? getenv('USERNAME_REGEX') : '^[a-z][a-zA-Z0-9\._-]{3,32}$');
  #We'll use the username regex for groups too.
 
- $PASSWORD_HASH = (getenv('PASSWORD_HASH') ? getenv('PASSWORD_HASH') : 'SSHA');
- if ( ! in_array($PASSWORD_HASH, array('MD5','SMD5','SHA','SSHA','CRYPT'))) { $PASSWORD_HASH = 'SSHA'; }
+ $PASSWORD_HASH = strtoupper(getenv('PASSWORD_HASH') ? getenv('PASSWORD_HASH') : 'SSHA');
 
  $ACCEPT_WEAK_PASSWORDS = ((strcasecmp(getenv('ACCEPT_WEAK_PASSWORDS'),'TRUE') == 0) ? TRUE : FALSE);
 
