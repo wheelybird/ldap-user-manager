@@ -186,7 +186,6 @@ function ldap_hashed_password($password) {
  foreach ($check_algos as $algo_name => $algo_function) {
    if (defined($algo_function) and constant($algo_function) != 0) {
      array_push($available_algos, $algo_name);
-     $count++;
    }
    else {
      error_log("$log_prefix password hashing - the system doesn't support ${algo_name}");
