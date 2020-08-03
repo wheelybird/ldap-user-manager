@@ -1,13 +1,13 @@
 LDAP User Manager
 --
 
-A PHP web-based interface for LDAP user account management and self-service password change.
+This is a PHP LDAP account manager; a web-based GUI interface which allows you to quickly populate a new LDAP directory and easily manage user accounts and groups.  It also has a self-service password change module.   
+It's designed to work with OpenLDAP and to be run as a container.  It complements OpenLDAP containers such as [*osixia/openldap*](https://hub.docker.com/r/osixia/openldap/).
 
 
-Purpose
+
+Features
 ---
-
-This presents a simple-to-use interface for setting up a new LDAP directory and managing user accounts and groups, as well as providing a way for users to change their own password.  It's designed to complement OpenLDAP servers such as *osixia/openldap* (https://hub.docker.com/r/osixia/openldap/).   
 
  * Setup wizard: this will create the necessary structure to allow you to add users and groups and will set up an initial admin user that can log into the user manager.
  * Group creation and management.
@@ -35,6 +35,14 @@ Screenshots
 ![self_service_password_change](https://user-images.githubusercontent.com/17613683/59344258-9ffcab80-8d05-11e9-9dc2-27dfd373fcc8.png)
 
 
+A note on your LDAP schema
+---
+
+By default this application will expect the LDAP server to be using the **RFC2307BIS** schema.  OpenLDAP (including the **osixia/openldap** image) uses the old NIS schema as its default schema.  The user manager will work with either, but RFC2307BIS is recommended as it allows you to use **memberOf** searches.  You can enable RFC2307BIS in **osixia/openldap** by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.  The application is set to expect BIS by default for backwards-compatibility with older versions.   
+
+If you prefer not to use RFC2307BIS then set `LDAP_USES_NIS_SCHEMA` to `TRUE`.  This will create groups solely as the **posixGroup** objectclass, and the default for `LDAP_GROUP_MEMBERSHIP_USES_UID` will `TRUE`.
+
+
 Quick start
 ---
 
@@ -55,7 +63,7 @@ docker run \
            -e "EMAIL_DOMAIN=example.com"\
            wheelybird/ldap-user-manager:v1.2
 ```
-Change the variable values to suit your environment.  You might need to change `LDAP_USES_NIS_SCHEMA` if you're [using the BIS schema](#LDAP_USES_NIS_SCHEMA). Now go to https://lum.example.com/setup.
+Change the variable values to suit your environment.  You might need to change `LDAP_USES_NIS_SCHEMA` if you're using the BIS schema. Now go to https://lum.example.com/setup.
 
 
 Configuration
@@ -64,17 +72,7 @@ Configuration
 Configuration is via environmental variables.  Please bear the following in mind:
 
  * This tool needs to bind to LDAP as a user with permissions to modify everything under the base DN.
- * This interface is designed to work with a fresh LDAP server and should be used with populated LDAP directories with caution and at your own risk.
-
-LDAP_USES_NIS_SCHEMA
-----
-
-By default this application will expect the LDAP server to be using the **RFC2307BIS** schema.  OpenLDAP (including the **osixia/openldap** image) uses the old NIS schema as its default schema.  The user manager will work with either, but RFC2307BIS is recommended as it allows you to use **memberOf** searches.  You can enable RFC2307BIS in **osixia/openldap** by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.   
-
-If you prefer not to use RFC2307BIS then set `LDAP_USES_NIS_SCHEMA` to `TRUE`.  This will create groups solely as the **posixGroup** objectclass, and the default for `LDAP_GROUP_MEMBERSHIP_USES_UID` will `TRUE`.  The application is set to expect the BIS schema by default for backwards-compatibility with older releases.
-
-
-
+ * This interface is designed to work with a fresh LDAP server and should be against populated LDAP directories with caution and at your own risk.
 
 Mandatory:
 ----
@@ -93,7 +91,7 @@ Optional:
    
 * `LDAP_USER_OU` (default: *people*):  The name of the OU used to store user accounts (without the base DN appended).
    
-* `LDAP_USES_NIS_SCHEMA` (default: *FALSE*):  If you use the NIS schema instead of the (preferable) RFC2307BIS schema, set this to `TRUE`.  See [LDAP_USES_NIS_SCHEMA](#LDAP_USES_NIS_SCHEMA) for more information.
+* `LDAP_USES_NIS_SCHEMA` (default: *FALSE*):  If you use the NIS schema instead of the (preferable) RFC2307BIS schema, set this to `TRUE`.  See [A note on your LDAP schema](#a-note-on-your-ldap-schema) for more information.
    
 * `LDAP_GROUP_OU` (default: *groups*):  The name of the OU used to store groups (without the base DN appended).
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user to a group.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `memberUID`, otherwise it's `uniqueMember`.  Explicitly setting this variable will override the default.
@@ -101,7 +99,7 @@ Optional:
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
    
-* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CERT=$(</path/to/ca.crt)`
+* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CACERT=$(</path/to/ca.crt)`
    
 * `DEFAULT_USER_GROUP` (default: *everybody*):  The group that new accounts are automatically added to when created.  *NOTE*: If this group doesn't exist then a group is created with the same name as the username and the user is added to that group.
 * `DEFAULT_USER_SHELL` (default: */bin/bash*):  The shell that will be launched when the user logs into a server.
@@ -110,7 +108,7 @@ Optional:
 * `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See [Username format](#username-format).
 * `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See [Username format](#username-format).
 
-* `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are (in order of precedence) `SHA512CRYPT`, `SHA256CRYPT`, `BLOWFISH`, `EXT_DES`, `MD5CRYPT`, `SSHA`, `SHA`, `SMD5`, `MD5`, `CRYPT` & `CLEAR`.  If your chosen method isn't available on your system then the strongest available method will be automatically selected - `SSHA` is the strongest method guaranteed to be available.  Cleartext passwords should NEVER be used in any situation outside of a test.
+* `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are (in order of precedence) `SHA512CRYPT`, `SHA256CRYPT`, `MD5CRYPT`, `SSHA`, `SHA`, `SMD5`, `MD5`, `CRYPT` & `CLEAR`.  If your chosen method isn't available on your system then the strongest available method will be automatically selected - `SSHA` is the strongest method guaranteed to be available.  Cleartext passwords should NEVER be used in any situation outside of a test.
 * `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
    
 * `LOGIN_TIMEOUT_MINS` (default: 10 minutes):  How long before an idle session will be timed out.
@@ -164,3 +162,38 @@ Anything else in the `USERNAME_FORMAT` string is left as defined, but the userna
 
 If `EMAIL_DOMAIN` is set then the email address field will be automatically updated in the form of `username@email_domain`.  Entering anything manually in that field will stop the automatic update of the email field.
 
+
+Testing with an LDAP container
+--
+
+This will set up an OpenLDAP container you can use to test the user manager against.  It uses the BIS schema.  This won't be using HTTPS or TLS, so don't use this in production.
+```
+docker run \
+             --detach \
+             --restart unless-stopped \
+             --name openldap \
+             -e LDAP_ORGANISATION=wheelybird \
+             -e LDAP_DOMAIN=wheelybird.com \
+             -e LDAP_ADMIN_PASSWORD=change_me \
+             -e LDAP_RFC2307BIS_SCHEMA=true \
+             -e LDAP_REMOVE_CONFIG_AFTER_SETUP=true \
+             -e LDAP_TLS=false \
+             -p 389:389
+             --volume /opt/docker/openldap/var_lib_ldap:/var/lib/ldap \
+             --volume /opt/docker/openldap/etc_ldap_slapd.d:/etc/ldap/slapd.d \
+             osixia/openldap:latest
+             
+docker run \
+             --detach \
+             --name=lum \
+             -p 80:80 \
+             -e SERVER_HOSTNAME=localhost \
+             -e LDAP_URI=ldap://172.17.0.1 \
+             -e LDAP_BASE_DN=dc=wheelybird,dc=com \
+             -e LDAP_ADMINS_GROUP=admins \
+             -e LDAP_ADMIN_BIND_DN="cn=admin,dc=wheelybird,dc=com" \
+             -e LDAP_ADMIN_BIND_PWD=change_me \
+             -e NO_HTTPS=TRUE \
+             wheelybird/ldap-user-manager:latest
+```
+Now go to http://localhost/setup - the password is `change_me` (unless you changed it).

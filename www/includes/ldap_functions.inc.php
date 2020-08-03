@@ -167,8 +167,8 @@ function ldap_hashed_password($password) {
  $check_algos = array (
                        "SHA512CRYPT" => "CRYPT_SHA512",
                        "SHA256CRYPT" => "CRYPT_SHA256",
-                       "BLOWFISH"    => "CRYPT_BLOWFISH",
-                       "EXT_DES"     => "CRYPT_EXT_DES",
+#                       "BLOWFISH"    => "CRYPT_BLOWFISH",
+#                       "EXT_DES"     => "CRYPT_EXT_DES",
                        "MD5CRYPT"    => "CRYPT_MD5"
                       );
 
@@ -196,7 +196,7 @@ function ldap_hashed_password($password) {
  if (isset($PASSWORD_HASH)) {
    if (!in_array($PASSWORD_HASH, $available_algos)) {
      $hash_algo = $available_algos[0];
-     error_log("$log_prefix password hashing - the chosen hash method ($PASSWORD_HASH) wasn't available");
+     error_log("$log_prefix LDAP password: the chosen hash method ($PASSWORD_HASH) wasn't available");
    }
    else {
      $hash_algo = $PASSWORD_HASH;
@@ -205,7 +205,9 @@ function ldap_hashed_password($password) {
  else {
    $hash_algo = $available_algos[0];
  }
- error_log("$log_prefix password hashing - using '${hash_algo}'");
+ error_log("$log_prefix LDAP password: using '${hash_algo}' as the hashing method");
+
+ $hash_algo = 'SSHA';
 
  switch ($hash_algo) {
 
@@ -217,20 +219,17 @@ function ldap_hashed_password($password) {
     $hashed_pwd = '{CRYPT}' . crypt($password, '$5$' . generate_salt(8));
     break;
 
-  case 'BLOWFISH':
-    $hashed_pwd = '{CRYPT}' . crypt($password, '$2a$12$' . generate_salt(13));
-    break;
+# Blowfish & EXT_DES didn't work
+#  case 'BLOWFISH':
+#    $hashed_pwd = '{CRYPT}' . crypt($password, '$2a$12$' . generate_salt(13));
+#    break;
 
-  case 'EXT_DES':
-    $hashed_pwd = '{CRYPT}' . crypt($password, '_' . generate_salt(8));
-    break;
+#  case 'EXT_DES':
+#    $hashed_pwd = '{CRYPT}' . crypt($password, '_' . generate_salt(8));
+#    break;
 
   case 'MD5CRYPT':
     $hashed_pwd = '{CRYPT}' . crypt($password, '$1$' . generate_salt(9));
-    break;
-
-  case 'MD5':
-    $hashed_pwd = '{MD5}' . base64_encode(md5($password, TRUE));
     break;
 
   case 'SMD5':
@@ -238,8 +237,17 @@ function ldap_hashed_password($password) {
     $hashed_pwd = '{SMD5}' . base64_encode(md5($password . $salt, TRUE) . $salt);
     break;
 
+  case 'MD5':
+    $hashed_pwd = '{MD5}' . base64_encode(md5($password, TRUE));
+    break;
+
   case 'SHA':
     $hashed_pwd = '{SHA}' . base64_encode(sha1($password, TRUE));
+    break;
+
+  case 'SSHA':
+    $salt = generate_salt(8);
+    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
     break;
 
   case 'CRYPT':
@@ -253,12 +261,9 @@ function ldap_hashed_password($password) {
     break;
 
 
-  case 'SSHA':
-    $salt = generate_salt(8);
-    $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
-    break;
-
  }
+
+ error_log("$log_prefix password update - algo $hash_algo | pwd $hashed_pwd");
 
  return $hashed_pwd;
 
