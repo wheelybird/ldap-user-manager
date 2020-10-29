@@ -207,8 +207,6 @@ function ldap_hashed_password($password) {
  }
  error_log("$log_prefix LDAP password: using '${hash_algo}' as the hashing method");
 
- $hash_algo = 'SSHA';
-
  switch ($hash_algo) {
 
   case 'SHA512CRYPT':
