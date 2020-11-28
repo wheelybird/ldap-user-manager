@@ -8,10 +8,10 @@ include_once "module_functions.inc.php";
 
 if ( $_POST['setup_admin_account'] ) {
  $admin_setup = TRUE;
- 
+
  validate_setup_cookie();
  set_page_access("setup");
- 
+
  $completed_action="/log_in";
  $page_title="New administrator account";
 
@@ -34,6 +34,9 @@ $invalid_username = FALSE;
 $weak_password = FALSE;
 $invalid_email = FALSE;
 
+if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FALSE; }
+
+
 if (isset($_POST['create_account'])) {
 
  $ldap_connection = open_ldap_connection();
@@ -42,15 +45,16 @@ if (isset($_POST['create_account'])) {
  $last_name = stripslashes($_POST['last_name']);
  $username = stripslashes($_POST['username']);
  $password = $_POST['password'];
- 
- if ($_POST['email']) { $email = stripslashes($_POST['email']); }
 
+ if ($_POST['email']) { $email = stripslashes($_POST['email']); }
 
  if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
  if (isset($email) and !is_valid_email($email)) { $invalid_email = TRUE; }
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
  if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
  if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }
+ if (isset($_POST['send_email']) and isset($email) and $can_send_email == TRUE) { $send_user_email = TRUE; }
+
 
  if (     isset($first_name)
       and isset($last_name)
@@ -68,11 +72,35 @@ if (isset($_POST['create_account'])) {
 
   if ($new_account) {
 
+    $creation_message = "The account was created.";
+
+    if (isset($send_user_email) and $send_user_email == TRUE) {
+
+      if ($NO_HTTPS == TRUE) { $protocol = 'http://'; } else { $protocol = 'https://'; }
+
+      if (in_array(strtolower($ORGANISATION_NAME[0]),array('a','e','i','o','u'))) { $org_prefix = "An "; } else { $org_prefix = "A "; }
+      $mail_subject = "$org_prefix $ORGANISATION_NAME account has been created for you.";
+
+$mail_body = <<<EoT
+You've been set up with an account for $ORGANISATION_NAME.  Your credentials are:
+
+Username: $username
+Password: $password
+
+You should change your password as soon as possible.  Log into the account manager at ${protocol}${SITE_URL}/log_in using your credentials.
+Once logged in you can change your password at ${protocol}${SITE_URL}/change_password/
+EoT;
+
+      include_once "mail_functions.inc.php";
+      send_email($email,"$first_name $last_name",$mail_subject,$mail_body);
+      $creation_message = "The account was created and an email sent to $email.";
+    }
+
     if ($admin_setup == TRUE) {
       $member_add = ldap_add_member_to_group($ldap_connection, $LDAP['admins_group'], $username);
       if (!$member_add) { ?>
        <div class="alert alert-warning">
-        <p class="text-center">The account was created but adding it to the admin group failed.</p>
+        <p class="text-center"><?php print $creation_message; ?>. Unfortunately adding it to the admin group failed.</p>
        </div>
        <?php
       }
@@ -80,7 +108,7 @@ if (isset($_POST['create_account'])) {
 
    ?>
    <div class="alert alert-success">
-   <p class="text-center">Account created.</p>
+   <p class="text-center"><?php print $creation_message; ?></p>
    </div>
    <form action='<?php print $completed_action; ?>'>
     <p align="center">
@@ -181,6 +209,25 @@ render_js_email_generator('username','email');
 
 </script>
 
+<script>
+
+ function check_email_validity(email) {
+
+  var check_regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+  if (! check_regex.test(email) ) {
+   document.getElementById("email_div").classList.add("has-error");
+   <?php if ($can_send_email == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = true;<?php } ?>
+  }
+  else {
+   document.getElementById("email_div").classList.remove("has-error");
+   <?php if ($can_send_email == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = false;<?php } ?>
+  }
+
+ }
+
+</script>
+
 <div class="container">
  <div class="col-sm-8">
 
@@ -197,28 +244,28 @@ render_js_email_generator('username','email');
      <div class="form-group">
       <label for="first_name" class="col-sm-3 control-label">First name</label>
       <div class="col-sm-6">
-       <input tabindex="1" type="text" class="form-control" id="first_name" name="first_name" <?php if (isset($first_name)){ print " value='$first_name'"; } ?> onkeyup="update_username(); update_email();">
+       <input tabindex="1" type="text" class="form-control" id="first_name" name="first_name" <?php if (isset($first_name)){ print " value='$first_name'"; } ?> onkeyup="update_username(); update_email(); check_email_validity(document.getElementById('email').value)">
       </div>
      </div>
 
      <div class="form-group">
       <label for="last_name" class="col-sm-3 control-label">Last name</label>
       <div class="col-sm-6">
-       <input tabindex="3" type="text" class="form-control" id="last_name" name="last_name" <?php if (isset($last_name)){ print " value='$last_name'"; } ?> onkeyup="update_username(); update_email();">
+       <input tabindex="3" type="text" class="form-control" id="last_name" name="last_name" <?php if (isset($last_name)){ print " value='$last_name'"; } ?> onkeyup="update_username(); update_email(); check_email_validity(document.getElementById('email').value)">
       </div>
      </div>
 
      <div class="form-group" id="username_div">
       <label for="username" class="col-sm-3 control-label">Username</label>
       <div class="col-sm-6">
-       <input tabindex="3" type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_entity_name_validity(document.getElementById('username').value,'username_div'); update_email();">
+       <input tabindex="3" type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_entity_name_validity(document.getElementById('username').value,'username_div'); update_email(); check_email_validity(document.getElementById('email').value)">
       </div>
      </div>
 
      <div class="form-group" id="email_div">
       <label for="username" class="col-sm-3 control-label">Email</label>
       <div class="col-sm-6">
-       <input tabindex="4" type="text" class="form-control" id="email" name="email" <?php if (isset($email)){ print " value='$email'"; } ?> onkeyup="auto_email_update = false;">
+       <input tabindex="4" type="text" class="form-control" id="email" name="email" <?php if (isset($email)){ print " value='$email'"; } ?> onkeyup="auto_email_update = false; check_email_validity(document.getElementById('email').value)">
       </div>
      </div>
 
@@ -239,8 +286,17 @@ render_js_email_generator('username','email');
       </div>
      </div>
 
+<?php  if ($can_send_email == TRUE and $admin_setup != TRUE) { ?>
+      <div class="form-group" id="send_email_div">
+       <label for="send_email" class="col-sm-3 control-label"> </label>
+       <div class="col-sm-6">
+        <input tabindex="8" type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  Email these credentials to the user? 
+       </div>
+      </div>
+<?php } ?>
+
      <div class="form-group">
-       <button tabindex="8" type="submit" class="btn btn-warning">Create account</button>
+       <button tabindex="9" type="submit" class="btn btn-warning">Create account</button>
      </div>
 
     </form>

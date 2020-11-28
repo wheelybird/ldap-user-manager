@@ -331,6 +331,8 @@ function is_valid_email($email) {
 }
 
 
+######################################################
+
 function render_js_username_check(){
 
   global $USERNAME_REGEX;

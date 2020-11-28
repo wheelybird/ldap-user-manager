@@ -206,7 +206,10 @@ if ($ldap_search) {
   $member_of = $currently_member_of;
  }
 
- ################
+$account_name = $user[0]['uid'][0];
+$full_dn = $user[0]['dn'];
+
+################
 
 
 ?>
@@ -320,16 +323,18 @@ if ($ldap_search) {
 
 
 </script>
-     
 <div class="container">
  <div class="col-sm-7">
 
   <div class="panel panel-default">
     <div class="panel-heading clearfix">
-     <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $user[0]['uid'][0]; ?></h3>
-     <button class="btn btn-warning pull-right" onclick="show_delete_user_button();">Delete account</button>
+     <span class="panel-title pull-left"><h3><?php print $account_name; ?></h3></span>
+     <button class="btn btn-warning pull-right align-self-end" style="margin-top: auto;" onclick="show_delete_user_button();">Delete account</button>
      <form action="/<?php print $THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($username); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
     </div>
+    <ul class="list-group">
+      <li class="list-group-item"><?php print $full_dn; ?></li>
+    </li>
     <div class="panel-body">
      <form class="form-horizontal" action="" method="post">
 

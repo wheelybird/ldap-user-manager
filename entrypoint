@@ -3,7 +3,7 @@ set -e
 
 ssl_dir="/opt/ssl"
 
-if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME=example.com; fi
+if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME=ldapusermanager.org; fi
 
 #If LDAP_TLS_CACERT is set then write it out as a file
 #and set up the LDAP client conf to use it.

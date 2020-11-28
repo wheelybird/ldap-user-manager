@@ -38,7 +38,7 @@ $ldap_connection = open_ldap_connection();
 print "$li_good Connected to ${LDAP['uri']}</li>\n";
 
 #TLS?
-if ($LDAP['starttls'] && $ENCRYPTED == TRUE) {
+if ($LDAP_IS_SECURE == TRUE) {
  print "$li_good Encrypted connection to ${LDAP['uri']} via STARTTLS</li>\n";
 }
 else {

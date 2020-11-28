@@ -1,13 +1,14 @@
 <?php
 
-$LDAP_CONNECTION_WARNING = FALSE;
+$LDAP_IS_SECURE = FALSE;
 
 ###################################
 
 function open_ldap_connection() {
 
- global $log_prefix, $LDAP, $SENT_HEADERS, $LDAP_DEBUG;
+ global $log_prefix, $LDAP, $SENT_HEADERS, $LDAP_DEBUG, $LDAP_IS_SECURE;
 
+ if ($LDAP['ignore_cert_errors'] == TRUE) { putenv('LDAPTLS_REQCERT=never'); }
  $ldap_connection = @ ldap_connect($LDAP['uri']);
 
  if (!$ldap_connection) {
@@ -17,6 +18,7 @@ function open_ldap_connection() {
  }
 
  ldap_set_option($ldap_connection, LDAP_OPT_PROTOCOL_VERSION, 3);
+ if ($LDAP_VERBOSE_CONNECTION_LOGS == TRUE) { ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL, 7); }
 
  if (!preg_match("/^ldaps:/", $LDAP['uri'])) {
 
@@ -39,9 +41,13 @@ function open_ldap_connection() {
     ldap_set_option($ldap_connection, LDAP_OPT_PROTOCOL_VERSION, 3);
    }
   }
-  elseif ($LDAP_DEBUG == TRUE) {
+  else {
+   if ($LDAP_DEBUG == TRUE) {
     error_log("$log_prefix Start STARTTLS connection to ${LDAP['uri']}",0);
+   }
+   $LDAP_IS_SECURE = TRUE;
   }
+
  }
 
  $bind_result = @ ldap_bind( $ldap_connection, $LDAP['admin_bind_dn'], $LDAP['admin_bind_pwd']);
@@ -387,6 +393,29 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
 
 }
 
+
+##################################
+
+
+function ldap_get_dn_of_group($ldap_connection,$group_name) {
+
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
+
+ if (isset($group_name)) {
+
+  $ldap_search_query = "(cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query , array("dn"));
+  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
+
+  if (isset($result[0]['dn'])) {
+    return $result[0]['dn'];
+  }
+
+ }
+
+ return FALSE;
+
+}
 
 ##################################
 

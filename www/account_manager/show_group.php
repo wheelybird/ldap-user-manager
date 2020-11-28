@@ -46,6 +46,7 @@ if (isset($_POST['new_group'])) {
 
 
 $current_members = ldap_get_group_members($ldap_connection,$group_cn);
+$full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
 $all_accounts = ldap_get_user_list($ldap_connection);
 $all_people = array();
 
@@ -210,8 +211,10 @@ ldap_close($ldap_connection);
    <button class="btn btn-warning pull-right" onclick="show_delete_group_button();">Delete group</button>
    <form action="/<?php print $THIS_MODULE_PATH; ?>/groups.php" method="post"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
   </div>
+  <ul class="list-group">
+   <li class="list-group-item"><?php print $full_dn; ?></li>
+  </li>
   <div class="panel-body">
-  
 
    <div class="row">
  
