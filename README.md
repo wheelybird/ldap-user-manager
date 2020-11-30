@@ -175,7 +175,7 @@ Optional:
    
 * `SESSION_DEBUG` (default: *FALSE*): Set to TRUE to increase the logging level for sessions and user authorisation.  This will output cookie passkeys to the error log - don't enable this in a production environment.
    
-* `SMTP_LOG_LEVEL` (default: *1*): Set to between 1-4 to get SMTP logging information (0 disables SMTP logs). See https://github.com/PHPMailer/PHPMailer/wiki/SMTP-Debugging for details of the levels.
+* `SMTP_LOG_LEVEL` (default: *0*): Set to between 1-4 to get SMTP logging information (0 disables SMTP debugging logs though it will still display errors). See https://github.com/PHPMailer/PHPMailer/wiki/SMTP-Debugging for details of the levels.
    
 Webserver SSL setup
 ---
@@ -213,7 +213,7 @@ When you create an account you'll have an option to send an email to the person 
 Emails are sent via SMTP, so you'll need to be able to connect to an SMTP server and pass in the settings for that server via environmental variables - see **Email settings** above.   
 If you haven't passed in those settings or if the account you've created has no (valid) email address then the option to send an email will be disabled.
 
-Note that failures to deliver are silent.  If people aren't receiving the emails then check the logs to see why not.  You can increase the log level (`SMTP_LOG_LEVEL`) for more detailed logs.
+When the account is created you'll be told if the email was sent or not but be aware that just because your SMTP server accepted the email it doesn't mean that it was able to deliver it.  If you get a message saying the email wasn't sent then check the logs for the error.  You can increase the log level (`SMTP_LOG_LEVEL`) to above 0 in order to see SMTP debug logs.
 
 Username format
 ---

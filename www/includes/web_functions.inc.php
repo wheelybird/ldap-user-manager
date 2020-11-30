@@ -17,6 +17,16 @@ $GOOD_ICON = "&#9745;";
 $WARN_ICON = "&#9888;";
 $FAIL_ICON = "&#9940;";
 
+if (isset($_SERVER['HTTPS']) and
+   ($_SERVER['HTTPS'] == 'on' || $_SERVER['HTTPS'] == 1) or
+   isset($_SERVER['HTTP_X_FORWARDED_PROTO']) and
+   $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
+  $SITE_PROTOCOL = 'https://';
+}
+else {
+  $SITE_PROTOCOL = 'http://';
+}
+
 include ("modules.inc.php");   # module definitions
 include ("config.inc.php");    # get local settings
 

@@ -76,10 +76,7 @@ if (isset($_POST['create_account'])) {
 
     if (isset($send_user_email) and $send_user_email == TRUE) {
 
-      if ($NO_HTTPS == TRUE) { $protocol = 'http://'; } else { $protocol = 'https://'; }
-
-      if (in_array(strtolower($ORGANISATION_NAME[0]),array('a','e','i','o','u'))) { $org_prefix = "An "; } else { $org_prefix = "A "; }
-      $mail_subject = "$org_prefix $ORGANISATION_NAME account has been created for you.";
+      $mail_subject = "Your $ORGANISATION_NAME account has been created.";
 
 $mail_body = <<<EoT
 You've been set up with an account for $ORGANISATION_NAME.  Your credentials are:
@@ -87,13 +84,19 @@ You've been set up with an account for $ORGANISATION_NAME.  Your credentials are
 Username: $username
 Password: $password
 
-You should change your password as soon as possible.  Log into the account manager at ${protocol}${SITE_URL}/log_in using your credentials.
-Once logged in you can change your password at ${protocol}${SITE_URL}/change_password/
+You should change your password as soon as possible.  Log into the account manager at ${SITE_PROTOCOL}${SERVER_HOSTNAME}/log_in using your credentials.
+Once logged in you can change your password at ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password/
 EoT;
 
       include_once "mail_functions.inc.php";
-      send_email($email,"$first_name $last_name",$mail_subject,$mail_body);
-      $creation_message = "The account was created and an email sent to $email.";
+      $sent_email = send_email($email,"$first_name $last_name",$mail_subject,$mail_body);
+      $creation_message = "The account was created";
+      if ($sent_email) {
+        $creation_message .= " and an email sent to $email.";
+      }
+      else {
+        $creation_message .= " but unfortunately the email wasn't sent.<br>More information will be available in the logs.";
+      }
     }
 
     if ($admin_setup == TRUE) {

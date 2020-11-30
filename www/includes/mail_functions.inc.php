@@ -6,7 +6,7 @@ require_once "/opt/PHPMailer/src/Exception.php";
 
 function send_email($recipient_email,$recipient_name,$subject,$body) {
 
-  global $EMAIL, $SMTP, $SITE_URL, $log_prefix;
+  global $EMAIL, $SMTP, $log_prefix;
 
   $mail = new PHPMailer\PHPMailer\PHPMailer();
   $mail->isSMTP();
@@ -16,8 +16,8 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
 
   $mail->Host = $SMTP['host'];
   $mail->Port = $SMTP['port'];
-  
-  if (isset($MAIL['username'])) {
+
+  if (isset($SMTP['user'])) {
     $mail->SMTPAuth = true;
     $mail->Username = $SMTP['user'];
     $mail->Password = $SMTP['pass'];
@@ -29,7 +29,15 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
   $mail->addAddress($recipient_email, $recipient_name);
   $mail->Subject = $subject;
   $mail->Body = $body;
-  $mail->send();
+
+  if (!$mail->Send())  {
+    error_log("$log_prefix SMTP: Unable to send email: " . $mail->ErrorInfo);
+    return FALSE;
+  }
+  else {
+    error_log("$log_prefix New user: sent a new account email to $recipient_email ($recipient_name)");
+    return TRUE;
+  }
 
 }
 
