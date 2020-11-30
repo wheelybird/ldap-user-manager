@@ -74,7 +74,7 @@ docker run \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
            -e "LDAP_USES_NIS_SCHEMA=true" \
            -e "EMAIL_DOMAIN=ldapusermanager.org"\
-           wheelybird/ldap-user-manager:v1.3
+           wheelybird/ldap-user-manager:v1.4
 ```
 Change the variable values to suit your environment.  You might need to change `LDAP_USES_NIS_SCHEMA` if you're using the BIS schema. Now go to https://lum.example.com/setup.
 
