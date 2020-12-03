@@ -78,7 +78,7 @@ if (isset($_POST['create_account'])) {
 
       $mail_subject = "Your $ORGANISATION_NAME account has been created.";
 
-$mail_body = <<<EoT
+$mail_body = getenv('MAIL_BODY') ?: <<<EoT
 You've been set up with an account for $ORGANISATION_NAME.  Your credentials are:
 
 Username: $username
