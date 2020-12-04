@@ -29,6 +29,7 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
   $mail->addAddress($recipient_email, $recipient_name);
   $mail->Subject = $subject;
   $mail->Body = $body;
+  $mail->IsHTML(true);
 
   if (!$mail->Send())  {
     error_log("$log_prefix SMTP: Unable to send email: " . $mail->ErrorInfo);
