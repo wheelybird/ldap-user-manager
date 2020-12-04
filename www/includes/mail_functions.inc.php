@@ -9,7 +9,7 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
   global $EMAIL, $SMTP, $log_prefix;
 
   $mail = new PHPMailer\PHPMailer\PHPMailer();
-  $mail -> charSet = "UTF-8"; 
+  $mail->CharSet = 'UTF-8';
   $mail->isSMTP();
 
   $mail->SMTPDebug = $SMTP['debug_level'];
