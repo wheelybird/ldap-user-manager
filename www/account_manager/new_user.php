@@ -88,8 +88,10 @@ You should change your password as soon as possible.  Log into the account manag
 Once logged in you can change your password at ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password/
 EoT;
 
-      // Replace special substring
+      // Replace special substring with user variables (substring are used in env)
       $mail_body = str_replace("#username#", $username, $mail_body);
+      $mail_body = str_replace("#first_name#", $first_name, $mail_body);
+      $mail_body = str_replace("#last_name#", $last_name, $mail_body);
       $mail_body = str_replace("#password#", $password, $mail_body);
 
       include_once "mail_functions.inc.php";
