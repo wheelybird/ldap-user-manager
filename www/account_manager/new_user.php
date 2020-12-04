@@ -88,6 +88,10 @@ You should change your password as soon as possible.  Log into the account manag
 Once logged in you can change your password at ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password/
 EoT;
 
+      // Replace special substring
+      $mail_body = str_replace("#username#", $username, $mail_body)
+      $mail_body = str_replace("#password#", $password, $mail_body)
+
       include_once "mail_functions.inc.php";
       $sent_email = send_email($email,"$first_name $last_name",$mail_subject,$mail_body);
       $creation_message = "The account was created";
