@@ -161,6 +161,15 @@ Optional:
    
 * `EMAIL_FROM_NAME` (default: *{SITE_NAME}*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
 
+* `MAIL_SUBJECT` (default: Your $ORGANISATION_NAME account has been created.): The mail subject
+
+* `MAIL_BODY` (default: ): The mail body. You can use the following substring in the body which will be replaced by user info:
+
+  - `#username#`: the user username
+  - `#first_name#`: the user first name
+  - `#last_name#`: the user last name
+  - `#password#`: the user password
+
 **Site security settings**   
 
 * `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.
