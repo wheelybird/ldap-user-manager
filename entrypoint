@@ -103,7 +103,7 @@ EoCertConf
   ########################
   #Create Apache config
 
-  if [ -f "/opt/tls/chain.pem" ]; then ssl_chain="SSLCertificateChainFile /opt/tls/chain.pem"; fi
+  if [ -f "${ssl_dir}/chain.pem" ]; then ssl_chain="SSLCertificateChainFile ${ssl_dir}/chain.pem"; fi
 
   cat <<EoHTTPSC >/etc/apache2/sites-enabled/lum.conf
 

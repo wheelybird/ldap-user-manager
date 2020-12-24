@@ -4,18 +4,17 @@ LDAP User Manager
 This is a PHP LDAP account manager; a web-based GUI interface which allows you to quickly populate a new LDAP directory and easily manage user accounts and groups.  It also has a self-service password change module.   
 It's designed to work with OpenLDAP and to be run as a container.  It complements OpenLDAP containers such as [*osixia/openldap*](https://hub.docker.com/r/osixia/openldap/).
 
-
-
 Features
 ---
 
  * Setup wizard: this will create the necessary structure to allow you to add users and groups and will set up an initial admin user that can log into the user manager.
  * Group creation and management.
  * User account creation and management.
- * Optionally send an email to the new user with their account credentials.
+ * Optionally send an email to the user with their new or updated account credentials.
  * Secure password auto-generator: click the button to generate a secure password.
  * Password strength indicator.
  * Self-service password change: non-admin users can log in to change their password.
+ * An optional form for people to request accounts (request emails are sent to an administrator).
 
 Screenshots
 ---
@@ -36,26 +35,6 @@ Screenshots
 ![self_service_password_change](https://user-images.githubusercontent.com/17613683/59344258-9ffcab80-8d05-11e9-9dc2-27dfd373fcc8.png)
 
 
-A note on your LDAP schema - please read this!
----
-
-By default this application will expect the LDAP server to be using the **RFC2307BIS** schema.  OpenLDAP (including the **osixia/openldap** image) uses the older NIS schema as its default schema.   
-
-> :warning: If you haven't explicitly set up the **RFC2307BIS** schema on your LDAP server then you need to set `LDAP_USES_NIS_SCHEMA` to `TRUE` as shown in the Quick start example below.
-
-**Why should I use RFC2307BIS?**   
-
-The user manager will work with either NIS or BIS, but BIS is recommended as it allows you to use **memberOf** searches.  You can enable BIS in **osixia/openldap** by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.
-
-**Why not make NIS the default?**   
-
-The original versions of this application were set to expect BIS by default.  This was before we used specific release versions, so we're expecting the BIS schemas as the default to keep backwards-compatibility for anyone using the `latest` tag.
-
-**I'm unable to use the BIS schema!**   
-
-If you can't or prefer not to use RFC2307BIS then set `LDAP_USES_NIS_SCHEMA` to `TRUE`.  This will create groups solely as the **posixGroup** objectclass, and the default for `LDAP_GROUP_MEMBERSHIP_USES_UID` will `TRUE`.
-
-
 Quick start
 ---
 
@@ -72,11 +51,11 @@ docker run \
            -e "LDAP_ADMINS_GROUP=admins" \
            -e "LDAP_ADMIN_BIND_DN=cn=admin,dc=example,dc=com" \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
-           -e "LDAP_USES_NIS_SCHEMA=true" \
-           -e "EMAIL_DOMAIN=ldapusermanager.org"\
-           wheelybird/ldap-user-manager:v1.4
+           -e "LDAP_IGNORE_CERT_ERRORS=true" \
+           -e "EMAIL_DOMAIN=ldapusermanager.org" \
+           wheelybird/ldap-user-manager:v1.5
 ```
-Change the variable values to suit your environment.  You might need to change `LDAP_USES_NIS_SCHEMA` if you're using the BIS schema. Now go to https://lum.example.com/setup.
+Change the variable values to suit your environment.  Now go to https://lum.example.com/setup.
 
 
 Configuration
@@ -84,8 +63,8 @@ Configuration
 
 Configuration is via environmental variables.  Please bear the following in mind:
 
- * This tool needs to bind to LDAP as a user with permissions to modify everything under the base DN.
- * This interface is designed to work with a fresh LDAP server and should be against populated LDAP directories with caution and at your own risk.
+ * This tool needs to bind to LDAP as a user that has the permissions to modify everything under the base DN.
+ * This interface is designed to work with a fresh LDAP server and should only be against existing, populated LDAP directories with caution and at your own risk.
 
 Mandatory:
 ----
@@ -116,17 +95,24 @@ Optional:
 
 * `LDAP_USER_OU` (default: *people*):  The name of the OU used to store user accounts (without the base DN appended).
    
-* `LDAP_USES_NIS_SCHEMA` (default: *FALSE*):  If you use the NIS schema instead of the (preferable) RFC2307BIS schema, set this to `TRUE`.  See [A note on your LDAP schema](#a-note-on-your-ldap-schema) for more information.
-   
 * `LDAP_GROUP_OU` (default: *groups*):  The name of the OU used to store groups (without the base DN appended).
-* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user to a group.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `memberUID`, otherwise it's `uniqueMember`.  Explicitly setting this variable will override the default.
-* `LDAP_GROUP_MEMBERSHIP_USES_UID` (default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username.  Otherwise it's the member's full DN.  If `LDAP_USES_NIS_SCHEMA` is `TRUE` the default is `TRUE`, otherwise it's `FALSE`.  Explicitly setting this variable will override the default.
    
 * `LDAP_REQUIRE_STARTTLS` (default: *TRUE*):  If *TRUE* then a TLS connection is required for this interface to work.  If set to *FALSE* then the interface will work without STARTTLS, but a warning will be displayed on the page.
    
 * `LDAP_IGNORE_CERT_ERRORS` (default: *FALSE*): If *TRUE* then problems with the certificate presented by the LDAP server will be ignored (for example FQDN mismatches).  Use this if your LDAP server is using a self-signed certificate and you don't have a CA certificate for it or you're connecting to a pool of different servers via round-robin DNS.
    
-* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CACERT=$(</path/to/ca.crt)`
+* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CACERT="$(</path/to/ca.crt)"` (ensure you're using quotes or you'll get an "invalid reference format: repository name must be lowercase" error.
+
+**Advanced LDAP settings**
+
+These settings should only be changed if you're trying to make the user manager work with an LDAP directory that's already populated and the defaults don't work.
+   
+* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user's account to a group.  When the `groupOfMembers` objectClass is detected or force-enabled it defaults to `uniqueMember`, otherwise it'll default to `memberUID`. Explicitly setting this variable will override any default.
+   
+* `LDAP_GROUP_MEMBERSHIP_USES_UID` (default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username, otherwise it's the member's full DN.  When the `groupOfMembers` objectClass is detected or force-enabled it defaults to `FALSE`, otherwise it'll default to `TRUE`. Explicitly setting this variable will override the default.
+   
+* `FORCE_RFC2307BIS` (default: *FALSE*): Set to *TRUE* if the auto-detection is failing to spot that the RFC2307BIS schema is available.  When *FALSE* the user manager will use auto-detection.  See [Using the RFC2307BIS schema](#using-the-rfc2307bis-schema) for more information.
+   
 
 **User account settings**   
 
@@ -145,8 +131,10 @@ Optional:
 * `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
    
 
-**Email settings**
+**Email sending**
 
+To send emails you'll need to use an existing SMTP server.  Email sending will be disabled if `SMTP_HOSTNAME` isn't set.
+   
 * `SMTP_HOSTNAME` (no default): The hostname of an SMTP server - used to send emails when creating new accounts.
    
 * `SMTP_HOST_PORT` (default: *25*): The SMTP port on the SMTP server.
@@ -161,13 +149,18 @@ Optional:
    
 * `EMAIL_FROM_NAME` (default: *{SITE_NAME}*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
 
+**Account requests**
+
+* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to {ACCOUNT_REQUESTS_EMAIL} with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.
+   
+* `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
 **Site security settings**   
 
 * `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.
    
-* `LOGIN_TIMEOUT_MINS` (default: *10 minutes*):  How long before an idle session will be timed out.
+* `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
-**Debug settings**
+**Debugging settings**
 
 * `LDAP_DEBUG` (default: *FALSE*): Set to TRUE to increase the logging level for LDAP requests.  This will output passwords to the error log - don't enable this in a production environment.  This is for information on problems updating LDAP records and such.  To debug problems connecting to the LDAP server in the first place use `LDAP_VERBOSE_CONNECTION_LOGS`.
    
@@ -177,29 +170,24 @@ Optional:
    
 * `SMTP_LOG_LEVEL` (default: *0*): Set to between 1-4 to get SMTP logging information (0 disables SMTP debugging logs though it will still display errors). See https://github.com/PHPMailer/PHPMailer/wiki/SMTP-Debugging for details of the levels.
    
-Webserver SSL setup
+SSL setup
 ---
 
-When `NO_HTTPS` is set to **false** (the default), the webserver (Apache HTTPD) expects to find `/opt/ssl/server.key` and `/opt/ssl/server.crt`, and these certificates should match `SERVER_HOSTNAME`.  If these files aren't found then the startup script will create self-signed certificates based on `SERVER_HOSTNAME`.  To use your own key and certificate then you need to bind-mount a directory containing them to `/opt/ssl`.  The script will also look for `/opt/ssl/chain.pem` if you need to add a certificate chain file (the Apache `SSLCertificateChainFile` option).
+When `NO_HTTPS` is set to **FALSE** (the default), the webserver (Apache HTTPD) expects to find `/opt/ssl/server.key` and `/opt/ssl/server.crt`, and these certificates should match `SERVER_HOSTNAME`.  If these files aren't found then the startup script will create self-signed certificates based on `SERVER_HOSTNAME`.  To use your own key and certificate then you need to bind-mount a directory containing them to `/opt/ssl`.  You can also add a certificate chain file (the Apache `SSLCertificateChainFile` option) if needed - name it `chain.pem` and place it in the same directory as `server.key` and `server.crt` .
    
-e.g.:
+For example, if your key and certificate files are in `/home/myaccount/ssl` you can bind-mount that folder by adding this line to the docker run example above, just after the last line starting with `-e`:
 ```
-docker run \
-           --detach \
-           --name=lum \
-           -p 80:80 \
-           -p 443:443 \
-           -e SERVER_HOSTNAME=lum.ldapusermanager.org \
-           -v /your/ssl/cert/dir:/opt/ssl \
-           ...
-           ...
+-v /home/myaccount/ssl:/opt/ssl \
 
 ```
 
 Initial setup
 ---
 
-Ideally you'll be using this against an empty LDAP directory.  You can use the setup utility to create the LDAP structures that this tool needs in order to create accounts and groups.   Go to `https://_website-hostname_/setup` to get started.   You need to log in with the password for the admin user as set by `LDAP_ADMIN_BIND_DN`.   
+Ideally you'll be using this against an empty LDAP directory.  You can use the setup utility to create the LDAP structures that this user manager needs in order to create accounts and groups.   Go to `https://{SERVER_HOSTNAME}/setup` to get started (replace `{SERVER_HOSTNAME}` with whatever you set `SERVER_HOSTNAME` to in the Docker run command).   
+
+The log in password is the admin user's password (what `LDAP_ADMIN_BIND_DN` was set to).
+
 The setup utility will create the user and account trees, records that store the last UID and GID used when creating a user account or group, a group for admins and the initial admin account.
 
 ![initial_setup](https://user-images.githubusercontent.com/17613683/59344213-865b6400-8d05-11e9-9d86-381d59671530.png)
@@ -210,7 +198,7 @@ Sending emails
 
 When you create an account you'll have an option to send an email to the person you created the account for.  The email will give them their new username, password and a link to the self-service password change utility.   
 
-Emails are sent via SMTP, so you'll need to be able to connect to an SMTP server and pass in the settings for that server via environmental variables - see **Email settings** above.   
+Emails are sent via SMTP, so you'll need to be able to connect to an SMTP server and pass in the settings for that server via environmental variables - see **Email sending** above.   
 If you haven't passed in those settings or if the account you've created has no (valid) email address then the option to send an email will be disabled.
 
 When the account is created you'll be told if the email was sent or not but be aware that just because your SMTP server accepted the email it doesn't mean that it was able to deliver it.  If you get a message saying the email wasn't sent then check the logs for the error.  You can increase the log level (`SMTP_LOG_LEVEL`) to above 0 in order to see SMTP debug logs.
@@ -232,37 +220,52 @@ Anything else in the `USERNAME_FORMAT` string is left as defined, but the userna
 If `EMAIL_DOMAIN` is set then the email address field will be automatically updated in the form of `username@email_domain`.  Entering anything manually in that field will stop the automatic update of the email field.
 
 
+Using the RFC2307BIS schema
+---
+
+The user manager will attempt detect if your LDAP server has the RFC2307BIS schema available and, if it does, use it when creating groups.  This will allow you to use `memberOf` in LDAP searches which gives you an easy way to check if a user is a member of a group. For example: `(&(objectClass=posixAccount)(memberof=cn=somegroup,ou=groups,dc=ldapusermanager,dc=org))`.   See (this guide)[https://unofficialaciguide.com/2019/07/31/ldap-schemas-for-aci-administrators-rfc2307-vs-rfc2307bis/] for more information.   
+
+With OpenLDAP this schema isn't normally available by default; you need to configure your server to use the **RFC2307BIS** schema when setting up your directory.   
+   
+If for some reason you do have the schema available but it isn't being detected then you can force it's use by setting `FORCE_ENABLE_GROUP_OF_MEMBERS` to `TRUE`.   
+**Note**: if you force-enable using RFC2307BIS but your LDAP server doesn't have that schema available then creating and adding users to groups won't work and the user manager will throw errors.
+   
+If you plan on using [osixia/openldap](https://github.com/osixia/docker-openldap) as your LDAP server you can enable the RFC2307BIS schema by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.
+
+
+
 Testing with an LDAP container
 --
 
-This will set up an OpenLDAP container you can use to test the user manager against.  It uses the BIS schema.  This won't be using HTTPS or TLS, so don't use this in production.
+This will set up an OpenLDAP container you can use to test the user manager against.  It uses the RFC2307BIS schema.
 ```
 docker run \
              --detach \
              --restart unless-stopped \
              --name openldap \
-             -e LDAP_ORGANISATION=wheelybird \
-             -e LDAP_DOMAIN=wheelybird.com \
-             -e LDAP_ADMIN_PASSWORD=change_me \
-             -e LDAP_RFC2307BIS_SCHEMA=true \
-             -e LDAP_REMOVE_CONFIG_AFTER_SETUP=true \
-             -e LDAP_TLS=false \
+             -e "LDAP_ORGANISATION=ldapusermanager" \
+             -e "LDAP_DOMAIN=ldapusermanager.org" \
+             -e "LDAP_ADMIN_PASSWORD=change_me" \
+             -e "LDAP_RFC2307BIS_SCHEMA=true" \
+             -e "LDAP_REMOVE_CONFIG_AFTER_SETUP=true" \
+             -e "LDAP_TLS_VERIFY_CLIENT=never" \
              -p 389:389
              --volume /opt/docker/openldap/var_lib_ldap:/var/lib/ldap \
              --volume /opt/docker/openldap/etc_ldap_slapd.d:/etc/ldap/slapd.d \
              osixia/openldap:latest
-             
+   
 docker run \
              --detach \
              --name=lum \
              -p 80:80 \
-             -e SERVER_HOSTNAME=localhost \
-             -e LDAP_URI=ldap://172.17.0.1 \
-             -e LDAP_BASE_DN=dc=wheelybird,dc=com \
-             -e LDAP_ADMINS_GROUP=admins \
-             -e LDAP_ADMIN_BIND_DN="cn=admin,dc=wheelybird,dc=com" \
-             -e LDAP_ADMIN_BIND_PWD=change_me \
-             -e NO_HTTPS=TRUE \
+             -p 443:443 \
+             -e "SERVER_HOSTNAME=localhost" \
+             -e "LDAP_URI=ldap://172.17.0.1" \
+             -e "LDAP_BASE_DN=dc=ldapusermanager,dc=org" \
+             -e "LDAP_ADMINS_GROUP=admins" \
+             -e "LDAP_ADMIN_BIND_DN=cn=admin,dc=ldapusermanager,dc=org" \
+             -e "LDAP_ADMIN_BIND_PWD=change_me" \
+             -e "LDAP_IGNORE_CERT_ERRORS=true" \
              wheelybird/ldap-user-manager:latest
 ```
-Now go to http://localhost/setup - the password is `change_me` (unless you changed it).
+Now go to https://localhost/setup - the password is `change_me` (unless you changed it).  As this will use self-signed certificates you might need to tell your browser to ignore certificate warnings.
