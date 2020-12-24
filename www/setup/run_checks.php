@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 set_include_path( ".:" . __DIR__ . "/../includes/");
 
@@ -18,7 +18,7 @@ $ldap_connection = open_ldap_connection();
 ?>
 <script>
     $(document).ready(function(){
-     $('[data-toggle="popover"]').popover(); 
+     $('[data-toggle="popover"]').popover();
     });
 </script>
 <div class="form-group">
@@ -55,6 +55,44 @@ else {
      </div>
 
      <div class="panel panel-default">
+      <div class="panel-heading">LDAP RFC2307BIS schema check</div>
+      <div class="panel-body">
+       <ul class="list-group">
+<?php
+
+$bis_detected = ldap_detect_rfc2307bis($ldap_connection);
+
+if ($bis_detected == TRUE) {
+
+ if ($LDAP['forced_rfc2307bis'] == TRUE) {
+  print "$li_warn FORCE_RFC2307BIS is set to TRUE which means the user manager skipped auto-detecting the RFC2307BIS schema. This could result in errors when creating groups if your LDAP server hasn't actually got the RFC2307BIS schema available. ";
+ }
+ else {
+  print "$li_good The RFC2307BIS schema appears to be available. ";
+ }
+ print "<a href='#' data-toggle='popover' title='RFC2307BIS schema' data-content='";
+ print "The RFC2307BIS schema enhances posixGroups, allowing you to use \"memberOf\" in LDAP searches.";
+ print "'>What's this?</a>";
+ print "</li>\n";
+
+}
+else {
+
+ print "$li_warn The RFC2307BIS schema doesn't appear to be available.<br>\nIf this is incorrect, set FORCE_RFC2307BIS to TRUE, restart the user manager and run the setup again. ";
+ print "<a href='#' data-toggle='popover' title='RFC2307BIS' data-content='";
+ print "The RFC2307BIS schema enhances posixGroups, allowing for memberOf LDAP searches.";
+ print "'>What's this?</a>";
+ print "</li>\n";
+
+}
+
+
+?>
+       </ul>
+      </div>
+     </div>
+
+     <div class="panel panel-default">
       <div class="panel-heading">LDAP OU checks</div>
       <div class="panel-body">
        <ul class="list-group">
@@ -73,7 +111,7 @@ if ($group_result['count'] != 1) {
  print "<label class='pull-right'><input type='checkbox' name='setup_group_ou' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
- 
+
 }
 else {
  print "$li_good The group OU (<strong>${LDAP['group_dn']}</strong>) is present.</li>";
@@ -92,7 +130,7 @@ if ($user_result['count'] != 1) {
  print "<label class='pull-right'><input type='checkbox' name='setup_user_ou' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
- 
+
 }
 else {
  print "$li_good The user OU (<strong>${LDAP['user_dn']}</strong>) is present.</li>";
@@ -122,7 +160,7 @@ if ($gid_result['count'] != 1) {
  print "<label class='pull-right'><input type='checkbox' name='setup_last_gid' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
- 
+
 }
 else {
  print "$li_good The <strong>lastGID</strong> entry is present.</li>";
@@ -142,7 +180,7 @@ if ($uid_result['count'] != 1) {
  print "<label class='pull-right'><input type='checkbox' name='setup_last_uid' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
- 
+
 }
 else {
  print "$li_good The <strong>lastUID</strong> entry is present.</li>";
@@ -162,7 +200,7 @@ if ($defgroup_result['count'] != 1) {
  print "<label class='pull-right'><input type='checkbox' name='setup_default_group' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
- 
+
 }
 else {
  print "$li_good The default user group (<strong>$DEFAULT_USER_GROUP</strong>) is present.</li>";
@@ -182,13 +220,13 @@ if ($adminsgroup_result['count'] != 1) {
  print "<label class='pull-right'><input type='checkbox' name='setup_admins_group' class='pull-right' checked>Create?&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
- 
+
 }
 else {
  print "$li_good The LDAP account administrators group (<strong>${LDAP['admins_group']}</strong>) is present.</li>";
 
  $admins = ldap_get_group_members($ldap_connection,$LDAP['admins_group']);
- 
+
  if (count($admins) < 1) {
   print "$li_fail The LDAP administration group is empty. You can add an admin account in the next section.</li>";
   $show_finish_button = FALSE;

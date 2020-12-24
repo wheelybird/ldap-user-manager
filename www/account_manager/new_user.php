@@ -33,9 +33,26 @@ $mismatched_passwords = FALSE;
 $invalid_username = FALSE;
 $weak_password = FALSE;
 $invalid_email = FALSE;
+$disabled_email_tickbox = TRUE;
 
-if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FALSE; }
+if (isset($_GET['account_request'])) {
 
+  $first_name=filter_var($_GET['first_name'], FILTER_SANITIZE_STRING);
+  $last_name=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
+  $email=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
+  $username = generate_username($first_name,$last_name);
+
+  if ($email == "") {
+    if (isset($EMAIL_DOMAIN)) {
+      $email = $username . "@" . $EMAIL_DOMAIN;
+      $disabled_email_tickbox = FALSE;
+    }
+  }
+  else {
+    $disabled_email_tickbox = FALSE;
+  }
+
+}
 
 if (isset($_POST['create_account'])) {
 
@@ -53,7 +70,7 @@ if (isset($_POST['create_account'])) {
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
  if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
  if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }
- if (isset($_POST['send_email']) and isset($email) and $can_send_email == TRUE) { $send_user_email = TRUE; }
+ if (isset($_POST['send_email']) and isset($email) and $EMAIL_SENDING_ENABLED == TRUE) { $send_user_email = TRUE; }
 
 
  if (     isset($first_name)
@@ -84,8 +101,7 @@ You've been set up with an account for $ORGANISATION_NAME.  Your credentials are
 Username: $username
 Password: $password
 
-You should change your password as soon as possible.  Log into the account manager at ${SITE_PROTOCOL}${SERVER_HOSTNAME}/log_in using your credentials.
-Once logged in you can change your password at ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password/
+You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password and log in using your new credentials.  This will take you to a page where you can change your password.
 EoT;
 
       include_once "mail_functions.inc.php";
@@ -216,15 +232,15 @@ render_js_email_generator('username','email');
 
  function check_email_validity(email) {
 
-  var check_regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  var check_regex = <?php print $JS_EMAIL_REGEX; ?>
 
   if (! check_regex.test(email) ) {
    document.getElementById("email_div").classList.add("has-error");
-   <?php if ($can_send_email == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = true;<?php } ?>
+   <?php if ($EMAIL_SENDING_ENABLED == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = true;<?php } ?>
   }
   else {
    document.getElementById("email_div").classList.remove("has-error");
-   <?php if ($can_send_email == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = false;<?php } ?>
+   <?php if ($EMAIL_SENDING_ENABLED == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = false;<?php } ?>
   }
 
  }
@@ -289,11 +305,11 @@ render_js_email_generator('username','email');
       </div>
      </div>
 
-<?php  if ($can_send_email == TRUE and $admin_setup != TRUE) { ?>
+<?php  if ($EMAIL_SENDING_ENABLED == TRUE and $admin_setup != TRUE) { ?>
       <div class="form-group" id="send_email_div">
        <label for="send_email" class="col-sm-3 control-label"> </label>
        <div class="col-sm-6">
-        <input tabindex="8" type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  Email these credentials to the user? 
+        <input tabindex="8" type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" <?php if ($disabled_email_tickbox == TRUE) { print "disabled"; } ?>>  Email these credentials to the user?
        </div>
       </div>
 <?php } ?>

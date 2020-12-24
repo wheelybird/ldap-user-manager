@@ -1,5 +1,7 @@
 <?php
 
+ $log_prefix = "";
+
  #Mandatory
 
  $LDAP['uri'] = getenv('LDAP_URI');
@@ -14,23 +16,15 @@
  $LDAP['group_ou'] = (getenv('LDAP_GROUP_OU') ? getenv('LDAP_GROUP_OU') : 'groups');
  $LDAP['user_ou'] = (getenv('LDAP_USER_OU') ? getenv('LDAP_USER_OU') : 'people');
 
- $LDAP['nis_schema'] = ((strcasecmp(getenv('LDAP_USES_NIS_SCHEMA'),'TRUE') == 0) ? TRUE : FALSE);
+ $LDAP['forced_rfc2308bis'] = ((strcasecmp(getenv('FORCE_RFC2307BIS'),'TRUE') == 0) ? TRUE : FALSE);
 
- if ($LDAP['nis_schema'] == TRUE) {
-  $default_membership_attribute = 'memberuid';
-  $default_group_membership_uses_uid = TRUE;
- }
- else {
-  $default_membership_attribute = 'uniquemember';
-  $default_group_membership_uses_uid = FALSE;
- }
-
- $LDAP['group_membership_attribute'] = (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') ? getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE') : $default_membership_attribute);
- $LDAP['group_membership_uses_uid'] = ((strcasecmp(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID'),'TRUE') == 0) ? TRUE : $default_group_membership_uses_uid);
+ if (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE')) { $LDAP['group_membership_attribute'] = getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE'); }
+ if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID') and strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == TRUE )  { $LDAP['group_membership_uses_uid']  = TRUE; }
 
  $LDAP['account_attribute'] = 'uid';
  $LDAP['require_starttls'] = ((strcasecmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : FALSE);
  $LDAP['ignore_cert_errors'] = ((strcasecmp(getenv('LDAP_IGNORE_CERT_ERRORS'),'TRUE') == 0) ? TRUE : FALSE);
+ $LDAP['rfc2307bis_check_run'] = FALSE;
 
  $DEFAULT_USER_GROUP = (getenv('DEFAULT_USER_GROUP') ? getenv('DEFAULT_USER_GROUP') : 'everybody');
  $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_USER_SHELL') : '/bin/bash');
@@ -46,7 +40,7 @@
  if (getenv('PASSWORD_HASH')) { $PASSWORD_HASH = strtoupper(getenv('PASSWORD_HASH')); }
 
  $ACCEPT_WEAK_PASSWORDS = ((strcasecmp(getenv('ACCEPT_WEAK_PASSWORDS'),'TRUE') == 0) ? TRUE : FALSE);
- $LOGIN_TIMEOUT_MINS = (getenv('SESSION_TIMEOUT') ? getenv('SESSION_TIMEOUT') : 10);
+ $SESSION_TIMEOUT = (getenv('SESSION_TIMEOUT') ? getenv('SESSION_TIMEOUT') : 10);
 
  $LDAP_DEBUG = ((strcasecmp(getenv('LDAP_DEBUG'),'TRUE') == 0) ? TRUE : FALSE);
  $LDAP_VERBOSE_CONNECTION_LOGS = ((strcasecmp(getenv('LDAP_VERBOSE_CONNECTION_LOGS'),'TRUE') == 0) ? TRUE : FALSE);
@@ -76,11 +70,22 @@
  $EMAIL['from_address'] = (getenv('EMAIL_FROM_ADDRESS') ? getenv('EMAIL_FROM_ADDRESS') : "admin@" . $default_email_from_domain );
  $EMAIL['from_name'] = (getenv('EMAIL_FROM_NAME') ? getenv('EMAIL_FROM_NAME') : $SITE_NAME );
 
- $NO_HTTPS = ((strcasecmp(getenv('NO_HTTPS'),'TRUE') == 0) ? TRUE : FALSE);
+ if ($SMTP['host'] != "") { $EMAIL_SENDING_ENABLED = TRUE; } else { $EMAIL_SENDING_ENABLED = FALSE; }
+
 
  ###
 
- $log_prefix = "";
+ $ACCOUNT_REQUESTS_ENABLED = ((strcasecmp(getenv('ACCOUNT_REQUESTS_ENABLED'),'TRUE') == 0) ? TRUE : FALSE);
+ if ($EMAIL_SENDING_ENABLED == FALSE) { 
+   $ACCOUNT_REQUESTS_ENABLED = FALSE;
+   error_log("$log_prefix Config: ACCOUNT_REQUESTS_ENABLED was set to TRUE but SMTP_HOSTNAME wasn't set, so account requesting has been disabled as we can't send out the request email",0);
+ }
+
+ $ACCOUNT_REQUESTS_EMAIL = (getenv('ACCOUNT_REQUESTS_EMAIL') ? getenv('ACCOUNT_REQUESTS_EMAIL') : $EMAIL['from_address']);
+
+ ###
+
+ $NO_HTTPS = ((strcasecmp(getenv('NO_HTTPS'),'TRUE') == 0) ? TRUE : FALSE);
 
  ###
 

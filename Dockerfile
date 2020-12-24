@@ -1,8 +1,21 @@
 FROM php:7.0-apache
 
-RUN apt-get update && apt-get install -y --no-install-recommends libldb-dev libldap2-dev && rm -rf /var/lib/apt/lists/* && ln -s /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so \
-&& ln -s /usr/lib/x86_64-linux-gnu/liblber.so /usr/lib/liblber.so
-RUN docker-php-source extract && docker-php-ext-install -j$(nproc) ldap && docker-php-source delete
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libldb-dev libldap2-dev \
+        libfreetype6-dev \
+        libjpeg-dev \
+        libpng-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    ln -s /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so && \
+    ln -s /usr/lib/x86_64-linux-gnu/liblber.so /usr/lib/liblber.so
+
+RUN docker-php-ext-configure gd \
+         --enable-gd-native-ttf \
+         --with-freetype-dir=/usr/include/freetype2 \
+         --with-png-dir=/usr/include \
+         --with-jpeg-dir=/usr/include && \
+    docker-php-ext-install -j$(nproc) ldap gd
 
 ADD https://github.com/PHPMailer/PHPMailer/archive/v6.2.0.tar.gz /tmp
 
