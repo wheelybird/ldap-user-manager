@@ -156,6 +156,8 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 * `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
 **Site security settings**   
 
+**Website sessions**
+
 * `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.
    
 * `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
