@@ -229,10 +229,10 @@ The user manager will attempt detect if your LDAP server has the RFC2307BIS sche
 
 With OpenLDAP this schema isn't normally available by default; you need to configure your server to use the **RFC2307BIS** schema when setting up your directory.   
    
-If for some reason you do have the schema available but it isn't being detected then you can force it's use by setting `FORCE_ENABLE_GROUP_OF_MEMBERS` to `TRUE`.   
+If for some reason you do have the schema available but it isn't being detected then you can force it's use by setting `FORCE_RFC2307BIS` to `TRUE`.   
 **Note**: if you force-enable using RFC2307BIS but your LDAP server doesn't have that schema available then creating and adding users to groups won't work and the user manager will throw errors.
    
-If you plan on using [osixia/openldap](https://github.com/osixia/docker-openldap) as your LDAP server you can enable the RFC2307BIS schema by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.
+If you plan on using (osixia/openldap)[https://github.com/osixia/docker-openldap] as your LDAP server you can enable the RFC2307BIS schema by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.
 
 
 
