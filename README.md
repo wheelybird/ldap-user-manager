@@ -225,14 +225,14 @@ If `EMAIL_DOMAIN` is set then the email address field will be automatically upda
 Using the RFC2307BIS schema
 ---
 
-The user manager will attempt detect if your LDAP server has the RFC2307BIS schema available and, if it does, use it when creating groups.  This will allow you to use `memberOf` in LDAP searches which gives you an easy way to check if a user is a member of a group. For example: `(&(objectClass=posixAccount)(memberof=cn=somegroup,ou=groups,dc=ldapusermanager,dc=org))`.   See (this guide)[https://unofficialaciguide.com/2019/07/31/ldap-schemas-for-aci-administrators-rfc2307-vs-rfc2307bis/] for more information.   
+The user manager will attempt detect if your LDAP server has the RFC2307BIS schema available and, if it does, use it when creating groups.  This will allow you to use `memberOf` in LDAP searches which gives you an easy way to check if a user is a member of a group. For example: `(&(objectClass=posixAccount)(memberof=cn=somegroup,ou=groups,dc=ldapusermanager,dc=org))`.   See [this guide](https://unofficialaciguide.com/2019/07/31/ldap-schemas-for-aci-administrators-rfc2307-vs-rfc2307bis/) for more information.   
 
 With OpenLDAP this schema isn't normally available by default; you need to configure your server to use the **RFC2307BIS** schema when setting up your directory.   
    
 If for some reason you do have the schema available but it isn't being detected then you can force it's use by setting `FORCE_RFC2307BIS` to `TRUE`.   
 **Note**: if you force-enable using RFC2307BIS but your LDAP server doesn't have that schema available then creating and adding users to groups won't work and the user manager will throw errors.
    
-If you plan on using (osixia/openldap)[https://github.com/osixia/docker-openldap] as your LDAP server you can enable the RFC2307BIS schema by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.
+If you plan on using [osixia/openldap](https://github.com/osixia/docker-openldap) as your LDAP server you can enable the RFC2307BIS schema by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.
 
 
 
