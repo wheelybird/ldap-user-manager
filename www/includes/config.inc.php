@@ -55,10 +55,10 @@
  ###
 
  $SMTP['host'] = getenv('SMTP_HOSTNAME');
- $SMTP['user'] = getenv('SMTP_USERNAME');
- $SMTP['pass'] = getenv('SMTP_PASSWORD');
+ $SMTP['user'] = (getenv('SMTP_USERNAME') ? getenv('SMTP_USERNAME') : NULL);
+ $SMTP['pass'] = (getenv('SMTP_PASSWORD') ? getenv('SMTP_PASSWORD') : NULL);
  $SMTP['port'] = (getenv('SMTP_HOST_PORT') ? getenv('SMTP_HOST_PORT') : 25);
- $SMTP['tls'] = ((strcasecmp(getenv('SMTP_USE_TLS'),'TRUE') == 0) ? TRUE : FALSE);
+ $SMTP['tls']  = ((strcasecmp(getenv('SMTP_USE_TLS'),'TRUE') == 0) ? TRUE : FALSE);
 
  $SMTP['debug_level'] = getenv('SMTP_LOG_LEVEL');
  if (!is_numeric($SMTP['debug_level']) or $SMTP['debug_level'] >4 or $SMTP['debug_level'] <0) { $SMTP['debug_level'] = 0; }
