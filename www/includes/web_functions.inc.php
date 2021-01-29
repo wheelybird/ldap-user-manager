@@ -423,9 +423,9 @@ function render_js_username_generator($firstname_field_id,$lastname_field_id,$us
 
   var actual_username = template;
 
-  actual_username = actual_username.replace('{first_name}', first_name.toLowerCase() );
+  actual_username = actual_username.replace('{first_name}', first_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') );
   actual_username = actual_username.replace('{first_name_initial}', first_name.charAt(0).toLowerCase() );
-  actual_username = actual_username.replace('{last_name}', last_name.toLowerCase() );
+  actual_username = actual_username.replace('{last_name}', last_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') );
   actual_username = actual_username.replace('{last_name_initial}', last_name.charAt(0).toLowerCase() );
 
   check_entity_name_validity(actual_username,'$username_div_id');
