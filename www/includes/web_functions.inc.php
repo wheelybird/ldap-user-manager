@@ -250,7 +250,8 @@ function render_menu() {
   <nav class="navbar navbar-default">
    <div class="container-fluid">
    <div class="navbar-header">
-     <a class="navbar-brand" href="#"><img src="../gfx/SlovenskoIT_logo.svg" width="30" height="30" class="d-inline-block align-top" alt=""><?php print $SITE_NAME ?></a>
+     <span class="navbar-brand"><img src="../gfx/SlovenskoIT_logo.svg" width="30" height="30" alt="logo">
+     <a class="navbar-brand" href="#"><?php print $SITE_NAME ?></a>
    </div>
      <ul class="nav navbar-nav">
      <?php
