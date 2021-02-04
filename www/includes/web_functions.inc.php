@@ -209,7 +209,7 @@ function log_out($method='normal') {
 
 function render_header($title="",$menu=TRUE) {
 
- global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS;
+ global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS, $CUSTOM_STYLES;
 
  if (empty($title)) { $title = $SITE_NAME; }
 
@@ -222,6 +222,7 @@ function render_header($title="",$menu=TRUE) {
  <meta charset="utf-8">
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+ <?php if ($CUSTOM_STYLES) echo '<link rel="stylesheet" href="'.$CUSTOM_STYLES.'">' ?>
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </HEAD>
@@ -249,11 +250,9 @@ function render_menu() {
  ?>
   <nav class="navbar navbar-default">
    <div class="container-fluid">
-   <div class="navbar-header">
-     <?php
+   <div class="navbar-header"><?php
       if ($CUSTOM_LOGO) echo '<span class="navbar-brand"><img src="'.$CUSTOM_LOGO.'" class="logo" style="margin-top: -7px; width: 30px; height: 30px" alt="logo"></span>'
-     ?>
-     <a class="navbar-brand" href="./"><?php print $SITE_NAME ?></a>
+     ?><a class="navbar-brand" href="./"><?php print $SITE_NAME ?></a>
    </div>
      <ul class="nav navbar-nav">
      <?php
