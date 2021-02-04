@@ -251,7 +251,7 @@ function render_menu() {
    <div class="container-fluid">
    <div class="navbar-header">
      <?php
-      if ($CUSTOM_LOGO) echo '<span class="navbar-brand"><img src="<?=$CUSTOM_LOGO?>" width="30" height="30" style="margin-top: -7px" alt="logo"></span>'
+      if ($CUSTOM_LOGO) echo '<span class="navbar-brand"><img src="<?=$CUSTOM_LOGO?>" class="logo" style="margin-top: -7px; width: 30px; height: 30px" alt="logo"></span>'
      ?>
      <a class="navbar-brand" href="./"><?php print $SITE_NAME ?></a>
    </div>
