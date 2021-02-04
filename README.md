@@ -162,6 +162,24 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
+**Website customs**
+
+* `$CUSTOM_LOGO` (default: *FALSE*)*: If this is defined with path to image file, then this image will be displayed in header. You need also mount volume with this file. 
+
+* `$CUSTOM_STYLES` (default: *FALSE*)*:  If this is defined with path to css file, then this style will be used in header. Also helps vith logo positioninig. You need also mount volume with this file.
+
+docker-compose.yml example:
+
+```yaml
+ldap-user-manager:
+  environment:
+    CUSTOM_LOGO: "../gfx/logo.svg"
+    CUSTOM_STYLES: "../css/custom.css"
+  volumes:
+    - '/opt/openldap/www/gfx:/opt/ldap_user_manager/gfx'
+    - '/opt/openldap/www/css:/opt/ldap_user_manager/css'
+```
+
 **Debugging settings**
 
 * `LDAP_DEBUG` (default: *FALSE*): Set to TRUE to increase the logging level for LDAP requests.  This will output passwords to the error log - don't enable this in a production environment.  This is for information on problems updating LDAP records and such.  To debug problems connecting to the LDAP server in the first place use `LDAP_VERBOSE_CONNECTION_LOGS`.
