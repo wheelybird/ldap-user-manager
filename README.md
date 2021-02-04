@@ -162,7 +162,7 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
-**Website customs**
+**Website customisation**
 
 * `$CUSTOM_LOGO` (default: *FALSE*)*: If this is defined with path to image file, then this image will be displayed in header. You need also mount volume with this file. 
 
