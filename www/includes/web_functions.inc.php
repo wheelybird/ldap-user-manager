@@ -244,14 +244,16 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN;
+ global $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $CUSTOM_LOGO;
 
  ?>
   <nav class="navbar navbar-default">
    <div class="container-fluid">
    <div class="navbar-header">
-     <span class="navbar-brand"><img src="../gfx/SlovenskoIT_logo.svg" width="30" height="30" style="margin-top: -7px" alt="logo"></span>
-     <a class="navbar-brand" href="#"><?php print $SITE_NAME ?></a>
+     <?php
+      if ($CUSTOM_LOGO) echo '<span class="navbar-brand"><img src="<?=$CUSTOM_LOGO?>" width="30" height="30" style="margin-top: -7px" alt="logo"></span>'
+     ?>
+     <a class="navbar-brand" href="./"><?php print $SITE_NAME ?></a>
    </div>
      <ul class="nav navbar-nav">
      <?php
