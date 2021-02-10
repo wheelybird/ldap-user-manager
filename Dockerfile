@@ -17,7 +17,7 @@ RUN docker-php-ext-configure gd \
 
 # The uname hack below is ... hacky, probably would
 # break if you cross compile for other archs 
-RUN docker-php-ext-config ldap --with-libdir=lib/`uname -m`-linux-gnu/ && \
+RUN docker-php-ext-configure ldap --with-libdir=lib/`uname -m`-linux-gnu/ && \
       docker-php-ext-install -j$(nproc) ldap
 
 
