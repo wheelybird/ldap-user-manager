@@ -6,16 +6,20 @@ RUN apt-get update && \
         libfreetype6-dev \
         libjpeg-dev \
         libpng-dev && \
-    rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so && \
-    ln -s /usr/lib/x86_64-linux-gnu/liblber.so /usr/lib/liblber.so
+    rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd \
          --enable-gd-native-ttf \
          --with-freetype-dir=/usr/include/freetype2 \
          --with-png-dir=/usr/include \
          --with-jpeg-dir=/usr/include && \
-    docker-php-ext-install -j$(nproc) ldap gd
+    docker-php-ext-install -j$(nproc) gd
+
+# The uname hack below is ... hacky, probably would
+# break if you cross compile for other archs 
+RUN docker-php-ext-config ldap --with-libdir=lib/`uname -m`-linux-gnu/ && \
+      docker-php-ext-install -j$(nproc) ldap
+
 
 ADD https://github.com/PHPMailer/PHPMailer/archive/v6.2.0.tar.gz /tmp
 
