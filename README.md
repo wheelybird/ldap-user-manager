@@ -107,9 +107,15 @@ Optional:
 
 These settings should only be changed if you're trying to make the user manager work with an LDAP directory that's already populated and the defaults don't work.
    
-* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user's account to a group.  When the `groupOfMembers` objectClass is detected or force-enabled it defaults to `uniqueMember`, otherwise it'll default to `memberUID`. Explicitly setting this variable will override any default.
+* `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The account attribute used as the account identifier.  See [Account names](#account-names) for more information.
    
-* `LDAP_GROUP_MEMBERSHIP_USES_UID` (default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username, otherwise it's the member's full DN.  When the `groupOfMembers` objectClass is detected or force-enabled it defaults to `FALSE`, otherwise it'll default to `TRUE`. Explicitly setting this variable will override the default.
+* `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user's account to a group.  When the `groupOfMembers` objectClass is detected `FORCE_RFC2307BIS` is `TRUE` it defaults to `uniqueMember`, otherwise it'll default to `memberUID`. Explicitly setting this variable will override any default.
+   
+* `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
+
+* `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` (no default): A comma-separated list of extra attributes to display when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
+   
+* `LDAP_GROUP_MEMBERSHIP_USES_UID` (default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username, otherwise it's the member's full DN.  When the `groupOfMembers` objectClass is detected or `FORCE_RFC2307BIS` is `TRUE` it  defaults to `FALSE`, otherwise it'll default to `TRUE`. Explicitly setting this variable will override the default.
    
 * `FORCE_RFC2307BIS` (default: *FALSE*): Set to *TRUE* if the auto-detection is failing to spot that the RFC2307BIS schema is available.  When *FALSE* the user manager will use auto-detection.  See [Using the RFC2307BIS schema](#using-the-rfc2307bis-schema) for more information.
    
@@ -122,9 +128,11 @@ These settings should only be changed if you're trying to make the user manager 
    
 * `EMAIL_DOMAIN` (no default):  If set then the email address field will be automatically populated in the form of `username@email_domain`.
    
-* `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate usernames.  See [Username format](#username-format).
+* `ENFORCE_SAFE_SYSTEM_NAMES` (default: *TRUE*):  If set to `TRUE` (the default) this will check system login and group names against `USERNAME_REGEX` to ensure they're safe to use on servers.  See [Account names](#account-names) for more information.
    
-* `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure a username (and group name) is valid.  See [Username format](#username-format).
+* `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate the usernames stored in the `uid` attribute.  See [Username format](#username-format).
+   
+* `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure account names and group names are safe to use on servers.  See [Username format](#username-format).
 
 * `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are (in order of precedence) `SHA512CRYPT`, `SHA256CRYPT`, `MD5CRYPT`, `SSHA`, `SHA`, `SMD5`, `MD5`, `CRYPT` & `CLEAR`.  If your chosen method isn't available on your system then the strongest available method will be automatically selected - `SSHA` is the strongest method guaranteed to be available.  Cleartext passwords should NEVER be used in any situation outside of a test.
    
@@ -145,15 +153,15 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `SMTP_USE_TLS` (default: *FALSE*): Set to TRUE if the SMTP server requires TLS to be enabled.
    
-* `EMAIL_FROM_ADDRESS` (default: *admin@{EMAIL_DOMAIN}*): The FROM email address used when sending out emails.  The default domain is taken from `EMAIL_DOMAIN` under **User account settings**.
+* `EMAIL_FROM_ADDRESS` (default: *admin@`EMAIL_DOMAIN`*): The FROM email address used when sending out emails.  The default domain is taken from `EMAIL_DOMAIN` under **User account settings**.
    
-* `EMAIL_FROM_NAME` (default: *{SITE_NAME}*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
+* `EMAIL_FROM_NAME` (default: *`SITE_NAME`*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
 
 **Account requests**
 
-* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to {ACCOUNT_REQUESTS_EMAIL} with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.
+* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.
    
-* `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
+* `ACCOUNT_REQUESTS_EMAIL` (default: *`EMAIL_FROM_ADDRESS`*): This is the email address that any requests for a new account are sent to.
 **Site security settings**   
 
 **Website sessions**
@@ -205,10 +213,25 @@ If you haven't passed in those settings or if the account you've created has no 
 
 When the account is created you'll be told if the email was sent or not but be aware that just because your SMTP server accepted the email it doesn't mean that it was able to deliver it.  If you get a message saying the email wasn't sent then check the logs for the error.  You can increase the log level (`SMTP_LOG_LEVEL`) to above 0 in order to see SMTP debug logs.
 
+
+Account names
+---
+
+You log into the user manager with whatever the *account identifier* value is for your account.  By default the user manager uses the **System username** as your login.  This is actually the LDAP `uid` attribute.  So if your system username is `test-person`, that's what you'll use to log in with.    
+   
+The `uid` is the attribute that's normally used as the login username for systems like Linux, FreeBSD, NetBSD etc., and so is a great choice if you're using LDAP to create server accounts.   
+Other services or software might use the *Common Name* (`cn`) attribute, which is normally a person's full name. So you might therefore log in as `Test Person`.   
+   
+The account identifier is what uniquely identifies the account, so you can't create multiple accounts where the account identifier is the same.   
+You should ensure your LDAP clients use the same account identifier attribute when authenticating users.   
+   
+If you're using LDAP for server accounts then you'll find there are  normally constraints on how many cahracters and the type of characters you're allowed to use.  The user manager will validate user and group names against `USERNAME_REGEX`.  If you don't need to be so strict then you can disable these checks by setting `ENFORCE_SAFE_SYSTEM_NAMES` to `FALSE`.
+
+
 Username format
 ---
 
-When entering the user's first and last names a bit of JavaScript automatically generates the username.  The way it generates is it based on a template format defined by `USERNAME_FORMAT`.  This is basically a string in which predefined macros are replaced by the formatted first and/or last name.   
+When entering a person's name the system username is automatically filled-in based on a template.  The template is defined in `USERNAME_FORMAT` and is a string containing predefined macros that are replaced with the relevant value.   
 The default is `{first_name}-{last_name}` with which *Jonathan Testperson*'s username would be *jonathan-testperson*.   
 Currently the available macros are:
 
@@ -217,23 +240,38 @@ Currently the available macros are:
 * `{last_name}`: the last name in lowercase
 * `{last_name_initial}`: the first initial of the last name in lowercase
 
-Anything else in the `USERNAME_FORMAT` string is left as defined, but the username is also checked for validity against `USERNAME_REGEX`.  This is to ensure that there aren't any characters forbidden by other systems (i.e. email or Linux/Unix accounts).
-
+Anything else in the `USERNAME_FORMAT` string is left unmodified.  If `ENFORCE_SAFE_SYSTEM_NAMES` is set then the username is also checked for validity against `USERNAME_REGEX`.  This is to ensure that there aren't any characters forbidden when using LDAP to create server or email accounts.   
+   
 If `EMAIL_DOMAIN` is set then the email address field will be automatically updated in the form of `username@email_domain`.  Entering anything manually in that field will stop the automatic update of the email field.
 
+
+Extra objectClasses and attributes
+---
+
+If you need to use this user manager with an existing LDAP directory and your account records need additional objectClasses and attributes then you can add them via `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` and `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES`.   
+
+`LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` is a comma-separated list of objectClasses to add when creating the account record.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
+
+To add extra fields for new attributes you need to pass a comma-separated string of the attributes and optionally the label for the attribute (which will be shown on the user form) and a default value to `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES`.   
+The format for configuring an attribute is: `attribute1:label1,default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
+An example (for the couriermailaccount objectClass) would be: `mailbox:Mailbox:domain.com,quota:Mail quota:20`   
+   
+ObjectClasses often have attributes that must have a value, so you should definitely set a default for those attributes.   
+
+This is advanced stuff and the user manager doesn't attempt to validate any objectClasses or any attributes, labels or default values you pass in.  It's up to you to ensure that your LDAP server has the appropriate schemas and that the labels and values are sane.
 
 Using the RFC2307BIS schema
 ---
 
-The user manager will attempt detect if your LDAP server has the RFC2307BIS schema available and, if it does, use it when creating groups.  This will allow you to use `memberOf` in LDAP searches which gives you an easy way to check if a user is a member of a group. For example: `(&(objectClass=posixAccount)(memberof=cn=somegroup,ou=groups,dc=ldapusermanager,dc=org))`.   See [this guide](https://unofficialaciguide.com/2019/07/31/ldap-schemas-for-aci-administrators-rfc2307-vs-rfc2307bis/) for more information.   
-
-With OpenLDAP this schema isn't normally available by default; you need to configure your server to use the **RFC2307BIS** schema when setting up your directory.   
+Using the **RFC2307BIS** will allow you to use `memberOf` in LDAP searches which gives you an easy way to check if a user is a member of a group. For example: `(&(objectClass=posixAccount)(memberof=cn=somegroup,ou=groups,dc=ldapusermanager,dc=org))`.   
    
-If for some reason you do have the schema available but it isn't being detected then you can force it's use by setting `FORCE_RFC2307BIS` to `TRUE`.   
+OpenLDAP will use the RFC2307 (NIS) schema by default; you'll need to configure your server to use the **RFC2307BIS** schema when setting up your directory.    See [this guide](https://unofficialaciguide.com/2019/07/31/ldap-schemas-for-aci-administrators-rfc2307-vs-rfc2307bis/) for more information regarding RFC2307 vs RFC2307BIS.   
+Setting up RFC2307BIS is way beyond the scope of this README, but if you plan on using [osixia/openldap](https://github.com/osixia/docker-openldap) as your LDAP server then you can easily enable the RFC2307BIS schema by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.   
+   
+The user manager will attempt detect if your LDAP server has the RFC2307BIS schema available and, if it does, use it when creating groups.  This will allow you to use `memberOf` in LDAP searches which gives you an easy way to check if a user is a member of a group. For example: `(&(objectClass=posixAccount)(memberof=cn=somegroup,ou=groups,dc=ldapusermanager,dc=org))`.   
+
+If for some reason you do have the schema available but it isn't being detected then you can force the user manager to use it by setting `FORCE_RFC2307BIS` to `TRUE`.   
 **Note**: if you force-enable using RFC2307BIS but your LDAP server doesn't have that schema available then creating and adding users to groups won't work and the user manager will throw errors.
-   
-If you plan on using [osixia/openldap](https://github.com/osixia/docker-openldap) as your LDAP server you can enable the RFC2307BIS schema by setting `LDAP_RFC2307BIS_SCHEMA` to `true` during the initial setup.
-
 
 
 Testing with an LDAP container

@@ -14,71 +14,59 @@ $invalid_password = FALSE;
 $mismatched_passwords = FALSE;
 $invalid_username = FALSE;
 $weak_password = FALSE;
+$to_update = array();
 
 if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FALSE; }
 
-$attribute_map = array( "givenname"      => "First name",
-                        "sn"             => "Last name",
-                        "uidnumber"      => "UID",
-                        "gidnumber"      => "GID",
-                        "loginshell"     => "Login shell",
-                        "homedirectory"  => "Home directory",
-                        "mail"           => "Email"
-                       );
+$LDAP['default_attribute_map']["uidnumber"]  = array("label" => "UID");
+$LDAP['default_attribute_map']["gidnumber"]  = array("label" => "GID");
+$LDAP['default_attribute_map']["loginshell"] = array("label" => "Login shell");
+$LDAP['default_attribute_map']["homedirectory"]  = array("label" => "Home directory");
+$LDAP['default_attribute_map']["mail"]  = array("label" => "Email", "onkeyup" => "check_if_we_should_enable_sending_email();");
 
+$attribute_map = ldap_complete_account_attribute_array();
 
-$ldap_connection = open_ldap_connection();
-
-
-if (!isset($_POST['username']) and !isset($_GET['username'])) {
+if (!isset($_POST['account_identifier']) and !isset($_GET['account_identifier'])) {
 ?>
  <div class="alert alert-danger">
-  <p class="text-center">The username is missing.</p>
+  <p class="text-center">The account identifier is missing.</p>
  </div>
 <?php
 render_footer();
 exit(0);
 }
 else {
- $username = (isset($_POST['username']) ? $_POST['username'] : $_GET['username']);
- $username = urldecode($username);
+ $account_identifier = (isset($_POST['account_identifier']) ? $_POST['account_identifier'] : $_GET['account_identifier']);
+ $account_identifier = urldecode($account_identifier);
 }
 
-if (!preg_match("/$USERNAME_REGEX/",$username)) {
-?>
- <div class="alert alert-danger">
-  <p class="text-center">The username <b><?php print "$username"; ?></b> is invalid.</p>
- </div>
-<?php
-render_footer();
-exit(0);
-}
-
-$ldap_search_query="(${LDAP['account_attribute']}=". ldap_escape($username, "", LDAP_ESCAPE_FILTER) . ")";
+$ldap_connection = open_ldap_connection();
+$ldap_search_query="(${LDAP['account_attribute']}=". ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ")";
 $ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query);
-
 
 if ($ldap_search) {
 
  $user = ldap_get_entries($ldap_connection, $ldap_search);
 
+ foreach ($attribute_map as $attribute => $attr_r) {
 
- ################################################
+   $$attribute = $user[0][$attribute][0];
 
- ### Check for updates
-
- if (isset($_POST['update_account'])) {
-
-  $to_update = array();
-
-  foreach ($attribute_map as $key => $value) {
-
-   if ($user[0][$key][0] != $_POST[$key]) {
-    $to_update[$key] = $_POST[$key];
-    $user[0][$key][0] = $_POST[$key];
+   if (isset($_POST['update_account']) and isset($_POST[$attribute]) and $_POST[$attribute] != $$attribute) {
+     $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
+     $to_update[$attribute] = $$attribute;
+   }
+   elseif (isset($attr_r['default'])) {
+     $$attribute = $attr_r['default'];
    }
 
-  }
+ }
+ $dn = $user[0]['dn'];
+
+
+ ### Update values
+
+ if (isset($_POST['update_account'])) {
 
   if (isset($_POST['password']) and $_POST['password'] != "") {
 
@@ -87,42 +75,53 @@ if ($ldap_search) {
     if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
     if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
     if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
-    if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }
+    if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$USERNAME_REGEX/",$account_identifier)) { $invalid_username = TRUE; }
 
-   if ( !$mismatched_passwords
+    if ( !$mismatched_passwords
        and !$weak_password
        and !$invalid_password
                              ) {
-    $to_update['userpassword'] = ldap_hashed_password($password);
-   }
+     $to_update['userpassword'] = ldap_hashed_password($password);
+    }
   }
 
-  if (isset($_POST['send_email']) and isset($user[0]['mail'][0]) and $can_send_email == TRUE) {
-    $user_email = $user[0]['mail'][0];
-    $first_name = $user[0]['givenname'][0];
-    $last_name  = $user[0]['sn'][0];
+  if (array_key_exists($LDAP['account_attribute'], $to_update)) {
+    $new_rdn = "${LDAP['account_attribute']}=${to_update[$LDAP['account_attribute']]}";
+    $renamed_entry = ldap_rename($ldap_connection, $dn, $new_rdn, $LDAP['user_dn'], true);
+    if ($renamed_entry) {
+      $dn = "${new_rdn},${LDAP['user_dn']}";
+      $account_identifier = $to_update[$LDAP['account_attribute']];
+    }
+    else {
+      ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
+      error_log("$log_prefix Failed to rename the DN for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
+    }
   }
 
-  $updated_account = ldap_mod_replace($ldap_connection, $user[0]['dn'] , $to_update);
+  $updated_account = @ ldap_mod_replace($ldap_connection, $dn, $to_update);
+  if (!$updated_account) {
+    ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
+    error_log("$log_prefix Failed to modify account details for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
+  }
 
   $sent_email_message="";
-  if ($updated_account and isset($user_email)) {
+  if ($updated_account and isset($mail) and $can_send_email == TRUE and isset($_POST['send_email'])) {
 
       $mail_subject = "Your $ORGANISATION_NAME password has been reset.";
 
 $mail_body = <<<EoT
 Your password for $ORGANISATION_NAME has been reset.  Your new credentials are:
 
-Username: $username
+Username: $account_identifier
 Password: $password
 
 You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password and log in using your new credentials.  This will take you to a page where you can change your password.
 EoT;
 
       include_once "mail_functions.inc.php";
-      $sent_email = send_email($user_email,"$first_name $last_name",$mail_subject,$mail_body);
+      $sent_email = send_email($mail,"$givenname $sn",$mail_subject,$mail_body);
       if ($sent_email) {
-        $sent_email_message .= "  An email sent to $user_email.";
+        $sent_email_message .= "  An email sent to $mail.";
       }
       else {
         $sent_email_message .= "  Unfortunately the email wasn't sent; check the logs for more information.";
@@ -138,7 +137,7 @@ EoT;
    </script>
    <div class="alert alert-success" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <strong>Success!</strong> The account has been updated.<?php print $sent_email_message; ?>
+    <p class="text-center">The account has been updated.<?php print $sent_email_message; ?></p>
    </div>
   <?php
   }
@@ -151,7 +150,7 @@ EoT;
    </script>
    <div class="alert alert-danger" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <strong>Error!</strong> There was a problem updating the account.  Check the logs for more information.
+    <p class="text-center">There was a problem updating the account.  Check the logs for more information.</p>
    </div>
   <?php
   }
@@ -182,10 +181,9 @@ EoT;
 
  $all_groups = ldap_get_group_list($ldap_connection);
 
- $currently_member_of = ldap_user_group_membership($ldap_connection,$username);
+ $currently_member_of = ldap_user_group_membership($ldap_connection,$account_identifier);
 
  $not_member_of = array_diff($all_groups,$currently_member_of);
-
 
  #########  Add/remove from groups
 
@@ -194,19 +192,23 @@ EoT;
   $updated_group_membership = array();
 
   foreach ($_POST as $index => $group) {
-   if (is_numeric($index) and preg_match("/$USERNAME_REGEX/",$group)) {
+   if (is_numeric($index)) {
     array_push($updated_group_membership,$group);
    }
+  }
+
+  if ($USER_ID == $account_identifier and !array_search($USER_ID, $updated_group_membership)){
+    array_push($updated_group_membership,$LDAP["admins_group"]);
   }
 
   $groups_to_add = array_diff($updated_group_membership,$currently_member_of);
   $groups_to_del = array_diff($currently_member_of,$updated_group_membership);
 
   foreach ($groups_to_del as $this_group) {
-   ldap_delete_member_from_group($ldap_connection,$this_group,$username);
+   ldap_delete_member_from_group($ldap_connection,$this_group,$account_identifier);
   }
   foreach ($groups_to_add as $this_group) {
-   ldap_add_member_to_group($ldap_connection,$this_group,$username);
+   ldap_add_member_to_group($ldap_connection,$this_group,$account_identifier);
   }
 
   $not_member_of = array_diff($all_groups,$updated_group_membership);
@@ -220,7 +222,7 @@ EoT;
    </script>
    <div class="alert alert-success" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <strong>Success!</strong> The group membership has been updated.
+    <p class="text-center">The group membership has been updated.</p>
    </div>
 
   <?php
@@ -229,9 +231,6 @@ EoT;
  else {
   $member_of = $currently_member_of;
  }
-
-$account_name = $user[0]['uid'][0];
-$full_dn = $user[0]['dn'];
 
 ################
 
@@ -376,37 +375,39 @@ $full_dn = $user[0]['dn'];
 </script>
 
 <div class="container">
- <div class="col-sm-7">
+ <div class="col-sm-8 col-md-offset-2">
 
   <div class="panel panel-default">
     <div class="panel-heading clearfix">
-     <span class="panel-title pull-left"><h3><?php print $account_name; ?></h3></span>
-     <button class="btn btn-warning pull-right align-self-end" style="margin-top: auto;" onclick="show_delete_user_button();">Delete account</button>
-     <form action="/<?php print $THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($username); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
+     <span class="panel-title pull-left"><h3><?php print $account_identifier; ?></h3></span>
+     <button class="btn btn-warning pull-right align-self-end" style="margin-top: auto;" onclick="show_delete_user_button();" <?php if ($account_identifier == $USER_ID) { print "disabled"; }?>>Delete account</button>
+     <form action="/<?php print $THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
     </div>
     <ul class="list-group">
-      <li class="list-group-item"><?php print $full_dn; ?></li>
+      <li class="list-group-item"><?php print $dn; ?></li>
     </li>
     <div class="panel-body">
      <form class="form-horizontal" action="" method="post">
 
       <input type="hidden" name="update_account">
       <input type="hidden" id="pass_score" value="0" name="pass_score">
-      <input type="hidden" name="username" value="<?php print $username; ?>">
+      <input type="hidden" name="account_identifier" value="<?php print $account_identifier; ?>">
 
 
 <?php
 
-  foreach ($attribute_map as $key => $value) {
+  foreach ($attribute_map as $attribute => $attr_r) {
+    $label   = $attr_r['label'];
+    $onkeyup = $attr_r['onkeyup'];
+    if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
   ?>
-      <div class="form-group" id="<?php print $key; ?>_div">
-       <label for="<?php print $key; ?>" class="col-sm-3 control-label"><?php print $value; ?></label>
-       <div class="col-sm-6">
-        <input type="text" class="form-control" id="<?php print $key; ?>" name="<?php print $key; ?>" value="<?php print $user[0][$key][0]; ?>" <?php
-          if ($key == "mail") { print 'onkeyup="check_if_we_should_enable_sending_email();"'; }
-        ?>>
-       </div>
+     <div class="form-group" id="<?php print $attribute; ?>_div">
+      <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
+      <div class="col-sm-6">
+       <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
+         if (isset($onkeyup)) { print "onkeyup=\"$onkeyup;\""; } ?>>
       </div>
+     </div>
   <?php
   }
 ?>
@@ -448,6 +449,8 @@ $full_dn = $user[0]['dn'];
      <div id="StrengthProgressBar" class="progress-bar"></div>
     </div>
 
+    <div><p align='center'><sup>&ast;</sup>The account identifier.  Changing this will change the full <strong>DN</strong>.</p></div>
+
    </div>
   </div>
 
@@ -484,7 +487,12 @@ $full_dn = $user[0]['dn'];
            <ul class="list-group" id="member_of_list">
             <?php
             foreach ($member_of as $group) {
-              print "<li class='list-group-item'>$group</li>\n";
+              if ($group == $LDAP["admins_group"] and $USER_ID == $account_identifier) {
+                print "<div class='list-group-item' style='opacity: 0.5; pointer-events:none;'>${group}</div>\n";
+              }
+              else {
+                print "<li class='list-group-item'>$group</li>\n";
+              }
             }
             ?>
            </ul>
@@ -500,7 +508,7 @@ $full_dn = $user[0]['dn'];
           </button>
           <form id="update_with_groups" action="<?php print $CURRENT_PAGE; ?>" method="post">
            <input type="hidden" name="update_member_of">
-           <input type="hidden" name="username" value="<?php print $username; ?>">
+           <input type="hidden" name="account_identifier" value="<?php print $account_identifier; ?>">
           </form>
           <button id="submit_members" class="btn btn-info" disabled type="submit" onclick="update_form_with_groups()">Save</button>
          </div>
