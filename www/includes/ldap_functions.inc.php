@@ -93,7 +93,7 @@ function ldap_auth_username($ldap_connection,$username, $password) {
  $ldap_search_query="${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER);
  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Running LDAP search for: $ldap_search_query"); }
 
- $ldap_search = @ ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query );
+ $ldap_search = @ ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_query );
 
  if (!$ldap_search) {
   error_log("$log_prefix Couldn't search for $ldap_search_query: " . ldap_error($ldap_connection),0);
@@ -926,7 +926,7 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
  #Find DN of user
 
  $ldap_search_query = "${LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER);
- $ldap_search = @ ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query);
+ $ldap_search = @ ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_query);
  if ($ldap_search) {
   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
   if ($result["count"] == 1) {
