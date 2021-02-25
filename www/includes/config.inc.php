@@ -122,7 +122,7 @@
  }
 
  if ($errors != "") {
-  render_header();
+  render_header("Fatal errors",false);
   print $errors;
   render_footer();
   exit(1);
