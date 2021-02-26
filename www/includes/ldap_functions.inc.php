@@ -31,7 +31,7 @@ function open_ldap_connection($ldap_bind=TRUE) {
     exit(0);
    }
    else {
-    if ($SENT_HEADERS == TRUE) {
+    if ($SENT_HEADERS == TRUE and !preg_match('/^ldap:\/\/localhost(:[0-9]+)?$', $LDAP['uri']) and !preg_match('/^ldap:\/\/127\.0\.0\.([0-9]+)(:[0-9]+)$', $LDAP['uri'])) {
       print "<div style='position: fixed;bottom: 0px;width: 100%;height: 20px;border-bottom:solid 20px yellow;'>WARNING: Insecure LDAP connection to ${LDAP['uri']}</div>";
     }
     ldap_close($ldap_connection);
@@ -688,18 +688,17 @@ function ldap_complete_account_attribute_array() {
  global $LDAP;
 
  $attribute_r = $LDAP['default_attribute_map'];
+ $additional_attributes_r = array();
 
  if (isset($LDAP['account_additional_attributes'])) {
 
-  #string might look like:    attributeName1:Attribute Description1:default_value1,attributeName2:Attribute Description2,attributeName3,attributeName4:Attribute Description4
+  $user_attribute_r = explode(",", $LDAP['account_additional_attributes']);
 
-  $additional_attribute_r = explode(",", $LDAP['account_additional_attributes']);
-
-  foreach ($additional_attribute_r as $this_attr) {
+  foreach ($user_attribute_r as $this_attr) {
 
     $this_r = array();
     $kv = explode(":", $this_attr);
-    $attr_name = filter_var($kv[0], FILTER_SANITIZE_STRING);
+    $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_STRING));
 
     if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
 
@@ -714,12 +713,12 @@ function ldap_complete_account_attribute_array() {
       $this_r['default'] = filter_var($kv[2], FILTER_SANITIZE_STRING);
      }
 
-     $return_r[$attr_name] = $this_r;
+     $additional_attributes_r[$attr_name] = $this_r;
 
-    }
+   }
   }
 
-  $attribute_r = array_merge($attribute_r, $additional_attribute_r);
+  $attribute_r = array_merge($attribute_r, $additional_attributes_r);
 
  }
 
