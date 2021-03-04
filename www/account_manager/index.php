@@ -48,9 +48,8 @@ if (isset($_POST['delete_user'])) {
  }
 
 }
-
+#'
 $people = ldap_get_user_list($ldap_connection);
-ldap_close($ldap_connection);
 
 ?>
 <div class="container">
@@ -64,15 +63,20 @@ ldap_close($ldap_connection);
      <th>First name</th>
      <th>Last name</th>
      <th>Email</th>
+     <th>Member of</th>
    </tr>
   </thead>
  <tbody>
 <?php
 foreach ($people as $username => $attribs){
+
+ $group_membership = ldap_user_group_membership($ldap_connection,$username);
+
  print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_user.php?username=" . urlencode($username) . "'>$username</a></td>\n";
  print "   <td>" . $people[$username]['givenname'] . "</td>\n";
  print "   <td>" . $people[$username]['sn'] . "</td>\n";
  print "   <td>" . $people[$username]['mail'] . "</td>\n";
+ print "   <td>" . implode(", ", $group_membership) . "</td>\n";
  print " </tr>\n";
 }
 ?>
@@ -81,5 +85,6 @@ foreach ($people as $username => $attribs){
 </div>
 <?php
 
+ldap_close($ldap_connection);
 render_footer();
 ?>

@@ -37,7 +37,7 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
     return FALSE;
   }
   else {
-    error_log("$log_prefix New user: sent a new account email to $recipient_email ($recipient_name)");
+    error_log("$log_prefix SMTP: sent an email to $recipient_email ($recipient_name)");
     return TRUE;
   }
 
