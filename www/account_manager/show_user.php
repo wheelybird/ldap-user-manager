@@ -42,7 +42,7 @@ else {
 
 $ldap_connection = open_ldap_connection();
 $ldap_search_query="(${LDAP['account_attribute']}=". ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ")";
-$ldap_search = ldap_search( $ldap_connection, $LDAP['base_dn'], $ldap_search_query);
+$ldap_search = ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_query);
 
 if ($ldap_search) {
 

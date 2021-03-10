@@ -343,7 +343,7 @@ function fetch_id_stored_in_ldap($ldap_connection,$type="uid") {
   global $log_prefix, $LDAP, $LDAP_DEBUG;
 
   $filter = "(&(objectclass=device)(cn=last${type}))";
-  $ldap_search = ldap_search($ldap_connection, "${LDAP['base_dn']}", $filter, array('serialNumber'));
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['base_dn']}", $filter, array('serialNumber'));
   $result = ldap_get_entries($ldap_connection, $ldap_search);
 
   $fetched_id = $result[0]['serialnumber'][0];
@@ -390,7 +390,7 @@ function ldap_get_highest_id($ldap_connection,$type="uid") {
 
   error_log("$log_prefix cn=lastGID doesn't exist so the highest $type is determined by searching through all the LDAP records.",0);
 
-  $ldap_search = ldap_search($ldap_connection, $record_base_dn, $record_filter, array($record_attribute));
+  $ldap_search = @ ldap_search($ldap_connection, $record_base_dn, $record_filter, array($record_attribute));
   $result = ldap_get_entries($ldap_connection, $ldap_search);
 
   foreach ($result as $record) {
@@ -414,7 +414,7 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  $this_filter = "(&(objectclass=*)$filters)";
- $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter);
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter);
 
  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
@@ -516,7 +516,7 @@ function ldap_is_group_member($ldap_connection,$group_name,$username) {
  if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
 
  $ldap_search_query = "(cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
- $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
  $result = ldap_get_entries($ldap_connection, $ldap_search);
 
  if ($LDAP['group_membership_uses_uid'] == FALSE) {
@@ -546,7 +546,7 @@ function ldap_user_group_membership($ldap_connection,$username) {
  }
 
  $ldap_search_query = "(&(objectClass=posixGroup)(${LDAP['group_membership_attribute']}=${username}))";
- $ldap_search = ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array('cn'));
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array('cn'));
  $result = ldap_get_entries($ldap_connection, $ldap_search);
 
  $groups = array();
