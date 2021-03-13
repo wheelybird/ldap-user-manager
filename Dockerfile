@@ -14,13 +14,13 @@ RUN docker-php-ext-configure gd \
          --with-png-dir=/usr/include \
          --with-jpeg-dir=/usr/include && \
     docker-php-ext-install -j$(nproc) gd && \
-    docker-php-ext-configure ldap --with-libdir=lib/`uname -m`-linux-gnu/ && \
+    libdir=$(find /usr -name "libldap.so*" | sed -e 's/\/usr\///' -e 's/\/libldap.so//') && \
+    docker-php-ext-configure ldap --with-libdir=$libdir && \
     docker-php-ext-install -j$(nproc) ldap
 
 ADD https://github.com/PHPMailer/PHPMailer/archive/v6.2.0.tar.gz /tmp
 
-RUN a2enmod rewrite ssl
-RUN a2dissite 000-default default-ssl
+RUN a2enmod rewrite ssl && a2dissite 000-default default-ssl
 
 EXPOSE 80
 EXPOSE 443
