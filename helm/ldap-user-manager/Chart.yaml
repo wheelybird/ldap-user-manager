@@ -1,9 +1,0 @@
-apiVersion: v1
-description: A helm chart for ldap-user-manager
-name: ldap-user-manager
-version: 0.0.1 # Will be replaced during build
-sources:
-- https://github.com/wheelybird/ldap-user-manager
-maintainers:
-- name: Abhishek Srivastava
-  email: abhishekguitarist@gmail.com
