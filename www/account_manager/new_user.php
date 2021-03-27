@@ -133,10 +133,10 @@ You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SE
 EoT;
 
       include_once "mail_functions.inc.php";
-      $sent_email = send_email($email,"$first_name $last_name",$mail_subject,$mail_body);
+      $sent_email = send_email($mail,"$first_name $last_name",$mail_subject,$mail_body);
       $creation_message = "The account was created";
       if ($sent_email) {
-        $creation_message .= " and an email sent to $email.";
+        $creation_message .= " and an email sent to $mail.";
       }
       else {
         $creation_message .= " but unfortunately the email wasn't sent.<br>More information will be available in the logs.";
