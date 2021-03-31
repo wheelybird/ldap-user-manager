@@ -52,7 +52,7 @@ $people = ldap_get_user_list($ldap_connection);
 ?>
 <div class="container">
 <div>
-  <p><?php count($people);?> accounts</p>
+  <p><?php print count($people);?> accounts</p>
 </div>
 
  <form action="/<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post">
