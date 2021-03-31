@@ -133,9 +133,9 @@ You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SE
 EoT;
 
       // Replace special substring with user variables (substring are used in env)
-      $mail_body = str_replace("#username#", $username, $mail_body);
-      $mail_body = str_replace("#first_name#", $first_name, $mail_body);
-      $mail_body = str_replace("#last_name#", $last_name, $mail_body);
+      $mail_body = str_replace("#username#", $account_identifier, $mail_body);
+      $mail_body = str_replace("#first_name#", $givenname, $mail_body);
+      $mail_body = str_replace("#last_name#", $sn, $mail_body);
       $mail_body = str_replace("#password#", $password, $mail_body);
 
       include_once "mail_functions.inc.php";
