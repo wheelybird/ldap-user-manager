@@ -25,27 +25,25 @@ if (isset($_POST['delete_user'])) {
  $this_user = $_POST['delete_user'];
  $this_user = urldecode($this_user);
 
- if (preg_match("/$USERNAME_REGEX/",$this_user)) {
+ $del_user = ldap_delete_account($ldap_connection,$this_user);
 
-  $del_user = ldap_delete_account($ldap_connection,$this_user);
-
-  if ($del_user) {
-  ?>
-  <div class="alert alert-success" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <strong>Success!</strong> User <strong><?php print $this_user; ?> was deleted.
-  </div>
-  <?php
-  }
-  else {
-  ?>
-  <div class="alert alert-danger" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <strong>Problem!</strong> User <strong><?php print $this_user; ?></strong> wasn't deleted.
-  </div>
-  <?php
-  }
+ if ($del_user) {
+ ?>
+ <div class="alert alert-success" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
+  <p class="text-center">User <strong><?php print $this_user; ?> was deleted.</p>
+ </div>
+ <?php
  }
+ else {
+ ?>
+ <div class="alert alert-danger" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
+  <p class="text-center">User <strong><?php print $this_user; ?></strong> wasn't deleted.</p>
+ </div>
+ <?php
+ }
+
 
 }
 #'
@@ -59,7 +57,7 @@ $people = ldap_get_user_list($ldap_connection);
  <table class="table table-striped">
   <thead>
    <tr>
-     <th>Username</th>
+     <th>Account name</th>
      <th>First name</th>
      <th>Last name</th>
      <th>Email</th>
@@ -68,14 +66,14 @@ $people = ldap_get_user_list($ldap_connection);
   </thead>
  <tbody>
 <?php
-foreach ($people as $username => $attribs){
+foreach ($people as $account_identifier => $attribs){
 
- $group_membership = ldap_user_group_membership($ldap_connection,$username);
+ $group_membership = ldap_user_group_membership($ldap_connection,$account_identifier);
 
- print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_user.php?username=" . urlencode($username) . "'>$username</a></td>\n";
- print "   <td>" . $people[$username]['givenname'] . "</td>\n";
- print "   <td>" . $people[$username]['sn'] . "</td>\n";
- print "   <td>" . $people[$username]['mail'] . "</td>\n";
+ print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_user.php?account_identifier=" . urlencode($account_identifier) . "'>$account_identifier</a></td>\n";
+ print "   <td>" . $people[$account_identifier]['givenname'] . "</td>\n";
+ print "   <td>" . $people[$account_identifier]['sn'] . "</td>\n";
+ print "   <td>" . $people[$account_identifier]['mail'] . "</td>\n";
  print "   <td>" . implode(", ", $group_membership) . "</td>\n";
  print " </tr>\n";
 }
