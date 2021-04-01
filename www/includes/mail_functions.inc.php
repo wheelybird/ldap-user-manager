@@ -9,6 +9,7 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
   global $EMAIL, $SMTP, $log_prefix;
 
   $mail = new PHPMailer\PHPMailer\PHPMailer();
+  $mail->CharSet = 'UTF-8';
   $mail->isSMTP();
 
   $mail->SMTPDebug = $SMTP['debug_level'];
@@ -29,6 +30,7 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
   $mail->addAddress($recipient_email, $recipient_name);
   $mail->Subject = $subject;
   $mail->Body = $body;
+  $mail->IsHTML(true);
 
   if (!$mail->Send())  {
     error_log("$log_prefix SMTP: Unable to send email: " . $mail->ErrorInfo);

@@ -156,11 +156,24 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `EMAIL_FROM_NAME` (default: *`SITE_NAME`*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
 
+* `MAIL_SUBJECT` (default: Your $ORGANISATION_NAME account has been created.): The mail subject
+
+* `MAIL_BODY` (default: ): The mail body. You can use the following substring in the body which will be replaced by user info:
+
+  - `#username#`: the user username
+  - `#first_name#`: the user first name
+  - `#last_name#`: the user last name
+  - `#password#`: the user password
+
+**Account requests**
+
 #### Account request settings
 
-* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.
-   
-* `ACCOUNT_REQUESTS_EMAIL` (default: *`EMAIL_FROM_ADDRESS`*): This is the email address that any requests for a new account are sent to.
+* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.  
+
+* `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
+
+**Site security settings**   
 
 #### Website security
 

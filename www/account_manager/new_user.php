@@ -121,9 +121,9 @@ if (isset($_POST['create_account'])) {
 
     if (isset($send_user_email) and $send_user_email == TRUE) {
 
-      $mail_subject = "Your $ORGANISATION_NAME account has been created.";
+      $mail_subject = getenv('MAIL_SUBJECT') ?: "Your $ORGANISATION_NAME account has been created.";
 
-$mail_body = <<<EoT
+$mail_body = getenv('MAIL_BODY') ?: <<<EoT
 You've been set up with an account for $ORGANISATION_NAME.  Your credentials are:
 
 Username: $account_identifier
@@ -131,6 +131,12 @@ Password: $password
 
 You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password and log in using your new credentials.  This will take you to a page where you can change your password.
 EoT;
+
+      // Replace special substring with user variables (substring are used in env)
+      $mail_body = str_replace("#username#", $account_identifier, $mail_body);
+      $mail_body = str_replace("#first_name#", $givenname, $mail_body);
+      $mail_body = str_replace("#last_name#", $sn, $mail_body);
+      $mail_body = str_replace("#password#", $password, $mail_body);
 
       include_once "mail_functions.inc.php";
       $sent_email = send_email($mail,"$first_name $last_name",$mail_subject,$mail_body);
