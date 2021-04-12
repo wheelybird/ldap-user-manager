@@ -38,12 +38,12 @@ $ldap_connection = open_ldap_connection();
 print "$li_good Connected to ${LDAP['uri']}</li>\n";
 
 #TLS?
-if ($LDAP_IS_SECURE == TRUE) {
- print "$li_good Encrypted connection to ${LDAP['uri']} via STARTTLS</li>\n";
+if ($LDAP['connection_type'] != "plain") {
+ print "$li_good Encrypted connection to ${LDAP['uri']} via ${LDAP['connection_type']}</li>\n";
 }
 else {
- print "$li_warn Unable to connect to ${LDAP['uri']} via STARTTLS. ";
- print "<a href='#' data-toggle='popover' title='STARTTLS' data-content='";
+ print "$li_warn Unable to connect to ${LDAP['uri']} via StartTLS. ";
+ print "<a href='#' data-toggle='popover' title='StartTLS' data-content='";
  print "The connection to the LDAP server works, but encrypted communication can&#39;t be enabled.";
  print "'>What's this?</a></li>\n";
 }

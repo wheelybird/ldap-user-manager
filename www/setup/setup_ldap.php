@@ -35,7 +35,7 @@ if (isset($_POST['fix_problems'])) {
 <?php
 
  if (isset($_POST['setup_group_ou'])) {
-  $ou_add = ldap_add($ldap_connection, $LDAP['group_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['group_ou'] ));
+  $ou_add = @ ldap_add($ldap_connection, $LDAP['group_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['group_ou'] ));
   if ($ou_add == TRUE) {
    print "$li_good Created OU <strong>${LDAP['group_dn']}</strong></li>\n";
   }
@@ -48,7 +48,7 @@ if (isset($_POST['fix_problems'])) {
 
 
  if (isset($_POST['setup_user_ou'])) {
-  $ou_add = ldap_add($ldap_connection, $LDAP['user_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['user_ou'] ));
+  $ou_add = @ ldap_add($ldap_connection, $LDAP['user_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['user_ou'] ));
   if ($ou_add == TRUE) {
    print "$li_good Created OU <strong>${LDAP['user_dn']}</strong></li>\n";
   }
@@ -65,10 +65,11 @@ if (isset($_POST['fix_problems'])) {
   $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
   $description = "Records the last GID used to create a Posix group. This prevents the re-use of a GID from a deleted group.";
 
-  $gid_add = ldap_add($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", array( 'objectClass' => array('device','top'),
-                                                                                'serialnumber' => $highest_gid,
-                                                                                'description' => $description )
-                     );
+  $add_lastgid_r = array( 'objectClass' => array('device','top'),
+                          'serialnumber' => $highest_gid,
+                          'description' => $description );
+
+  $gid_add = @ ldap_add($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", $add_lastgid_r);
 
   if ($gid_add == TRUE) {
    print "$li_good Created <strong>cn=lastGID,${LDAP['base_dn']}</strong></li>\n";
@@ -86,10 +87,11 @@ if (isset($_POST['fix_problems'])) {
   $highest_uid = ldap_get_highest_id($ldap_connection,'uid');
   $description = "Records the last UID used to create a Posix account. This prevents the re-use of a UID from a deleted account.";
 
-  $uid_add = ldap_add($ldap_connection, "cn=lastUID,${LDAP['base_dn']}", array( 'objectClass' => array('device','top'),
-                                                                                'serialnumber' => $highest_uid,
-                                                                                'description' => $description )
-                    );
+  $add_lastuid_r = array( 'objectClass' => array('device','top'),
+                          'serialnumber' => $highest_uid,
+                          'description' => $description );
+
+  $uid_add = @ ldap_add($ldap_connection, "cn=lastUID,${LDAP['base_dn']}", $add_lastuid_r);
 
   if ($uid_add == TRUE) {
    print "$li_good Created <strong>cn=lastUID,${LDAP['base_dn']}</strong></li>\n";
@@ -146,7 +148,6 @@ if (isset($_POST['fix_problems'])) {
   print "<label class='pull-right'><input type='checkbox' name='setup_admin_account' class='pull-right' checked>Create a new account and add it to the admin group?&nbsp;</label>";
   print "</li>\n";
   $show_create_admin_button = TRUE;
-
  }
  else {
   print "$li_good The LDAP account administrators group (<strong>${LDAP['admins_group']}</strong>) isn't empty.</li>";
@@ -164,6 +165,7 @@ if (isset($_POST['fix_problems'])) {
  if ($no_errors == TRUE) {
   if ($show_create_admin_button == FALSE) {
  ?>
+ </form>
  <div class='well'>
   <form action="/">
    <input type='submit' class="btn btn-success center-block" value='Finished' class='center-block'>
@@ -173,15 +175,16 @@ if (isset($_POST['fix_problems'])) {
   }
   else {
   ?>
-   <div class='well'>
-     <input type='submit' class="btn btn-warning center-block" value='Create new account >' class='center-block'>
-    </form>
+    <div class='well'>
+    <input type='submit' class="btn btn-warning center-block" value='Create new account >' class='center-block'>
+   </form>
   </div>
   <?php 
   }
  }
- else { 
+ else {
  ?>
+ </form>
  <div class='well'>
   <form action="/setup/run_checks.php">
    <input type='submit' class="btn btn-danger center-block" value='< Re-run setup' class='center-block'>

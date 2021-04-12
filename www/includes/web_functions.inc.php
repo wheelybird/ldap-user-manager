@@ -112,7 +112,7 @@ function validate_passkey_cookie() {
     }
    }
   }
-  
+
  }
  else {
   if ( $SESSION_DEBUG == TRUE) { error_log("$log_prefix Session: orf_cookie wasn't sent by the client.",0); }
@@ -245,7 +245,7 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $CUSTOM_LOGO;
+ global $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $USER_ID, $CUSTOM_LOGO;
 
  ?>
   <nav class="navbar navbar-default">
@@ -279,8 +279,11 @@ function render_menu() {
        print "<a href='/{$module}/'>$this_module_name</a></li>\n";
       }
      }
-    ?>
-    </ul>
+     ?>
+     </ul>
+     <div style="text-align: right;">
+     <?php if(isset($USER_ID)) { print $USER_ID; } ?>
+     </div>
    </div>
   </nav>
  <?php
@@ -363,15 +366,16 @@ function is_valid_email($email) {
 
 function render_js_username_check(){
 
-  global $USERNAME_REGEX;
+ global $POSIX_REGEX, $ENFORCE_SAFE_SYSTEM_NAMES;
+
+ if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
 
  print <<<EoCheckJS
-
 <script>
 
  function check_entity_name_validity(name,div_id) {
 
-  var check_regex = /$USERNAME_REGEX/;
+  var check_regex = /$POSIX_REGEX/;
 
   if (! check_regex.test(name) ) {
    document.getElementById(div_id).classList.add("has-error");
@@ -383,7 +387,12 @@ function render_js_username_check(){
  }
 
 </script>
+
 EoCheckJS;
+ }
+ else {
+  print "<script> function check_entity_name_validity(name,div_id) {} </script>";
+ }
 
 }
 
@@ -391,9 +400,9 @@ EoCheckJS;
 
 function generate_username($fn,$ln) {
 
-  global $USERNAME_FORMAT;
+  global $POSIX_USERNAME_FORMAT;
 
-  $username = $USERNAME_FORMAT;
+  $username = $POSIX_USERNAME_FORMAT;
   $username = str_replace('{first_name}',strtolower($fn), $username);
   $username = str_replace('{first_name_initial}',strtolower($fn[0]), $username);
   $username = str_replace('{last_name}',strtolower($ln), $username);
@@ -410,36 +419,75 @@ function render_js_username_generator($firstname_field_id,$lastname_field_id,$us
  #Parameters are the IDs of the input fields and username name div in the account creation form.
  #The div will be set to warning if the username is invalid.
 
- global $USERNAME_FORMAT;
+ global $POSIX_USERNAME_FORMAT, $ENFORCE_SAFE_SYSTEM_NAMES;
 
-  render_js_username_check();
+  $remove_accents="";
+  if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) { $remove_accents = ".normalize('NFD').replace(/[\u0300-\u036f]/g, '')"; }
 
   print <<<EoRenderJS
-<script>
 
+<script>
  function update_username() {
 
   var first_name = document.getElementById('$firstname_field_id').value;
   var last_name  = document.getElementById('$lastname_field_id').value;
-  var template = '$USERNAME_FORMAT';
+  var template = '$POSIX_USERNAME_FORMAT';
 
   var actual_username = template;
 
-  actual_username = actual_username.replace('{first_name}', first_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') );
-  actual_username = actual_username.replace('{first_name_initial}', first_name.charAt(0).toLowerCase() );
-  actual_username = actual_username.replace('{last_name}', last_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') );
-  actual_username = actual_username.replace('{last_name_initial}', last_name.charAt(0).toLowerCase() );
+  actual_username = actual_username.replace('{first_name}', first_name.toLowerCase()$remove_accents );
+  actual_username = actual_username.replace('{first_name_initial}', first_name.charAt(0).toLowerCase()$remove_accents );
+  actual_username = actual_username.replace('{last_name}', last_name.toLowerCase()$remove_accents );
+  actual_username = actual_username.replace('{last_name_initial}', last_name.charAt(0).toLowerCase()$remove_accents );
 
   check_entity_name_validity(actual_username,'$username_div_id');
 
   document.getElementById('$username_field_id').value = actual_username;
 
  }
+
 </script>
+
 EoRenderJS;
 
 }
 
+######################################################
+
+function render_js_cn_generator($firstname_field_id,$lastname_field_id,$cn_field_id,$cn_div_id) {
+
+  global $ENFORCE_SAFE_SYSTEM_NAMES;
+
+  if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
+    $gen_js = "first_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') + last_name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')";
+  }
+  else {
+    $gen_js = "first_name + ' ' + last_name";
+  }
+
+  print <<<EoRenderCNJS
+<script>
+
+ var auto_cn_update = true;
+
+ function update_cn() {
+
+  if ( auto_cn_update == true ) {
+    var first_name = document.getElementById('$firstname_field_id').value;
+    var last_name  = document.getElementById('$lastname_field_id').value;
+    this_cn = $gen_js;
+
+    check_entity_name_validity(this_cn,'$cn_div_id');
+
+    document.getElementById('$cn_field_id').value = this_cn;
+  }
+
+ }
+</script>
+
+EoRenderCNJS;
+
+}
 
 ######################################################
 
@@ -458,8 +506,10 @@ function render_js_email_generator($username_field_id,$email_field_id) {
     var username = document.getElementById('$username_field_id').value;
     document.getElementById('$email_field_id').value = username + '@' + "$EMAIL_DOMAIN";
   }
+
  }
 </script>
+
 EoRenderEmailJS;
 
 }
