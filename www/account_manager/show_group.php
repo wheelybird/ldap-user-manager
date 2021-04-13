@@ -27,7 +27,7 @@ else {
  $group_cn = urldecode($group_cn);
 }
 
-if (!preg_match("/$USERNAME_REGEX/",$group_cn)) {
+if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$POSIX_REGEX/",$group_cn)) {
 ?>
  <div class="alert alert-danger">
   <p class="text-center">The group name is invalid.</p>
@@ -62,9 +62,13 @@ if (isset($_POST["update_members"])) {
 
  foreach ($_POST as $index => $member) {
 
-  if (is_numeric($index) and preg_match("/$USERNAME_REGEX/",$member)) {
+  if (is_numeric($index)) {
    array_push($updated_membership,$member);
   }
+ }
+
+ if ($group_cn == $LDAP['admins_group'] and !array_search($USER_ID, $updated_membership)){
+    array_push($updated_membership,$USER_ID);
  }
 
  $members_to_del = array_diff($current_members,$updated_membership);
@@ -88,7 +92,7 @@ if (isset($_POST["update_members"])) {
   </script>
   <div class="alert alert-success" role="alert">
    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <strong>Success!</strong> The group has been updated.
+   <p class="text-center">The group has been updated.</p>
   </div>
 
  <?php
@@ -207,8 +211,8 @@ ldap_close($ldap_connection);
 
  <div class="panel panel-default">
   <div class="panel-heading clearfix">
-   <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $group_cn; ?></h3>
-   <button class="btn btn-warning pull-right" onclick="show_delete_group_button();">Delete group</button>
+   <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $group_cn; ?><?php if ($group_cn == $LDAP["admins_group"]) { print " <sup>(admin group)</sup>" ; } ?></h3>
+   <button class="btn btn-warning pull-right" onclick="show_delete_group_button();" <?php if ($group_cn == $LDAP["admins_group"]) { print "disabled"; } ?>>Delete group</button>
    <form action="/<?php print $THIS_MODULE_PATH; ?>/groups.php" method="post"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
   </div>
   <ul class="list-group">
@@ -237,7 +241,12 @@ ldap_close($ldap_connection);
           <ul class="list-group" id="membership_list">
            <?php
            foreach ($group_members as $member) {
-             print "<li class='list-group-item'>$member</li>\n";
+             if ($group_cn == $LDAP['admins_group'] and $member == $USER_ID) {
+               print "<div class='list-group-item' style='opacity: 0.5; pointer-events:none;'>$member</div>\n";
+             }
+             else {
+               print "<li class='list-group-item'>$member</li>\n";
+             }
            }
            ?>
           </ul>

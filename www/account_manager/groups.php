@@ -25,27 +25,25 @@ if (isset($_POST['delete_group'])) {
  $this_group = $_POST['delete_group'];
  $this_group = urldecode($this_group);
 
- if (preg_match("/$USERNAME_REGEX/",$this_group)) {
+ $del_group = ldap_delete_group($ldap_connection,$this_group);
 
-  $del_group = ldap_delete_group($ldap_connection,$this_group);
-
-  if ($del_group) {
+ if ($del_group) {
   ?>
   <div class="alert alert-success" role="alert">
    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <strong>Success!</strong> Group <strong><?php print $this_group; ?> was deleted.
+   <p class="text-center">Group <strong><?php print $this_group; ?> was deleted.</p>
   </div>
   <?php
-  }
-  else {
+ }
+ else {
   ?>
   <div class="alert alert-danger" role="alert">
    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <strong>Problem!</strong> Group <strong><?php print $this_group; ?></strong> wasn't deleted.
+   <p class="text-center">Group <strong><?php print $this_group; ?></strong> wasn't deleted.</p>
   </div>
   <?php
-  }
  }
+
 
 }
 

@@ -2,6 +2,16 @@
 
  $log_prefix = "";
 
+ #Fixed
+
+ $LDAP['account_objectclasses'] = array( 'person', 'inetOrgPerson', 'posixAccount' );
+ $LDAP['default_attribute_map'] = array( "givenname" => array("label" => "First name",      "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value)"),
+                                         "sn"        => array("label" => "Last name",       "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value)"),
+                                         "uid"       => array("label" => "System username", "onkeyup" => "check_entity_name_validity(document.getElementById('uid').value,'uid_div'); update_email(); check_email_validity(document.getElementById('mail').value)"),
+                                         "cn"        => array("label" => "Common Name",     "onkeyup" => "auto_cn_update = false;"),
+                                         "mail"      => array("label" => "Email",           "onkeyup" => "auto_email_update = false; check_email_validity(document.getElementById('mail').value)")
+                                       );
+
  #Mandatory
 
  $LDAP['uri'] = getenv('LDAP_URI');
@@ -9,19 +19,22 @@
  $LDAP['admins_group'] = getenv('LDAP_ADMINS_GROUP');
  $LDAP['admin_bind_dn'] = getenv('LDAP_ADMIN_BIND_DN');
  $LDAP['admin_bind_pwd'] = getenv('LDAP_ADMIN_BIND_PWD');
-
+ $LDAP['connection_type'] = "plain";
 
  #Optional
 
+ $LDAP['account_attribute'] = (getenv('LDAP_ACCOUNT_ATTRIBUTE') ? getenv('LDAP_ACCOUNT_ATTRIBUTE') : 'uid');
  $LDAP['group_ou'] = (getenv('LDAP_GROUP_OU') ? getenv('LDAP_GROUP_OU') : 'groups');
  $LDAP['user_ou'] = (getenv('LDAP_USER_OU') ? getenv('LDAP_USER_OU') : 'people');
 
  $LDAP['forced_rfc2307bis'] = ((strcasecmp(getenv('FORCE_RFC2307BIS'),'TRUE') == 0) ? TRUE : FALSE);
 
+ if (getenv('LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES')) { $LDAP['account_additional_objectclasses'] = strtolower(getenv('LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES')); }
+ if (getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES')) { $LDAP['account_additional_attributes'] = getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES'); }
+
  if (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE')) { $LDAP['group_membership_attribute'] = getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE'); }
  if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID') and strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == TRUE )  { $LDAP['group_membership_uses_uid']  = TRUE; }
 
- $LDAP['account_attribute'] = 'uid';
  $LDAP['require_starttls'] = ((strcasecmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : FALSE);
  $LDAP['ignore_cert_errors'] = ((strcasecmp(getenv('LDAP_IGNORE_CERT_ERRORS'),'TRUE') == 0) ? TRUE : FALSE);
  $LDAP['rfc2307bis_check_run'] = FALSE;
@@ -33,8 +46,9 @@
  $SITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : "$ORGANISATION_NAME user manager");
  $SERVER_HOSTNAME = (getenv('SERVER_HOSTNAME') ? getenv('SERVER_HOSTNAME') : "ldapusermanager.org");
 
- $USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
- $USERNAME_REGEX = (getenv('USERNAME_REGEX') ? getenv('USERNAME_REGEX') : '^[a-z][a-zA-Z0-9\._-]{3,32}$');
+ $ENFORCE_SAFE_SYSTEM_NAMES = ((strcasecmp(getenv('ENFORCE_SAFE_SYSTEM_NAMES'),'FALSE') == 0) ? FALSE : TRUE);
+ $POSIX_USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
+ $POSIX_REGEX  = (getenv('USERNAME_REGEX')  ? getenv('USERNAME_REGEX') : '^[a-z][a-zA-Z0-9\._-]{3,32}$');
  #We'll use the username regex for groups too.
 
  if (getenv('PASSWORD_HASH')) { $PASSWORD_HASH = strtoupper(getenv('PASSWORD_HASH')); }
@@ -64,7 +78,7 @@
  if (!is_numeric($SMTP['debug_level']) or $SMTP['debug_level'] >4 or $SMTP['debug_level'] <0) { $SMTP['debug_level'] = 0; }
 
  $EMAIL_DOMAIN = (getenv('EMAIL_DOMAIN') ? getenv('EMAIL_DOMAIN') : Null);
- 
+
  $default_email_from_domain = ($EMAIL_DOMAIN ? $EMAIL_DOMAIN : 'ldapusermanger.org');
 
  $EMAIL['from_address'] = (getenv('EMAIL_FROM_ADDRESS') ? getenv('EMAIL_FROM_ADDRESS') : "admin@" . $default_email_from_domain );
@@ -76,7 +90,7 @@
  ###
 
  $ACCOUNT_REQUESTS_ENABLED = ((strcasecmp(getenv('ACCOUNT_REQUESTS_ENABLED'),'TRUE') == 0) ? TRUE : FALSE);
-if (($EMAIL_SENDING_ENABLED == FALSE) && ($ACCOUNT_REQUESTS_ENABLED == TRUE)) {
+ if (($EMAIL_SENDING_ENABLED == FALSE) && ($ACCOUNT_REQUESTS_ENABLED == TRUE)) {
    $ACCOUNT_REQUESTS_ENABLED = FALSE;
    error_log("$log_prefix Config: ACCOUNT_REQUESTS_ENABLED was set to TRUE but SMTP_HOSTNAME wasn't set, so account requesting has been disabled as we can't send out the request email",0);
  }
@@ -88,6 +102,9 @@ if (($EMAIL_SENDING_ENABLED == FALSE) && ($ACCOUNT_REQUESTS_ENABLED == TRUE)) {
  $NO_HTTPS = ((strcasecmp(getenv('NO_HTTPS'),'TRUE') == 0) ? TRUE : FALSE);
 
  ###
+
+ $CUSTOM_LOGO = (getenv('CUSTOM_LOGO') ? getenv('CUSTOM_LOGO') : FALSE);
+ $CUSTOM_STYLES = (getenv('CUSTOM_STYLES') ? getenv('CUSTOM_STYLES') : FALSE);
 
  $errors = "";
 
@@ -108,7 +125,7 @@ if (($EMAIL_SENDING_ENABLED == FALSE) && ($ACCOUNT_REQUESTS_ENABLED == TRUE)) {
  }
 
  if ($errors != "") {
-  render_header();
+  render_header("Fatal errors",false);
   print $errors;
   render_footer();
   exit(1);

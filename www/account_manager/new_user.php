@@ -6,6 +6,8 @@ include_once "web_functions.inc.php";
 include_once "ldap_functions.inc.php";
 include_once "module_functions.inc.php";
 
+$attribute_map = ldap_complete_account_attribute_array();
+
 if ( $_POST['setup_admin_account'] ) {
  $admin_setup = TRUE;
 
@@ -34,58 +36,84 @@ $invalid_username = FALSE;
 $weak_password = FALSE;
 $invalid_email = FALSE;
 $disabled_email_tickbox = TRUE;
+$invalid_cn = FALSE;
+$invalid_account_attribute = FALSE;
+
+$new_account_r = array();
+
+foreach ($attribute_map as $attribute => $attr_r) {
+ if (isset($_POST[$attribute])) {
+  $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
+ }
+ elseif (isset($attr_r['default'])) {
+  $$attribute = $attr_r['default'];
+ }
+ $new_account_r[$attribute] = $$attribute;
+}
+
+##
 
 if (isset($_GET['account_request'])) {
 
-  $first_name=filter_var($_GET['first_name'], FILTER_SANITIZE_STRING);
-  $last_name=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
-  $email=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
-  $username = generate_username($first_name,$last_name);
+  $givenname=filter_var($_GET['first_name'], FILTER_SANITIZE_STRING);
+  $new_account_r['givenname'] = $givenname;
 
-  if ($email == "") {
+  $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
+  $new_account_r['sn'] = $sn;
+
+  $uid = generate_username($first_name,$last_name);
+  $new_account_r['uid'] = $uid;
+
+  if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
+    $cn = "$givenname$sn";
+  }
+  else {
+    $cn = "$givenname $sn";
+  }
+
+  $new_account_r['cn'] = $cn;
+
+  $mail=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
+  if ($mail == "") {
     if (isset($EMAIL_DOMAIN)) {
-      $email = $username . "@" . $EMAIL_DOMAIN;
+      $mail = $uid . "@" . $EMAIL_DOMAIN;
       $disabled_email_tickbox = FALSE;
     }
   }
   else {
     $disabled_email_tickbox = FALSE;
   }
+  $new_account_r['mail'] = $mail;
 
 }
 
 if (isset($_POST['create_account'])) {
 
- $ldap_connection = open_ldap_connection();
-
- $first_name = stripslashes($_POST['first_name']);
- $last_name = stripslashes($_POST['last_name']);
- $username = stripslashes($_POST['username']);
- $password = $_POST['password'];
-
- if ($_POST['email']) { $email = stripslashes($_POST['email']); }
-
+ $password  = $_POST['password'];
+ $new_account_r['password'] = $password;
+ $account_identifier = $new_account_r[$LDAP["account_attribute"]];
+ 
+ if (!isset($cn) or $cn == "") { $invalid_cn = TRUE; }
+ if ((!isset($account_identifier) or $account_identifier == "") and $invalid_cn != TRUE) { $invalid_account_identifier = TRUE; }
  if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
- if (isset($email) and !is_valid_email($email)) { $invalid_email = TRUE; }
+ if (isset($mail) and !is_valid_email($mail)) { $invalid_email = TRUE; }
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
- if ($_POST['password'] != $_POST['password_match']) { $mismatched_passwords = TRUE; }
- if (!preg_match("/$USERNAME_REGEX/",$username)) { $invalid_username = TRUE; }
- if (isset($_POST['send_email']) and isset($email) and $EMAIL_SENDING_ENABLED == TRUE) { $send_user_email = TRUE; }
+ if ($password != $_POST['password_match']) { $mismatched_passwords = TRUE; }
+ if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$POSIX_REGEX/",$account_identifier)) { $invalid_account_identifier = TRUE; }
+ if (isset($_POST['send_email']) and isset($mail) and $EMAIL_SENDING_ENABLED == TRUE) { $send_user_email = TRUE; }
 
-
- if (     isset($first_name)
-      and isset($last_name)
-      and isset($username)
+ if (     isset($givenname)
+      and isset($sn)
       and isset($password)
       and !$mismatched_passwords
       and !$weak_password
       and !$invalid_password
-      and !$invalid_username
+      and !$invalid_account_identifier
+      and !$invalid_cn
       and !$invalid_email) {
 
   $ldap_connection = open_ldap_connection();
-
-  $new_account = ldap_new_account($ldap_connection, $first_name, $last_name, $username, $password, $email);
+  $new_account = ldap_new_account($ldap_connection, $new_account_r);
 
   if ($new_account) {
 
@@ -98,17 +126,17 @@ if (isset($_POST['create_account'])) {
 $mail_body = <<<EoT
 You've been set up with an account for $ORGANISATION_NAME.  Your credentials are:
 
-Username: $username
+Username: $account_identifier
 Password: $password
 
 You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password and log in using your new credentials.  This will take you to a page where you can change your password.
 EoT;
 
       include_once "mail_functions.inc.php";
-      $sent_email = send_email($email,"$first_name $last_name",$mail_subject,$mail_body);
+      $sent_email = send_email($mail,"$first_name $last_name",$mail_subject,$mail_body);
       $creation_message = "The account was created";
       if ($sent_email) {
-        $creation_message .= " and an email sent to $email.";
+        $creation_message .= " and an email sent to $mail.";
       }
       else {
         $creation_message .= " but unfortunately the email wasn't sent.<br>More information will be available in the logs.";
@@ -116,10 +144,10 @@ EoT;
     }
 
     if ($admin_setup == TRUE) {
-      $member_add = ldap_add_member_to_group($ldap_connection, $LDAP['admins_group'], $username);
+      $member_add = ldap_add_member_to_group($ldap_connection, $LDAP['admins_group'], $account_identifier);
       if (!$member_add) { ?>
        <div class="alert alert-warning">
-        <p class="text-center"><?php print $creation_message; ?>. Unfortunately adding it to the admin group failed.</p>
+        <p class="text-center"><?php print $creation_message; ?> Unfortunately adding it to the admin group failed.</p>
        </div>
        <?php
       }
@@ -139,54 +167,53 @@ EoT;
    exit(0);
   }
   else {
-   if (!$new_account) { ?>
+  ?>
     <div class="alert alert-warning">
-     <p class="text-center">Failed to create the account.</p>
+     <p class="text-center">Failed to create the account:</p>
+     <pre>
+     <?php
+       print ldap_error($ldap_connection) . "\n";
+       ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
+       print $detailed_err;
+     ?>
+     </pre>
     </div>
     <?php
-   }
 
    render_footer();
    exit(0);
 
   }
+
  }
 
 }
 
+$errors="";
+if ($invalid_cn) { $errors.="<li>The Common Name is required</li>\n"; }
+if ($invalid_account_identifier) {  $errors.="<li>The account identifier (" . $attribute_map[$LDAP['account_attribute']]['label'] . ") is invalid.</li>\n"; }
+if ($weak_password) { $errors.="<li>The password is too weak</li>\n"; }
+if ($invalid_password) { $errors.="<li>The password contained invalid characters</li>\n"; }
+if ($invalid_email) { $errors.="<li>The email address is invalid</li>\n"; }
+if ($mismatched_passwords) { $errors.="<li>The passwords are mismatched</li>\n"; }
+if ($invalid_username) { $errors.="<li>The username is invalid</li>\n"; }
 
-if ($weak_password) { ?>
+if ($errors != "") { ?>
 <div class="alert alert-warning">
- <p class="text-center">The password is too weak.</p>
+ <p class="text-align: center">
+ There were issues creating the account:
+ <ul>
+ <?php print $errors; ?>
+ </ul>
+ </p>
 </div>
-<?php }
+<?php
+}
 
-if ($invalid_password) {  ?>
-<div class="alert alert-warning">
- <p class="text-center">The password contained invalid characters.</p>
-</div>
-<?php }
-
-if ($invalid_email) {  ?>
-<div class="alert alert-warning">
- <p class="text-center">The email address is invalid.</p>
-</div>
-<?php }
-
-if ($mismatched_passwords) {  ?>
-<div class="alert alert-warning">
- <p class="text-center">The passwords are mismatched.</p>
-</div>
-<?php }
-
-if ($invalid_username) {  ?>
-<div class="alert alert-warning">
- <p class="text-center">The username is invalid.</p>
-</div>
-<?php }
-
-render_js_username_generator('first_name','last_name','username','username_div');
-render_js_email_generator('username','email');
+render_js_username_check();
+render_js_username_generator('givenname','sn','uid','uid_div');
+render_js_cn_generator('givenname','sn','cn','cn_div');
+render_js_email_generator('uid','mail');
 
 ?>
 <script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
@@ -227,19 +254,18 @@ render_js_email_generator('username','email');
 
 
 </script>
-
 <script>
 
- function check_email_validity(email) {
+ function check_email_validity(mail) {
 
   var check_regex = <?php print $JS_EMAIL_REGEX; ?>
 
-  if (! check_regex.test(email) ) {
-   document.getElementById("email_div").classList.add("has-error");
+  if (! check_regex.test(mail) ) {
+   document.getElementById("mail_div").classList.add("has-error");
    <?php if ($EMAIL_SENDING_ENABLED == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = true;<?php } ?>
   }
   else {
-   document.getElementById("email_div").classList.remove("has-error");
+   document.getElementById("mail_div").classList.remove("has-error");
    <?php if ($EMAIL_SENDING_ENABLED == TRUE) { ?>document.getElementById("send_email_checkbox").disabled = false;<?php } ?>
   }
 
@@ -260,33 +286,24 @@ render_js_email_generator('username','email');
      <input type="hidden" name="create_account">
      <input type="hidden" id="pass_score" value="0" name="pass_score">
 
-     <div class="form-group">
-      <label for="first_name" class="col-sm-3 control-label">First name</label>
-      <div class="col-sm-6">
-       <input tabindex="1" type="text" class="form-control" id="first_name" name="first_name" <?php if (isset($first_name)){ print " value='$first_name'"; } ?> onkeyup="update_username(); update_email(); check_email_validity(document.getElementById('email').value)">
-      </div>
-     </div>
 
-     <div class="form-group">
-      <label for="last_name" class="col-sm-3 control-label">Last name</label>
-      <div class="col-sm-6">
-       <input tabindex="3" type="text" class="form-control" id="last_name" name="last_name" <?php if (isset($last_name)){ print " value='$last_name'"; } ?> onkeyup="update_username(); update_email(); check_email_validity(document.getElementById('email').value)">
-      </div>
-     </div>
+<?php
 
-     <div class="form-group" id="username_div">
-      <label for="username" class="col-sm-3 control-label">Username</label>
+  foreach ($attribute_map as $attribute => $attr_r) {
+    $label   = $attr_r['label'];
+    $onkeyup = $attr_r['onkeyup'];
+    if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
+  ?>
+     <div class="form-group" id="<?php print $attribute; ?>_div">
+      <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
       <div class="col-sm-6">
-       <input tabindex="3" type="text" class="form-control" id="username" name="username" <?php if (isset($username)){ print " value='$username'"; } ?> onkeyup="check_entity_name_validity(document.getElementById('username').value,'username_div'); update_email(); check_email_validity(document.getElementById('email').value)">
+       <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
+         if (isset($onkeyup)) { print "onkeyup=\"$onkeyup;\""; } ?>>
       </div>
      </div>
-
-     <div class="form-group" id="email_div">
-      <label for="username" class="col-sm-3 control-label">Email</label>
-      <div class="col-sm-6">
-       <input tabindex="4" type="text" class="form-control" id="email" name="email" <?php if (isset($email)){ print " value='$email'"; } ?> onkeyup="auto_email_update = false; check_email_validity(document.getElementById('email').value)">
-      </div>
-     </div>
+  <?php
+  }
+?>
 
      <div class="form-group" id="password_div">
       <label for="password" class="col-sm-3 control-label">Password</label>
@@ -323,6 +340,8 @@ render_js_email_generator('username','email');
     <div class="progress">
      <div id="StrengthProgressBar" class="progress-bar"></div>
     </div>
+
+    <div><sup>&ast;</sup>The account identifier</div>
 
    </div>
   </div>

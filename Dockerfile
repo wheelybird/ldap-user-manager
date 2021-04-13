@@ -6,21 +6,21 @@ RUN apt-get update && \
         libfreetype6-dev \
         libjpeg-dev \
         libpng-dev && \
-    rm -rf /var/lib/apt/lists/* && \
-    ln -s /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so && \
-    ln -s /usr/lib/x86_64-linux-gnu/liblber.so /usr/lib/liblber.so
+    rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd \
          --enable-gd-native-ttf \
          --with-freetype-dir=/usr/include/freetype2 \
          --with-png-dir=/usr/include \
          --with-jpeg-dir=/usr/include && \
-    docker-php-ext-install -j$(nproc) ldap gd
+    docker-php-ext-install -j$(nproc) gd && \
+    libdir=$(find /usr -name "libldap.so*" | sed -e 's/\/usr\///' -e 's/\/libldap.so//') && \
+    docker-php-ext-configure ldap --with-libdir=$libdir && \
+    docker-php-ext-install -j$(nproc) ldap
 
 ADD https://github.com/PHPMailer/PHPMailer/archive/v6.2.0.tar.gz /tmp
 
-RUN a2enmod rewrite ssl
-RUN a2dissite 000-default default-ssl
+RUN a2enmod rewrite ssl && a2dissite 000-default default-ssl
 
 EXPOSE 80
 EXPOSE 443
