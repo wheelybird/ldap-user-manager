@@ -216,7 +216,7 @@ function ldap_hashed_password($password) {
      array_push($available_algos, $algo_name);
    }
    else {
-     error_log("$log_prefix password hashing - the system doesn't support ${algo_name}");
+     error_log("$log_prefix password hashing - the system doesn't support ${algo_name}",0);
    }
  }
  $available_algos = array_merge($available_algos, $remaining_algos);
@@ -224,7 +224,7 @@ function ldap_hashed_password($password) {
  if (isset($PASSWORD_HASH)) {
    if (!in_array($PASSWORD_HASH, $available_algos)) {
      $hash_algo = $available_algos[0];
-     error_log("$log_prefix LDAP password: the chosen hash method ($PASSWORD_HASH) wasn't available");
+     error_log("$log_prefix LDAP password: the chosen hash method ($PASSWORD_HASH) wasn't available",0);
    }
    else {
      $hash_algo = $PASSWORD_HASH;
@@ -233,7 +233,7 @@ function ldap_hashed_password($password) {
  else {
    $hash_algo = $available_algos[0];
  }
- error_log("$log_prefix LDAP password: using '${hash_algo}' as the hashing method");
+ error_log("$log_prefix LDAP password: using '${hash_algo}' as the hashing method",0);
 
  switch ($hash_algo) {
 
@@ -282,14 +282,14 @@ function ldap_hashed_password($password) {
     break;
 
   case 'CLEAR':
-    error_log("$log_prefix password hashing - WARNING - Saving password in cleartext. This is extremely bad practice and should never ever be done in a production environment.");
+    error_log("$log_prefix password hashing - WARNING - Saving password in cleartext. This is extremely bad practice and should never ever be done in a production environment.",0);
     $hashed_pwd = $password;
     break;
 
 
  }
 
- error_log("$log_prefix password update - algo $hash_algo | pwd $hashed_pwd");
+ error_log("$log_prefix password update - algo $hash_algo | pwd $hashed_pwd",0);
 
  return $hashed_pwd;
 
@@ -346,10 +346,8 @@ function fetch_id_stored_in_ldap($ldap_connection,$type="uid") {
   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['base_dn']}", $filter, array('serialNumber'));
   $result = ldap_get_entries($ldap_connection, $ldap_search);
 
-  $fetched_id = $result[0]['serialnumber'][0];
-
-  if (isset($fetched_id) and is_numeric($fetched_id)){
-    return $fetched_id;
+  if (isset($result[0]['serialnumber'][0]) and is_numeric($result[0]['serialnumber'][0])){
+    return $result[0]['serialnumber'][0];
   }
   else {
     return FALSE;
@@ -517,17 +515,23 @@ function ldap_is_group_member($ldap_connection,$group_name,$username) {
 
  $ldap_search_query = "(cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
- $result = ldap_get_entries($ldap_connection, $ldap_search);
 
- if ($LDAP['group_membership_uses_uid'] == FALSE) {
-  $username = "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}";
- }
+ if ($ldap_search) {
+   $result = ldap_get_entries($ldap_connection, $ldap_search);
 
- if (preg_grep ("/^${username}$/i", $result[0][$LDAP['group_membership_attribute']])) {
-  return TRUE;
+   if ($LDAP['group_membership_uses_uid'] == FALSE) {
+     $username = "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}";
+   }
+
+   if (preg_grep ("/^${username}$/i", $result[0][$LDAP['group_membership_attribute']])) {
+     return TRUE;
+   }
+   else {
+     return FALSE;
+   }
  }
  else {
-  return FALSE;
+   return FALSE;
  }
 
 }
@@ -600,7 +604,7 @@ function ldap_new_group($ldap_connection,$group_name) {
 
    if (! $add_group ) {
     $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: DEBUG add_group array: ". print_r($new_group_array,true)); }
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: DEBUG add_group array: ". print_r($new_group_array,true),0); }
     error_log($this_error,0);
    }
    else {
@@ -965,7 +969,7 @@ function ldap_detect_rfc2307bis($ldap_connection) {
  $bis_available = FALSE;
 
  if ($LDAP['forced_rfc2307bis'] == TRUE) {
-  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - skipping autodetection because FORCE_RFC2307BIS is TRUE"); }
+  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - skipping autodetection because FORCE_RFC2307BIS is TRUE",0); }
   $bis_available = TRUE;
  }
  else {
@@ -973,8 +977,8 @@ function ldap_detect_rfc2307bis($ldap_connection) {
   $schema_base_query = @ ldap_read($ldap_connection,"","subschemaSubentry=*",array('subschemaSubentry'));
 
   if (!$schema_base_query) {
-   error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection));
-   error_log("$log_prefix LDAP RFC2307BIS detection - we'll assume that the RFC2307BIS schema isn't available.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS.");
+   error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
+   error_log("$log_prefix LDAP RFC2307BIS detection - we'll assume that the RFC2307BIS schema isn't available.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS.",0);
   }
   else {
    $schema_base_results = @ ldap_get_entries($ldap_connection, $schema_base_query);
@@ -986,7 +990,7 @@ function ldap_detect_rfc2307bis($ldap_connection) {
 
     $objclass_query = @ ldap_read($ldap_connection,$schema_base_dn,"(objectClasses=*)",array('objectClasses'));
     if (!$objclass_query) {
-     error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection));
+     error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
     }
     else {
      $objclass_results = @ ldap_get_entries($ldap_connection, $objclass_query);

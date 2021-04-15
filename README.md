@@ -85,6 +85,8 @@ Configuration is via environmental variables.  Please bear the following in mind
 
 * `SERVER_HOSTNAME` (default: *ldapusername.org*):  The hostname that this interface will be served from.
    
+* `SERVER_PATH` (default: */*): The path to the user manager on the webserver.  Useful if running this behind a reverse proxy.
+   
 * `ORGANISATION_NAME`: (default: *LDAP*): Your organisation's name.
    
 * `SITE_NAME` (default: *{ORGANISATION_NAME} user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".

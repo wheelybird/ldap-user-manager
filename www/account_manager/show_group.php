@@ -7,7 +7,7 @@ include_once "ldap_functions.inc.php";
 include_once "module_functions.inc.php";
 set_page_access("admin");
 
-render_header("LDAP manager");
+render_header("$ORGANISATION_NAME account manager");
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -213,7 +213,7 @@ ldap_close($ldap_connection);
   <div class="panel-heading clearfix">
    <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $group_cn; ?><?php if ($group_cn == $LDAP["admins_group"]) { print " <sup>(admin group)</sup>" ; } ?></h3>
    <button class="btn btn-warning pull-right" onclick="show_delete_group_button();" <?php if ($group_cn == $LDAP["admins_group"]) { print "disabled"; } ?>>Delete group</button>
-   <form action="/<?php print $THIS_MODULE_PATH; ?>/groups.php" method="post"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
+   <form action="<?php print "${THIS_MODULE_PATH}"; ?>/groups.php" method="post"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
   </div>
   <ul class="list-group">
    <li class="list-group-item"><?php print $full_dn; ?></li>

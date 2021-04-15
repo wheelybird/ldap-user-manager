@@ -23,7 +23,7 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
     $mail->Password = $SMTP['pass'];
   }
 
-  if ($MAIL['tls'] == TRUE) { $mail->SMTPSecure = "tls"; }
+  if ($EMAIL['tls'] == TRUE) { $mail->SMTPSecure = "tls"; }
 
   $mail->setFrom($EMAIL['from_address'], $EMAIL['from_name']);
   $mail->addAddress($recipient_email, $recipient_name);

@@ -8,25 +8,26 @@ include_once "module_functions.inc.php";
 
 $attribute_map = ldap_complete_account_attribute_array();
 
-if ( $_POST['setup_admin_account'] ) {
+if ( isset($_POST['setup_admin_account']) ) {
  $admin_setup = TRUE;
 
  validate_setup_cookie();
  set_page_access("setup");
 
- $completed_action="/log_in";
+ $completed_action="${SERVER_PATH}/log_in";
  $page_title="New administrator account";
 
- render_header("Setup administrator account", FALSE);
+ render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
 
 }
 else {
  set_page_access("admin");
 
- $completed_action="/$THIS_MODULE_PATH/";
+ $completed_action="${THIS_MODULE_PATH}/";
  $page_title="New account";
+ $admin_setup = FALSE;
 
- render_header();
+ render_header("$ORGANISATION_NAME account manager");
  render_submenu();
 }
 
@@ -37,7 +38,7 @@ $weak_password = FALSE;
 $invalid_email = FALSE;
 $disabled_email_tickbox = TRUE;
 $invalid_cn = FALSE;
-$invalid_account_attribute = FALSE;
+$invalid_account_identifier = FALSE;
 
 $new_account_r = array();
 
@@ -48,7 +49,7 @@ foreach ($attribute_map as $attribute => $attr_r) {
  elseif (isset($attr_r['default'])) {
   $$attribute = $attr_r['default'];
  }
- $new_account_r[$attribute] = $$attribute;
+ if (isset($$attribute)) { $new_account_r[$attribute] = $$attribute; }
 }
 
 ##
@@ -61,7 +62,7 @@ if (isset($_GET['account_request'])) {
   $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
   $new_account_r['sn'] = $sn;
 
-  $uid = generate_username($first_name,$last_name);
+  $uid = generate_username($givenname,$sn);
   $new_account_r['uid'] = $uid;
 
   if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
@@ -92,7 +93,7 @@ if (isset($_POST['create_account'])) {
  $password  = $_POST['password'];
  $new_account_r['password'] = $password;
  $account_identifier = $new_account_r[$LDAP["account_attribute"]];
- 
+
  if (!isset($cn) or $cn == "") { $invalid_cn = TRUE; }
  if ((!isset($account_identifier) or $account_identifier == "") and $invalid_cn != TRUE) { $invalid_account_identifier = TRUE; }
  if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
@@ -129,7 +130,7 @@ You've been set up with an account for $ORGANISATION_NAME.  Your credentials are
 Username: $account_identifier
 Password: $password
 
-You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password and log in using your new credentials.  This will take you to a page where you can change your password.
+You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}${SERVER_PATH}change_password and log in using your new credentials.  This will take you to a page where you can change your password.
 EoT;
 
       include_once "mail_functions.inc.php";

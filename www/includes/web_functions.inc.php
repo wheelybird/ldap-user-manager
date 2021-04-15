@@ -12,7 +12,7 @@ $SENT_HEADERS = FALSE;
 $SESSION_TIMED_OUT = FALSE;
 
 $paths=explode('/',getcwd());
-$THIS_MODULE_PATH=end($paths);
+$THIS_MODULE=end($paths);
 
 $GOOD_ICON = "&#9745;";
 $WARN_ICON = "&#9888;";
@@ -32,6 +32,9 @@ else {
 
 include ("config.inc.php");    # get local settings
 include ("modules.inc.php");   # module definitions
+
+if (substr($SERVER_PATH, -1) != "/") { $SERVER_PATH .= "/"; }
+$THIS_MODULE_PATH="${SERVER_PATH}${THIS_MODULE}";
 
 validate_passkey_cookie();
 
@@ -191,7 +194,7 @@ function log_out($method='normal') {
 
  # Delete the passkey from the database and the passkey cookie
 
- global $USER_ID;
+ global $USER_ID, $SERVER_PATH;
 
  setcookie('orf_cookie', "", time()-20000, '/', '', '', TRUE);
  setcookie('sessto_cookie', "", time()-20000, '/', '', '', TRUE);
@@ -200,7 +203,7 @@ function log_out($method='normal') {
  @ unlink("/tmp/$filename");
 
  if ($method == 'auto') { $options = "?logged_out"; } else { $options = ""; }
- header("Location:  //${_SERVER["HTTP_HOST"]}/index.php$options\n\n");
+ header("Location:  //${_SERVER["HTTP_HOST"]}${SERVER_PATH}index.php$options\n\n");
 
 }
 
@@ -232,6 +235,19 @@ function render_header($title="",$menu=TRUE) {
   render_menu();
  }
 
+ if (isset($_GET['logged_in'])) {
+
+  ?>
+  <script>
+    window.setTimeout(function() { $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); }); }, 10000);
+  </script>
+  <div class="alert alert-success">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
+    <p class="text-center">You've logged in successfully.</p>
+  </div>
+  <?php
+
+ }
  $SENT_HEADERS = TRUE;
 
 }
@@ -244,7 +260,7 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $USER_ID;
+ global $SITE_NAME, $MODULES, $THIS_MODULE, $VALIDATED, $IS_ADMIN, $USER_ID, $SERVER_PATH;
 
  ?>
   <nav class="navbar navbar-default">
@@ -268,13 +284,13 @@ function render_menu() {
       }
       #print "<p>$module - access is $access & show is $show_this_module</p>";
       if ($show_this_module == TRUE ) {
-       if ($module == $THIS_MODULE_PATH) {
+       if ($module == $THIS_MODULE) {
         print "<li class='active'>";
        }
        else {
         print '<li>';
        }
-       print "<a href='/{$module}/'>$this_module_name</a></li>\n";
+       print "<a href='${SERVER_PATH}{$module}/'>$this_module_name</a></li>\n";
       }
      }
      ?>
@@ -306,7 +322,7 @@ function render_footer() {
 
 function set_page_access($level) {
 
- global $IS_ADMIN, $IS_SETUP_ADMIN, $VALIDATED, $log_prefix, $SESSION_DEBUG, $SESSION_TIMED_OUT;
+ global $IS_ADMIN, $IS_SETUP_ADMIN, $VALIDATED, $log_prefix, $SESSION_DEBUG, $SESSION_TIMED_OUT, $SERVER_PATH;
 
  #Set the security level needed to view a page.
  #This should be one of the first pieces of code
@@ -318,7 +334,7 @@ function set_page_access($level) {
    return;
   }
   else {
-   header("Location: //" . $_SERVER["HTTP_HOST"] . "/setup/index.php?unauthorised\n\n");
+   header("Location: //" . $_SERVER["HTTP_HOST"] . "${SERVER_PATH}setup/index.php?unauthorised\n\n");
    if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: UNAUTHORISED: page security level is 'setup' but IS_SETUP_ADMIN isn't TRUE",0); }
    exit(0);
   }
@@ -331,7 +347,7 @@ function set_page_access($level) {
    return;
   }
   else {
-   header("Location: //" . $_SERVER["HTTP_HOST"] . "/log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
+   header("Location: //" . $_SERVER["HTTP_HOST"] . "${SERVER_PATH}log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
    if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: no access to page ($reason): page security level is 'admin' but IS_ADMIN = '${IS_ADMIN}' and VALIDATED = '${VALIDATED}' (user) ",0); }
    exit(0);
   }
@@ -342,7 +358,7 @@ function set_page_access($level) {
    return;
   }
   else {
-   header("Location: //" . $_SERVER["HTTP_HOST"] . "/log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
+   header("Location: //" . $_SERVER["HTTP_HOST"] . "${SERVER_PATH}log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
    if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: no access to page ($reason): page security level is 'user' but VALIDATED = '${VALIDATED}'",0); }
    exit(0);
   }
