@@ -274,7 +274,7 @@ function render_menu() {
        else {
         print '<li>';
        }
-       print "<a href='/{$module}/'>$this_module_name</a></li>\n";
+       print "<a href=https://"  . $_SERVER["HTTP_HOST"] .  "/{$module}/>$this_module_name</a></li>\n";
       }
      }
      ?>
