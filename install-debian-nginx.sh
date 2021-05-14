@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to LDAP User Manager with nginx web server on Debian 10
+# Script install to LDAP User Manager with nginx web server on Debian 10
 ## Version: 1.0
 # Date of update: 14/05/2021
 
