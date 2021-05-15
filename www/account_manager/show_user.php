@@ -243,8 +243,8 @@ EoT;
    $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
  });
 </script>
-<script type="text/javascript" src="/js/generate_passphrase.js"></script>
-<script type="text/javascript" src="/js/wordlist.js"></script>
+<script type="text/javascript" src="$SUBFOLDER/js/generate_passphrase.js"></script>
+<script type="text/javascript" src="$SUBFOLDER/js/wordlist.js"></script>
 <script>
 
  function show_delete_user_button() {
