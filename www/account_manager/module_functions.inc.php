@@ -6,7 +6,7 @@
 
 function render_submenu() {
 
-  global $THIS_MODULE_PATH;
+  global $ROOT_SITE, $THIS_MODULE_PATH;
 
   $submodules = array( 'users' => 'index.php',
                        'groups' => 'groups.php'
