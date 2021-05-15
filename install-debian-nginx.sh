@@ -39,12 +39,12 @@ chown -R www-data:www-data /var/www/html/ldap-user-manager
 ### Configuration of LDAP User Manager
 echo "What are your settings?"
 read -p "Hostname/URL of your serveur without http:// nor https:// (example : example.com) : " YOUR_URL
-read -p "If you want LDAP User Manager to be accessible in a subfolder (example : example.com/subfolder) please write it here, if not, juste click enter: " YOUR_SUBFOLDER
-read -p "The URI of the LDAP server, e.g. ldap://ldap.example.com or ldaps://ldap.example.com" YOUR_LDAP_URI
-read -p " The base DN for your organisation, e.g. dc=example,dc=com" YOUR_LDAP_BASE_DN
-read -p "The DN for the user with permission to modify all records under LDAP_BASE_DN, e.g. cn=admin,dc=example,dc=com" YOUR_LDAP_ADMIN_BIND_DN
-read -p "The password for LDAP_ADMIN_BIND_DN" YOUR_LDAP_ADMIN_BIND_PWD
-read -p "The name of the group used to define accounts that can use this tool to manage LDAP accounts. e.g. admins" YOUR_LDAP_ADMINS_GROUP
+read -p "If you want LDAP User Manager to be accessible in a subfolder (example : example.com/subfolder) please write it here, if not, juste click enter : " YOUR_SUBFOLDER
+read -p "The URI of the LDAP server, e.g. ldap://ldap.example.com or ldaps://ldap.example.com : " YOUR_LDAP_URI
+read -p " The base DN for your organisation, e.g. dc=example,dc=com : " YOUR_LDAP_BASE_DN
+read -p "The DN for the user with permission to modify all records under LDAP_BASE_DN, e.g. cn=admin,dc=example,dc=com : " YOUR_LDAP_ADMIN_BIND_DN
+read -p "The password for LDAP_ADMIN_BIND_DN : " YOUR_LDAP_ADMIN_BIND_PWD
+read -p "The name of the group used to define accounts that can use this tool to manage LDAP accounts. e.g. admins : " YOUR_LDAP_ADMINS_GROUP
 
 
 ### Configuration de Nginx 
