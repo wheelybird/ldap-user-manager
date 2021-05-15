@@ -381,7 +381,7 @@ EoT;
     <div class="panel-heading clearfix">
      <span class="panel-title pull-left"><h3><?php print $account_identifier; ?></h3></span>
      <button class="btn btn-warning pull-right align-self-end" style="margin-top: auto;" onclick="show_delete_user_button();" <?php if ($account_identifier == $USER_ID) { print "disabled"; }?>>Delete account</button>
-     <form action="/<?php print $THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
+     <form action="/<?php print $ROOT_SITE/$THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
     </div>
     <ul class="list-group">
       <li class="list-group-item"><?php print $dn; ?></li>
