@@ -244,7 +244,7 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $USER_ID;
+ global $SITE_PROTOCOL, $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $USER_ID;
 
  ?>
   <nav class="navbar navbar-default">
@@ -274,7 +274,7 @@ function render_menu() {
        else {
         print '<li>';
        }
-       print "<a href=https://"  . $_SERVER["HTTP_HOST"] .  "/{$module}/>$this_module_name</a></li>\n";
+       print "<a href=" . $SITE_PROTOCOL . $_SERVER["HTTP_HOST"] . "/{$module}>$this_module_name</a></li>\n";
       }
      }
      ?>
