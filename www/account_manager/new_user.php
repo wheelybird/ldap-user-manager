@@ -217,14 +217,14 @@ render_js_email_generator('uid','mail');
 
 ?>
 <script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
-<script type="text/javascript" src="/js/zxcvbn-bootstrap-strength-meter.js"></script>
+<script type="text/javascript" src="$SUBFOLDER/js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">
  $(document).ready(function(){
    $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
  });
 </script>
-<script type="text/javascript" src="/js/generate_passphrase.js"></script>
-<script type="text/javascript" src="/js/wordlist.js"></script>
+<script type="text/javascript" src="$SUBFOLDER/js/generate_passphrase.js"></script>
+<script type="text/javascript" src="$SUBFOLDER/js/wordlist.js"></script>
 <script>
 
  function check_passwords_match() {
