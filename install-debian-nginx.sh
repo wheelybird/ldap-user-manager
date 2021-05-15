@@ -27,15 +27,6 @@ wget https://github.com/PHPMailer/PHPMailer/archive/v6.2.0.tar.gz
 tar -xzf v6.2.0.tar.gz -C /opt && mv /opt/PHPMailer-6.2.0 /opt/PHPMailer
 rm v6.2.0.tar.gz
 
-### Download and Install LDAP User Manager
-
-wget https://github.com/wheelybird/ldap-user-manager/archive/refs/heads/master.zip
-apt install unzip
-unzip master.zip && rm master.zip
-cp -R ldap-user-manager-master/www/ /var/www/html/ldap-user-manager/
-rm -R ldap-user-manager-master
-chown -R www-data:www-data /var/www/html/ldap-user-manager
-
 ### Configuration of LDAP User Manager
 echo "What are your settings?"
 read -p "Hostname/URL of your serveur without http:// nor https:// (example : example.com) : " YOUR_URL
@@ -105,7 +96,7 @@ echo -e "server {
 \t}
 
 \tlocation /$YOUR_SUBFOLDER {
-\t\talias /var/www/html/ldap-user-manager;
+\t\talias /var/www/html/$YOUR_SUBFOLDER;
 \t\ttry_files \$uri \$uri/ @lum;
 
 \t\t# deny access to .htaccess files, if Apache's document root
@@ -129,6 +120,7 @@ echo -e "server {
 ">/etc/nginx/sites-available/default
 
 echo -e "fastcgi_param   HTTP_HOST       $YOUR_URL/$YOUR_SUBFOLDER;
+fastcgi_param   HTTP_SUBFOLDER        $YOUR_SUBFOLDER;
 fastcgi_param   LDAP_URI        $YOUR_LDAP_URI;
 fastcgi_param   LDAP_BASE_DN    $YOUR_LDAP_ADMIN_BIND_DN;
 fastcgi_param   LDAP_ADMIN_BIND_DN      $YOUR_LDAP_ADMIN_BIND_DN;
@@ -137,3 +129,17 @@ fastcgi_param   LDAP_ADMINS_GROUP       $YOUR_LDAP_ADMINS_GROUP;
 ">/etc/nginx/lum.nginx.conf
 fi
 service nginx reload
+
+### Download and Install LDAP User Manager
+
+wget https://github.com/wheelybird/ldap-user-manager/archive/refs/heads/master.zip
+apt install unzip
+unzip master.zip && rm master.zip
+if [ $YOUR_SUBFOLDER = ""]
+then
+cp -R ldap-user-manager-master/www/ /var/www/html/ldap-user-manager/
+chown -R www-data:www-data /var/www/html/ldap-user-manager
+else
+cp -R ldap-user-manager-master/www/ /var/www/html/$YOUR_SUBFOLDER/
+chown -R www-data:www-data /var/www/html/$YOUR_SUBFOLDER
+rm -R ldap-user-manager-master
