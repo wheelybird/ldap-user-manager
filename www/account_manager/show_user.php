@@ -237,7 +237,7 @@ EoT;
 
 ?>
 <script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
-<script type="text/javascript" src="/js/zxcvbn-bootstrap-strength-meter.js"></script>
+<script type="text/javascript" src="$SUBFOLDER/js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">
  $(document).ready(function(){
    $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
