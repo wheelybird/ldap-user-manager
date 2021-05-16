@@ -14,7 +14,7 @@ if ( $_POST['setup_admin_account'] ) {
  validate_setup_cookie();
  set_page_access("setup");
 
- $completed_action="$ROOT_SITE/log_in";
+ $completed_action="/$SUBFOLDER . log_in";
  $page_title="New administrator account";
 
  render_header("Setup administrator account", FALSE);
@@ -23,7 +23,7 @@ if ( $_POST['setup_admin_account'] ) {
 else {
  set_page_access("admin");
 
- $completed_action="$ROOT_SITE/$THIS_MODULE_PATH/";
+ $completed_action="/$SUBFOLDER . $THIS_MODULE_PATH/";
  $page_title="New account";
 
  render_header();
