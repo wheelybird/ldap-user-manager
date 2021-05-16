@@ -45,7 +45,7 @@
  $ORGANISATION_NAME = (getenv('ORGANISATION_NAME') ? getenv('ORGANISATION_NAME') : 'LDAP');
  $SITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : "$ORGANISATION_NAME user manager");
  $SERVER_HOSTNAME = (getenv('SERVER_HOSTNAME') ? getenv('SERVER_HOSTNAME') : "ldapusermanager.org");
- $SUBFOLDER = (getenv('HTTP_SUBFOLDER') ? getenv('HTTP_SUBFOLDER') : "");
+ if (getenv('HTTP_SUBFOLDER')) { $SUBFOLDER = getenv('HTTP_SUBFOLDER') . "/"; }
 
 $ENFORCE_SAFE_SYSTEM_NAMES = ((strcasecmp(getenv('ENFORCE_SAFE_SYSTEM_NAMES'),'FALSE') == 0) ? FALSE : TRUE);
  $POSIX_USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
