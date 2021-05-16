@@ -22,7 +22,7 @@ $ldap_connection = open_ldap_connection();
     });
 </script>
 <div class="form-group">
-  <form action="<?php print "$ROOT_SITE/$THIS_MODULE_PATH/setup_ldap.php"; ?>" method="post">
+  <form action="<?php print "/$SUBFOLDER . $THIS_MODULE_PATH/setup_ldap.php"; ?>" method="post">
   <input type="hidden" name="fix_problems">
 
 
@@ -249,7 +249,7 @@ if ($show_finish_button == TRUE) {
 ?>
      </form>
      <div class='well'>
-      <form action="/log_in">
+      <form action="/<?php print $SUBFOLDER ?>log_in"'>
        <input type='submit' class="btn btn-success center-block" value='Done'>
       </form>
      </div>
