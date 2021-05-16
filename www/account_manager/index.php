@@ -51,7 +51,7 @@ $people = ldap_get_user_list($ldap_connection);
 
 ?>
 <div class="container">
- <form action="/<?php print $ROOT_SITE/$THIS_MODULE_PATH; ?>/new_user.php" method="post">
+ <form action="<?php print $ROOT_SITE/$THIS_MODULE_PATH; ?>/new_user.php" method="post">
   <button id="add_group" class="btn btn-default" type="submit">New user</button>
  </form>
  <table class="table table-striped">
