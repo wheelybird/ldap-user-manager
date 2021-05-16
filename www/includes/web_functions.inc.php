@@ -274,7 +274,7 @@ function render_menu() {
        else {
         print '<li>';
        }
-       $module = $SUBFOLDER . "/" . $module;
+       $module = $SUBFOLDER . $module;
        print "<a href='/{$module}/'>$this_module_name</a></li>\n";
       }
      }
