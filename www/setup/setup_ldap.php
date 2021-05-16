@@ -138,7 +138,7 @@ if (isset($_POST['fix_problems'])) {
 
   ?>
   <div class="form-group">
-  <form action="<?php print "$ROOT_SITE/account_manager/new_user.php"; ?>" method="post">
+  <form action="<?php print "/$SUBFOLDER"; ?>account_manager/new_user.php"; ?>" method="post">
   <input type="hidden" name="setup_admin_account">
   <?php
   print "$li_fail The LDAP administration group is empty. ";
@@ -186,7 +186,7 @@ if (isset($_POST['fix_problems'])) {
  ?>
  </form>
  <div class='well'>
-  <form action="$ROOT_SITE/setup/run_checks.php">
+  <form action="/<?php print "/$SUBFOLDER"; ?>setup/run_checks.php">
    <input type='submit' class="btn btn-danger center-block" value='< Re-run setup' class='center-block'>
   </form>
  </div>
