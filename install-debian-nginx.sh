@@ -97,7 +97,7 @@ echo -e "server {
 
 \tlocation /$YOUR_SUBFOLDER {
 \t\talias /var/www/html/$YOUR_SUBFOLDER;
-\t\ttry_files \$uri \$uri/ @lum;
+\t\ttry_files \$uri \$uri/ =404;
 
 \t\t# deny access to .htaccess files, if Apache's document root
 \t\t# concurs with nginx's one
@@ -112,9 +112,6 @@ echo -e "server {
 \t\t\tfastcgi_param SCRIPT_FILENAME \$request_filename;
 \t\t\tinclude /etc/nginx/lum.nginx.conf;
 \t\t }
-\t}
-\tlocation @lum {
-\t\trewrite /$YOUR_SUBFOLDER/(.*)$ /$YOUR_SUBFOLDER/index.php?/\$1 last;
 \t}
 }
 ">/etc/nginx/sites-available/default
