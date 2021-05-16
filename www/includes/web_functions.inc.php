@@ -30,8 +30,6 @@ else {
   $SITE_PROTOCOL = 'http://';
 }
 
-$ROOT_SITE = $SITE_PROTOCOL . $_SERVER["HTTP_HOST"];
-
 include ("config.inc.php");    # get local settings
 include ("modules.inc.php");   # module definitions
 
@@ -246,7 +244,7 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $ROOT_SITE, $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $USER_ID;
+ global $SUBFOLDER, $SITE_NAME, $MODULES, $THIS_MODULE_PATH, $VALIDATED, $IS_ADMIN, $USER_ID;
 
  ?>
   <nav class="navbar navbar-default">
@@ -276,7 +274,8 @@ function render_menu() {
        else {
         print '<li>';
        }
-       print "<a href=" . $ROOT_SITE . "/{$module}>$this_module_name</a></li>\n";
+       $module = $SUBFOLDER . $module;
+       print "<a href='/{$module}/'>$this_module_name</a></li>\n";
       }
      }
      ?>

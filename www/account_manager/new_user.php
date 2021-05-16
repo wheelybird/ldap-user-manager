@@ -14,7 +14,7 @@ if ( $_POST['setup_admin_account'] ) {
  validate_setup_cookie();
  set_page_access("setup");
 
- $completed_action="$ROOT_SITE/log_in";
+ $completed_action="/" . $SUBFOLDER . "log_in";
  $page_title="New administrator account";
 
  render_header("Setup administrator account", FALSE);
@@ -23,7 +23,7 @@ if ( $_POST['setup_admin_account'] ) {
 else {
  set_page_access("admin");
 
- $completed_action="$ROOT_SITE/$THIS_MODULE_PATH/";
+ $completed_action="/$SUBFOLDER$THIS_MODULE_PATH/";
  $page_title="New account";
 
  render_header();
@@ -217,14 +217,14 @@ render_js_email_generator('uid','mail');
 
 ?>
 <script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
-<script type="text/javascript" src="/<?php print $SUBFOLDER; ?>/js/zxcvbn-bootstrap-strength-meter.js"></script>
+<script type="text/javascript" src="/<?php print $SUBFOLDER; ?>js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">
  $(document).ready(function(){
    $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
  });
 </script>
-<script type="text/javascript" src="/<?php print $SUBFOLDER; ?>/js/generate_passphrase.js"></script>
-<script type="text/javascript" src="/<?php print $SUBFOLDER; ?>/js/wordlist.js"></script>
+<script type="text/javascript" src="/<?php print $SUBFOLDER; ?>js/generate_passphrase.js"></script>
+<script type="text/javascript" src="/<?php print $SUBFOLDER; ?>js/wordlist.js"></script>
 <script>
 
  function check_passwords_match() {

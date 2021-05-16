@@ -51,7 +51,7 @@ $people = ldap_get_user_list($ldap_connection);
 
 ?>
 <div class="container">
- <form action="/$SUBFOLDER/<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post">
+ <form action="/<?php print $SUBFOLDER . $THIS_MODULE_PATH; ?>/new_user.php" method="post">
   <button id="add_group" class="btn btn-default" type="submit">New user</button>
  </form>
  <table class="table table-striped">
@@ -70,7 +70,7 @@ foreach ($people as $account_identifier => $attribs){
 
  $group_membership = ldap_user_group_membership($ldap_connection,$account_identifier);
 
- print " <tr>\n   <td><a href='$ROOT_SITE/$THIS_MODULE_PATH/show_user.php?account_identifier=" . urlencode($account_identifier) . "'>$account_identifier</a></td>\n";
+ print " <tr>\n   <td><a href='/$SUBFOLDER$THIS_MODULE_PATH/show_user.php?account_identifier=" . urlencode($account_identifier) . "'>$account_identifier</a></td>\n";
  print "   <td>" . $people[$account_identifier]['givenname'] . "</td>\n";
  print "   <td>" . $people[$account_identifier]['sn'] . "</td>\n";
  print "   <td>" . $people[$account_identifier]['mail'] . "</td>\n";

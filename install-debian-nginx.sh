@@ -43,7 +43,7 @@ read -p "The name of the group used to define accounts that can use this tool to
 rm /etc/nginx/sites-available/default
 PHP_version=$(php -v | cut -c5-7 | head -n 1)
 
-if [ $YOUR_SUBFOLDER = ""]
+if [ $YOUR_SUBFOLDER == ""]
 then
 echo -e "server {
 \tlisten 80 default_server;
@@ -97,7 +97,7 @@ echo -e "server {
 
 \tlocation /$YOUR_SUBFOLDER {
 \t\talias /var/www/html/$YOUR_SUBFOLDER;
-\t\ttry_files \$uri \$uri/ @lum;
+\t\ttry_files \$uri \$uri/ =404;
 
 \t\t# deny access to .htaccess files, if Apache's document root
 \t\t# concurs with nginx's one
@@ -112,9 +112,6 @@ echo -e "server {
 \t\t\tfastcgi_param SCRIPT_FILENAME \$request_filename;
 \t\t\tinclude /etc/nginx/lum.nginx.conf;
 \t\t }
-\t}
-\tlocation @lum {
-\t\trewrite /$YOUR_SUBFOLDER/(.*)$ /$YOUR_SUBFOLDER/index.php?/\$1 last;
 \t}
 }
 ">/etc/nginx/sites-available/default
@@ -135,11 +132,12 @@ service nginx reload
 wget https://github.com/wheelybird/ldap-user-manager/archive/refs/heads/master.zip
 apt install unzip
 unzip master.zip && rm master.zip
-if [ $YOUR_SUBFOLDER = ""]
+if [ $YOUR_SUBFOLDER == ""]
 then
 cp -R ldap-user-manager-master/www/ /var/www/html/ldap-user-manager/
 chown -R www-data:www-data /var/www/html/ldap-user-manager
 else
 cp -R ldap-user-manager-master/www/ /var/www/html/$YOUR_SUBFOLDER/
 chown -R www-data:www-data /var/www/html/$YOUR_SUBFOLDER
+fi
 rm -R ldap-user-manager-master
