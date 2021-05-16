@@ -6,7 +6,7 @@
 
 function render_submenu() {
 
-  global $ROOT_SITE, $THIS_MODULE_PATH;
+  global $SUBFOLDER, $THIS_MODULE_PATH;
 
   $submodules = array( 'users' => 'index.php',
                        'groups' => 'groups.php'
@@ -24,7 +24,7 @@ function render_submenu() {
        else {
         print '<li>';
        }
-       print "<a href='$ROOT_SITE/${THIS_MODULE_PATH}/{$path}'>" . ucwords($submodule) . "</a></li>\n";
+       print "<a href='/${SUBFOLDER}${THIS_MODULE_PATH}/{$path}'>" . ucwords($submodule) . "</a></li>\n";
 
       }
      ?>
