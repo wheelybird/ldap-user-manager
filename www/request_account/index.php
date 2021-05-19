@@ -72,14 +72,13 @@ if (!isset($notes)) { $notes = "n/a"; }
 
     $mail_body = <<<EoT
 A request for an $ORGANISATION_NAME account has been sent:
-
-First name: $firstname
-Last name: $lastname
-Email: $email
-Notes: $notes
-
-You can create the account at $link_url
-
+<p>
+First name: <b>$firstname</b><br>
+Last name: <b>$lastname</b><br>
+Email: <b>$email</b><br>
+Notes: <pre>$notes</pre><br>
+<p>
+<a href="$link_url">Create this account.</a>
 EoT;
 
      include_once "mail_functions.inc.php";

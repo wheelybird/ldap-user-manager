@@ -415,7 +415,7 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter);
 
  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
- if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
+ if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
 
  $records = array();
  foreach ($result as $record) {
@@ -481,7 +481,7 @@ function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=N
    if ($key !== 'count' and !empty($value)) {
     $this_member = preg_replace("/^.*?=(.*?),.*/", "$1", $value);
     array_push($records, $this_member);
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: ${value} is a member",0); }
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix ${value} is a member",0); }
    }
 
   }
@@ -567,7 +567,7 @@ function ldap_user_group_membership($ldap_connection,$username) {
 
 ##################################
 
-function ldap_new_group($ldap_connection,$group_name) {
+function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
@@ -575,7 +575,10 @@ function ldap_new_group($ldap_connection,$group_name) {
 
  if (isset($group_name)) {
 
-  $ldap_search_query = "(cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']})";
+  $new_group = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
+  $initial_member = ldap_escape($initial_member, "", LDAP_ESCAPE_FILTER);
+
+  $ldap_search_query = "(cn=$new_group,${LDAP['group_dn']})";
   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
@@ -586,25 +589,26 @@ function ldap_new_group($ldap_connection,$group_name) {
 
    if ($rfc2307bis_available == FALSE) {
     $new_group_array=array( 'objectClass' => array('top','posixGroup'),
-                            'cn' => $group_name,
+                            'cn' => $new_group,
                             'gidNumber' => $new_gid
                           );
    }
    else {
+    if ($LDAP['group_membership_uses_uid'] == FALSE) { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
     $new_group_array=array( 'objectClass' => array('top','groupOfUniqueNames','posixGroup'),
-                            'cn' => $group_name,
+                            'cn' => $new_group,
                             'gidNumber' => $new_gid,
-                            $LDAP['group_membership_attribute'] => ''
+                            $LDAP['group_membership_attribute'] => $initial_member
                           );
    }
 
-   $group_dn="cn=$group_name,${LDAP['group_dn']}";
+   $group_dn="cn=$new_group,${LDAP['group_dn']}";
 
    $add_group = @ ldap_add($ldap_connection, $group_dn, $new_group_array);
 
    if (! $add_group ) {
     $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix: DEBUG add_group array: ". print_r($new_group_array,true),0); }
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG add_group array: ". print_r($new_group_array,true),0); }
     error_log($this_error,0);
    }
    else {
@@ -901,7 +905,7 @@ function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
 
     $group_dn = "cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
 
-    if ($LDAP['group_membership_uses_uid'] == FALSE) {
+    if ($LDAP['group_membership_uses_uid'] == FALSE and $username != "") {
       $username = "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}";
     }
 
@@ -909,11 +913,11 @@ function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
     $update = @ ldap_mod_del($ldap_connection,$group_dn,$group_update);
 
     if ($update) {
-     error_log("$log_prefix Removed $username from $group_name",0);
+     error_log("$log_prefix Removed '$username' from $group_name",0);
      return TRUE;
     }
     else {
-     error_log("$log_prefix Couldn't remove $username from ${group_name}: " . ldap_error($ldap_connection),0);
+     error_log("$log_prefix Couldn't remove '$username' from ${group_name}: " . ldap_error($ldap_connection),0);
      return FALSE;
     }
   }

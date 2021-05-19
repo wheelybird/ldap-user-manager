@@ -37,16 +37,30 @@ render_footer();
 exit(0);
 }
 
-if (isset($_POST['new_group'])) {
- $group_add = ldap_new_group($ldap_connection,$group_cn);
-}
-
 
 ######################################################################################
 
+if (isset($_POST['new_group'])) {
+  $new_group = TRUE;
+  $current_members = array();
+  $full_dn = "Add members to create the new group";
+  $has_been = "";
+}
+elseif (isset($_POST['initialise_group'])) {
+  $new_group = FALSE;
+  $initialise_group = TRUE;
+  $current_members = array();
+  $full_dn = "cn=$group_cn,${LDAP['group_dn']}";
+  $has_been = "created";
+}
+else {
+  $new_group = FALSE;
+  $current_members = ldap_get_group_members($ldap_connection,$group_cn);
+  $full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
+  $has_been = "updated";
+}
 
-$current_members = ldap_get_group_members($ldap_connection,$group_cn);
-$full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
+
 $all_accounts = ldap_get_user_list($ldap_connection);
 $all_people = array();
 
@@ -68,11 +82,22 @@ if (isset($_POST["update_members"])) {
  }
 
  if ($group_cn == $LDAP['admins_group'] and !array_search($USER_ID, $updated_membership)){
-    array_push($updated_membership,$USER_ID);
+   array_push($updated_membership,$USER_ID);
  }
 
  $members_to_del = array_diff($current_members,$updated_membership);
  $members_to_add = array_diff($updated_membership,$current_members);
+
+ if ($initialise_group == TRUE) {
+   if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+   if ($rfc2307bis_available == TRUE) {
+     $initial_member = array_shift($members_to_add);
+   }
+   else {
+     $initial_member = "";
+   }
+   $group_add = ldap_new_group($ldap_connection,$group_cn,$initial_member);
+ }
 
  foreach ($members_to_del as $this_member) {
   ldap_delete_member_from_group($ldap_connection,$group_cn,$this_member);
@@ -92,7 +117,7 @@ if (isset($_POST["update_members"])) {
   </script>
   <div class="alert alert-success" role="alert">
    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <p class="text-center">The group has been updated.</p>
+   <p class="text-center">The group has been <?php print $has_been; ?>.</p>
   </div>
 
  <?php
@@ -263,6 +288,7 @@ ldap_close($ldap_connection);
          <form id="group_members" action="<?php print $CURRENT_PAGE; ?>" method="post">
           <input type="hidden" name="update_members">
           <input type="hidden" name="group_name" value="<?php print urlencode($group_cn); ?>">
+          <?php if ($new_group == TRUE) { ?><input type="hidden" name="initialise_group"><?php } ?>
          </form>
          <button id="submit_members" class="btn btn-info" disabled type="submit" onclick="update_form_with_users()">Save</button>
         </div>

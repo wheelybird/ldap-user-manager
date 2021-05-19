@@ -107,18 +107,11 @@ if ($ldap_search) {
   $sent_email_message="";
   if ($updated_account and isset($mail) and $can_send_email == TRUE and isset($_POST['send_email'])) {
 
-      $mail_subject = "Your $ORGANISATION_NAME password has been reset.";
-
-$mail_body = <<<EoT
-Your password for $ORGANISATION_NAME has been reset.  Your new credentials are:
-
-Username: $account_identifier
-Password: $password
-
-You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}${SERVER_PATH}change_password and log in using your new credentials.  This will take you to a page where you can change your password.
-EoT;
-
       include_once "mail_functions.inc.php";
+
+      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname, $sn);
+      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname, $sn);
+
       $sent_email = send_email($mail,"$givenname $sn",$mail_subject,$mail_body);
       if ($sent_email) {
         $sent_email_message .= "  An email sent to $mail.";

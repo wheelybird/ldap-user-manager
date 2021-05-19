@@ -122,19 +122,12 @@ if (isset($_POST['create_account'])) {
 
     if (isset($send_user_email) and $send_user_email == TRUE) {
 
-      $mail_subject = "Your $ORGANISATION_NAME account has been created.";
-
-$mail_body = <<<EoT
-You've been set up with an account for $ORGANISATION_NAME.  Your credentials are:
-
-Username: $account_identifier
-Password: $password
-
-You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}${SERVER_PATH}change_password and log in using your new credentials.  This will take you to a page where you can change your password.
-EoT;
-
       include_once "mail_functions.inc.php";
-      $sent_email = send_email($mail,"$first_name $last_name",$mail_subject,$mail_body);
+
+      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname, $sn);
+      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname, $sn);
+
+      $sent_email = send_email($mail,"$givenname $sn",$mail_subject,$mail_body);
       $creation_message = "The account was created";
       if ($sent_email) {
         $creation_message .= " and an email sent to $mail.";
@@ -152,6 +145,10 @@ EoT;
        </div>
        <?php
       }
+     #Tidy up empty uniquemember entries left over from the setup wizard
+     $USER_ID="tmp_admin";
+     ldap_delete_member_from_group($ldap_connection, $LDAP['admins_group'], "");
+     if (isset($DEFAULT_USER_GROUP)) { ldap_delete_member_from_group($ldap_connection, $DEFAULT_USER_GROUP, ""); }
     }
 
    ?>

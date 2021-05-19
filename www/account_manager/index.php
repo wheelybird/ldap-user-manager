@@ -51,8 +51,8 @@ $people = ldap_get_user_list($ldap_connection);
 
 ?>
 <div class="container">
- <form action="<?php print "${THIS_MODULE_PATH}"; ?>/new_user.php" method="post">
-  <button id="add_group" class="btn btn-default" type="submit">New user</button>
+ <form action="<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post">
+  <span class="badge badge-secondary" style="font-size:1.9rem;"><?php print count($people);?> account<?php if (count($people) != 1) { print "s"; }?></span>  &nbsp; <button id="add_group" class="btn btn-default" type="submit">New user</button>
  </form>
  <table class="table table-striped">
   <thead>
