@@ -782,10 +782,13 @@ function ldap_new_account($ldap_connection,$account_r) {
                                 'userPassword' => $hashed_pass,
                       );
 
-    unset($account_r['password']);
-    $account_attributes = array_merge($account_attributes, $account_r);
-
-    $add_account = @ ldap_add($ldap_connection,
+   unset($account_r['password']);
+   $account_attributes = array_change_key_case($account_attributes, CASE_LOWER);
+   $account_r = array_change_key_case($account_r, CASE_LOWER);
+   $account_attributes = array_replace_recursive($account_attributes, $account_r);
+   
+   
+   $add_account = @ ldap_add($ldap_connection,
                               "${LDAP['account_attribute']}=$account_identifier,${LDAP['user_dn']}",
                               $account_attributes
                              );
