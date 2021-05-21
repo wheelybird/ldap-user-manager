@@ -89,21 +89,15 @@ if (isset($_POST["update_members"])) {
  $members_to_add = array_diff($updated_membership,$current_members);
 
  if ($initialise_group == TRUE) {
-   if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
-   if ($rfc2307bis_available == TRUE) {
-     $initial_member = array_shift($members_to_add);
-   }
-   else {
-     $initial_member = "";
-   }
+   $initial_member = array_shift($members_to_add);
    $group_add = ldap_new_group($ldap_connection,$group_cn,$initial_member);
+ }
+ foreach ($members_to_add as $this_member) {
+  ldap_add_member_to_group($ldap_connection,$group_cn,$this_member);
  }
 
  foreach ($members_to_del as $this_member) {
   ldap_delete_member_from_group($ldap_connection,$group_cn,$this_member);
- }
- foreach ($members_to_add as $this_member) {
-  ldap_add_member_to_group($ldap_connection,$group_cn,$this_member);
  }
 
  $non_members = array_diff($all_people,$updated_membership);

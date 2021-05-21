@@ -390,8 +390,8 @@ if ($ldap_search) {
 <?php
 
   foreach ($attribute_map as $attribute => $attr_r) {
-    if (isset($attr_r['label'])) { $label = $attr_r['label']; } else { $label = ""; }
-    if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $label = ""; }
+    $label = $attr_r['label'];
+    if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
     if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
   ?>
      <div class="form-group" id="<?php print $attribute; ?>_div">

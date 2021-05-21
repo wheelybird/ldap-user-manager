@@ -289,14 +289,13 @@ render_js_email_generator('uid','mail');
 
   foreach ($attribute_map as $attribute => $attr_r) {
     $label   = $attr_r['label'];
-    $onkeyup = $attr_r['onkeyup'];
     if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
   ?>
      <div class="form-group" id="<?php print $attribute; ?>_div">
       <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
       <div class="col-sm-6">
        <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
-         if (isset($onkeyup)) { print "onkeyup=\"$onkeyup;\""; } ?>>
+         if (isset($attr_r['onkeyup'])) { print "onkeyup=\"${attr_r['onkeyup']};\""; } ?>>
       </div>
      </div>
   <?php
