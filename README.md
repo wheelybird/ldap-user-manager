@@ -36,7 +36,7 @@ It's designed to work with OpenLDAP and to be run as a container.  It complement
 
 ***
 
-## Quick start with Docker
+## Quick install with Docker
 
 ```
 docker run \
@@ -58,7 +58,7 @@ docker run \
 Change the variable values to suit your environment.  Now go to https://lum.example.com/setup.
 
 ***
-## Quick start on Debian 10 with Nginx
+## Quick install on Debian 10 with Nginx
 
 On a fresh Debian buster installation, you can use the install-debian-nginx.sh script to install LUM by doing these following commands :
 
