@@ -79,7 +79,7 @@ You can add more  variables values to suit your environment by editing /etc/ngin
 Here is one example of lum.nginx.conf file :
 
 ```
-fastcgi_param   HTTP_HOST               lum.example.com;
+fastcgi_param   SERVER_HOSTNAME               lum.example.com;
 fastcgi_param   SERVER_PATH             /subfolder;
 fastcgi_param   LDAP_URI                ldaps://ldap.example.com;
 fastcgi_param   LDAP_BASE_DN            dc=example,dc=com;
