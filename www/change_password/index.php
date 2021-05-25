@@ -52,21 +52,21 @@ if (isset($mismatched)) {  ?>
 
 ?>
 
-<script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
-<script type="text/javascript" src="/js/zxcvbn-bootstrap-strength-meter.js"></script>
+<script src="<?php print $SERVER_PATH; ?>js/zxcvbn.min.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">$(document).ready(function(){	$("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });});</script>
 
 <div class="container">
- <div class="col-sm-8">
+ <div class="col-sm-6">
    <div class="panel panel-default">
     <p>Use this form to change your <?php print $ORGANISATION_NAME; ?> password.  When you start typing your new password the gauge at the bottom will show its security strength.
-    <br>Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</p>
+    Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</p>
    </div>
  </div>
 </div>
 
 <div class="container">
- <div class="col-sm-8">
+ <div class="col-sm-6">
 
   <div class="panel panel-default">
    <div class="panel-heading text-center">Change your password</div>

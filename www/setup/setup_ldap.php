@@ -167,7 +167,7 @@ if (isset($_POST['fix_problems'])) {
  ?>
  </form>
  <div class='well'>
-  <form action="${SERVER_PATH}">
+  <form action="<?php print $THIS_MODULE_PATH; ?>">
    <input type='submit' class="btn btn-success center-block" value='Finished' class='center-block'>
   </form>
  </div>
@@ -186,7 +186,7 @@ if (isset($_POST['fix_problems'])) {
  ?>
  </form>
  <div class='well'>
-  <form action="${SERVER_PATH}setup/run_checks.php">
+  <form action="<?php print $THIS_MODULE_PATH; ?>/run_checks.php">
    <input type='submit' class="btn btn-danger center-block" value='< Re-run setup' class='center-block'>
   </form>
  </div>

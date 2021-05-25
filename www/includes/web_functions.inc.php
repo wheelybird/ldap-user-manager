@@ -36,6 +36,13 @@ include ("modules.inc.php");   # module definitions
 if (substr($SERVER_PATH, -1) != "/") { $SERVER_PATH .= "/"; }
 $THIS_MODULE_PATH="${SERVER_PATH}${THIS_MODULE}";
 
+$DEFAULT_COOKIE_OPTIONS = array( 'expires' => time()+(60 * $SESSION_TIMEOUT),
+                                 'path' => $SERVER_PATH,
+                                 'domain' => '',
+                                 'secure' => TRUE,
+                                 'samesite' => 'strict'
+                               );
+
 validate_passkey_cookie();
 
 ######################################################
@@ -56,7 +63,7 @@ function set_passkey_cookie($user_id,$is_admin) {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $SESSION_TIMEOUT, $VALIDATED, $USER_ID, $IS_ADMIN, $log_prefix, $SESSION_DEBUG;
+ global $SESSION_TIMEOUT, $VALIDATED, $USER_ID, $IS_ADMIN, $log_prefix, $SESSION_DEBUG, $DEFAULT_COOKIE_OPTIONS;
 
 
  $passkey = generate_passkey();
@@ -69,8 +76,10 @@ function set_passkey_cookie($user_id,$is_admin) {
  }
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
  @ file_put_contents("/tmp/$filename","$passkey:$admin_val:$this_time");
- setcookie('orf_cookie', "$user_id:$passkey", $this_time+(60 * $SESSION_TIMEOUT), '/', '', '', TRUE);
- setcookie('sessto_cookie', $this_time+(60 * $SESSION_TIMEOUT), $this_time+7200, '/', '', '', TRUE);
+ setcookie('orf_cookie', "$user_id:$passkey", $DEFAULT_COOKIE_OPTIONS);
+ $sessto_cookie_opts = $DEFAULT_COOKIE_OPTIONS;
+ $sessto_cookie_opts['expires'] = $this_time+7200;
+ setcookie('sessto_cookie', $this_time+(60 * $SESSION_TIMEOUT), $sessto_cookie_opts);
  if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: user $user_id validated (IS_ADMIN=${IS_ADMIN}), sent orf_cookie to the browser.",0); }
  $VALIDATED = TRUE;
 
@@ -137,7 +146,7 @@ function set_setup_cookie() {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $SESSION_TIMEOUT, $IS_SETUP_ADMIN, $log_prefix, $SESSION_DEBUG;
+ global $SESSION_TIMEOUT, $IS_SETUP_ADMIN, $log_prefix, $SESSION_DEBUG, $DEFAULT_COOKIE_OPTIONS;
 
  $passkey = generate_passkey();
  $this_time=time();
@@ -145,8 +154,9 @@ function set_setup_cookie() {
  $IS_SETUP_ADMIN = TRUE;
 
  file_put_contents("/tmp/ldap_setup","$passkey:$this_time");
-# setcookie('setup_cookie', "$passkey", $this_time+(60 * $SESSION_TIMEOUT), '/', $_SERVER["HTTP_HOST"]);
- setcookie('setup_cookie', "$passkey", $this_time+(60 * $SESSION_TIMEOUT), '/', '', '', TRUE);
+
+ setcookie('setup_cookie', $passkey, $DEFAULT_COOKIE_OPTIONS);
+
  if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: sent setup_cookie to the client.",0); }
 
 }
@@ -194,10 +204,17 @@ function log_out($method='normal') {
 
  # Delete the passkey from the database and the passkey cookie
 
- global $USER_ID, $SERVER_PATH;
+ global $USER_ID, $SERVER_PATH, $DEFAULT_COOKIE_OPTIONS;
 
- setcookie('orf_cookie', "", time()-20000, '/', '', '', TRUE);
- setcookie('sessto_cookie', "", time()-20000, '/', '', '', TRUE);
+ $this_time=time();
+
+ $orf_cookie_opts = $DEFAULT_COOKIE_OPTIONS;
+ $orf_cookie_opts['expires'] = $this_time-20000;
+ $sessto_cookie_opts = $DEFAULT_COOKIE_OPTIONS;
+ $sessto_cookie_opts['expires'] = $this_time-20000;
+
+ setcookie('orf_cookie', "", $DEFAULT_COOKIE_OPTIONS);
+ setcookie('sessto_cookie', "", $DEFAULT_COOKIE_OPTIONS);
 
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $USER_ID);
  @ unlink("/tmp/$filename");
@@ -212,7 +229,7 @@ function log_out($method='normal') {
 
 function render_header($title="",$menu=TRUE) {
 
- global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS;
+ global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS, $SERVER_PATH;
 
  if (empty($title)) { $title = $SITE_NAME; }
 
@@ -224,9 +241,9 @@ function render_header($title="",$menu=TRUE) {
  <TITLE><?php print "$title"; ?></TITLE>
  <meta charset="utf-8">
  <meta name="viewport" content="width=device-width, initial-scale=1">
- <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+ <link rel="stylesheet" href="<?php print $SERVER_PATH; ?>bootstrap/css/bootstrap.min.css">
+ <script src="<?php print $SERVER_PATH; ?>js/jquery-3.6.0.min.js"></script>
+ <script src="<?php print $SERVER_PATH; ?>bootstrap/js/bootstrap.min.js"></script>
 </HEAD>
 <BODY>
 <?php

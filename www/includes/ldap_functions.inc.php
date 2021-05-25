@@ -587,8 +587,8 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
    $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
    $new_gid = $highest_gid + 1;
 
-   if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { array('top','groupOfUniqueNames','posixGroup'); }
-   if ($LDAP['group_membership_uses_uid'] == FALSE) { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
+   if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { $objectclasses = array('top','groupOfUniqueNames','posixGroup'); }
+   if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
 
    $new_group_array=array( 'objectClass' => $objectclasses,
                            'cn' => $new_group,
