@@ -66,7 +66,8 @@ echo -e "server {
 \t}
 }
 ">/etc/nginx/sites-available/default
-echo -e "fastcgi_param   LDAP_URI        $YOUR_LDAP_URI;
+echo -e "fastcgi_param   SERVER_HOSTNAME       $YOUR_URL;
+fastcgi_param   LDAP_URI        $YOUR_LDAP_URI;
 fastcgi_param   LDAP_BASE_DN    $YOUR_LDAP_BASE_DN;
 fastcgi_param   LDAP_ADMIN_BIND_DN      $YOUR_LDAP_ADMIN_BIND_DN;
 fastcgi_param   LDAP_ADMIN_BIND_PWD     $YOUR_LDAP_ADMIN_BIND_PWD;
@@ -104,7 +105,7 @@ echo -e "server {
 }
 ">/etc/nginx/sites-available/default
 
-echo -e "fastcgi_param   HTTP_HOST       $YOUR_URL;
+echo -e "fastcgi_param   SERVER_HOSTNAME       $YOUR_URL;
 fastcgi_param   SERVER_PATH        /$YOUR_SUBFOLDER;
 fastcgi_param   LDAP_URI        $YOUR_LDAP_URI;
 fastcgi_param   LDAP_BASE_DN    $YOUR_LDAP_BASE_DN;
