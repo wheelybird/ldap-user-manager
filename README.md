@@ -70,7 +70,7 @@ On a fresh Debian buster installation, you can use the install-debian-nginx.sh s
 
 `./install-debian-nginx.sh`
 
-Then, you'll have to answer few question to set some mandatory environmental variables, HTTP_HOST, SERVER_PATH, LDAP_URI, LDAP_BASE_DN, LDAP_ADMIN_BIND_DN, LDAP_ADMIN_BIND_PWD and LDAP_ADMINS_GROUP .
+Then, you'll have to answer few question to set some mandatory environmental variables, `SERVER_HOSTNAME`, `SERVER_PATH`, `LDAP_URI`, `LDAP_BASE_DN`, `LDAP_ADMIN_BIND_DN`, `LDAP_ADMIN_BIND_PWD` and `LDAP_ADMINS_GROUP`.
 
 You can add more  variables values to suit your environment by editing /etc/nginx/lum.nginx.conf file :
 
