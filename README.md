@@ -36,7 +36,7 @@ It's designed to work with OpenLDAP and to be run as a container.  It complement
 
 ***
 
-## Quick start
+## Quick start with Docker
 
 ```
 docker run \
@@ -56,6 +56,47 @@ docker run \
            wheelybird/ldap-user-manager:v1.7
 ```
 Change the variable values to suit your environment.  Now go to https://lum.example.com/setup.
+
+***
+## Quick start on Debian 10 with Nginx
+
+On a fresh Debian buster installation, you can use the install-debian-nginx.sh script to install LUM by doing these following commands :
+
+`apt update && apt dist-upgrade`
+
+`wget https://github.com/wheelybird/ldap-user-manager/blob/master/install-debian-nginx.sh`
+
+`chmod +x install-debian-nginx.sh`
+
+`./install-debian-nginx.sh`
+
+Then, you'll have to answer few question to set some mandatory environmental variables, HTTP_HOST, SERVER_PATH, LDAP_URI, LDAP_BASE_DN, LDAP_ADMIN_BIND_DN, LDAP_ADMIN_BIND_PWD and LDAP_ADMINS_GROUP .
+
+You can add more  variables values to suit your environment by editing /etc/nginx/lum.nginx.conf file :
+
+`nano /etc/nginx/lum.nginx.conf`
+
+Here is one example of lum.nginx.conf file :
+
+```
+fastcgi_param   HTTP_HOST               lum.example.com;
+fastcgi_param   SERVER_PATH             /subfolder;
+fastcgi_param   LDAP_URI                ldaps://ldap.example.com;
+fastcgi_param   LDAP_BASE_DN            dc=example,dc=com;
+fastcgi_param   LDAP_ADMIN_BIND_DN      cn=admin,dc=example,dc=com;
+fastcgi_param   LDAP_ADMIN_BIND_PWD     YOURadminPASSWORD;
+fastcgi_param   LDAP_ADMINS_GROUP       admins;
+fastcgi_param   EMAIL_DOMAIN            example.com;
+fastcgi_param   USERNAME_FORMAT         \{first_name_initial\}\{last_name\};
+fastcgi_param   PASSWORD_HASH           SHA512CRYPT;
+fastcgi_param   SMTP_HOSTNAME           smtp.example.com;
+fastcgi_param   SMTP_USERNAME           user@example.com;
+fastcgi_param   SMTP_PASSWORD           YOURSMTPPASSWORD;
+fastcgi_param   SMTP_USE_TLS            TRUE;
+fastcgi_param   NEW_ACCOUNT_EMAIL_SUBJECT       "Your awesome account has been created. Yeah!";
+```
+
+Now go to https://lum.example.com/subfolder/setup.
 
 ***
 
