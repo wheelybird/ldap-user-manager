@@ -34,17 +34,19 @@ if (isset($_POST["user_id"]) and isset($_POST["password"])) {
    header("Location: //${_SERVER['HTTP_HOST']}" . base64_decode($_POST['redirect_to']) . "\n\n");
   }
   else {
-   header("Location: //${_SERVER['HTTP_HOST']}/index.php?logged_in\n\n");
+
+   if ($IS_ADMIN) { $default_module = "account_manager"; } else { $default_module = "change_password"; }
+   header("Location: //${_SERVER['HTTP_HOST']}${SERVER_PATH}$default_module?logged_in\n\n");
   }
  }
  else {
-  header("Location: //${_SERVER['HTTP_HOST']}/${THIS_MODULE_PATH}/index.php?invalid\n\n");
+  header("Location: //${_SERVER['HTTP_HOST']}${THIS_MODULE_PATH}/index.php?invalid\n\n");
  }
 
 }
 else {
 
- render_header("Log in");
+ render_header("$ORGANISATION_NAME account manager - log in");
 
  ?>
 <div class="container">

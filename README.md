@@ -53,7 +53,7 @@ docker run \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
            -e "LDAP_IGNORE_CERT_ERRORS=true" \
            -e "EMAIL_DOMAIN=ldapusermanager.org" \
-           wheelybird/ldap-user-manager:v1.6
+           wheelybird/ldap-user-manager:v1.7
 ```
 Change the variable values to suit your environment.  Now go to https://lum.example.com/setup.
 
@@ -84,6 +84,8 @@ Configuration is via environmental variables.  Please bear the following in mind
 #### Organisation settings
 
 * `SERVER_HOSTNAME` (default: *ldapusername.org*):  The hostname that this interface will be served from.
+   
+* `SERVER_PATH` (default: */*): The path to the user manager on the webserver.  Useful if running this behind a reverse proxy.
    
 * `ORGANISATION_NAME`: (default: *LDAP*): Your organisation's name.
    
@@ -150,17 +152,28 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `SMTP_PASSWORD` (no default): The password to use when the SMTP server requires authentication.
    
-* `SMTP_USE_TLS` (default: *FALSE*): Set to TRUE if the SMTP server requires TLS to be enabled.
+* `SMTP_USE_TLS` (default: *FALSE*): Set to TRUE if the SMTP server requires TLS to be enabled.  Overrides `SMTP_USE_TLS`.
+   
+* `SMTP_USE_SSL` (default: *FALSE*): Set to TRUE if the SMTP server requires SSL to be enabled.  This will be unset if `SMTP_USE_TLS` is `TRUE`.
    
 * `EMAIL_FROM_ADDRESS` (default: *admin@`EMAIL_DOMAIN`*): The FROM email address used when sending out emails.  The default domain is taken from `EMAIL_DOMAIN` under **User account settings**.
    
 * `EMAIL_FROM_NAME` (default: *`SITE_NAME`*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
 
+* `MAIL_SUBJECT` (default: *Your $ORGANISATION_NAME account has been created.*): The mail subject for new account emails.
+
+* `NEW_ACCOUNT_EMAIL_SUBJECT`, `NEW_ACCOUNT_EMAIL_BODY`, `RESET_PASSWORD_EMAIL_SUBJECT` & `RESET_PASSWORD_EMAIL_BODY`: Change the email contents for emails sent to users when you create an account or reset a password.  See [Sending emails](#sending_emails) for full details.
+
+
+**Account requests**
+
 #### Account request settings
 
-* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.
-   
-* `ACCOUNT_REQUESTS_EMAIL` (default: *`EMAIL_FROM_ADDRESS`*): This is the email address that any requests for a new account are sent to.
+* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.  
+
+* `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
+
+**Site security settings**   
 
 #### Website security
 
@@ -235,6 +248,26 @@ If you haven't passed in those settings or if the account you've created has no 
 
 When the account is created you'll be told if the email was sent or not but be aware that just because your SMTP server accepted the email it doesn't mean that it was able to deliver it.  If you get a message saying the email wasn't sent then check the logs for the error.  You can increase the log level (`SMTP_LOG_LEVEL`) to above 0 in order to see SMTP debug logs.
 
+You can set the email subject and text for new account and password reset emails via the `NEW_ACCOUNT_EMAIL_SUBJECT`, `NEW_ACCOUNT_EMAIL_BODY`, `RESET_PASSWORD_EMAIL_SUBJECT` and `RESET_PASSWORD_EMAIL_BODY` variables.  These variables are parsed before sending and the following macros will be replaced with the relevant information:
+
+ * `{password}` : the new password for the account
+ * `{login}` : the user's login (the value of the attribute defined by `LDAP_ACCOUNT_ATTRIBUTE`.  See [Account names](#account-names) for more information.
+ * `{first_name}` : the user's first name
+ * `{last_name}` : the user's surname
+ * `{organisation}` : the value set by `ORGANISATION_NAME`
+ * `{site_url}` : a link to the user manager site using the values set by `SERVER_HOSTNAME/SERVER_PATH`
+ * `{change_password_url}` : a link to the self-service password change page `SERVER_HOSTNAME/SERVER_PATH/change_password`
+
+The email body should be in HTML.  As an example, the default email subject on creating a new account is `Your {organisation} account has been created.` and the email body is
+```
+You've been set up with an account for {organisation}.  Your credentials are:
+<p>
+Login: {login}<br>
+Password: {password}
+<p>
+You should log into {change_password_url} and change the password as soon as possible.
+```
+
 ***
 
 ## Username format
@@ -243,10 +276,10 @@ When entering a person's name the system username is automatically filled-in bas
 The default is `{first_name}-{last_name}` with which *Jonathan Testperson*'s username would be *jonathan-testperson*.   
 Currently the available macros are:
 
-* `{first_name}` : the first name in lowercase
-* `{first_name_initial}` : the first letter of the first name in lowercase
-* `{last_name}`: the last name in lowercase
-* `{last_name_initial}`: the first initial of the last name in lowercase
+ * `{first_name}` : the first name in lowercase
+ * `{first_name_initial}` : the first letter of the first name in lowercase
+ * `{last_name}`: the last name in lowercase
+ * `{last_name_initial}`: the first initial of the last name in lowercase
 
 Anything else in the `USERNAME_FORMAT` string is left unmodified.  If `ENFORCE_SAFE_SYSTEM_NAMES` is set then the username is also checked for validity against `USERNAME_REGEX`.  This is to ensure that there aren't any characters forbidden when using LDAP to create server or email accounts.   
    

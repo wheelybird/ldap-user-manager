@@ -7,7 +7,7 @@ include_once "ldap_functions.inc.php";
 include_once "module_functions.inc.php";
 set_page_access("admin");
 
-render_header("LDAP manager");
+render_header("$ORGANISATION_NAME account manager");
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -70,9 +70,9 @@ render_js_username_check();
 <div class="container">
 
  <div class="form-inline" id="new_group_div">
-  <form action="/<?php print $THIS_MODULE_PATH; ?>/show_group.php" method="post">
+  <form action="<?php print "${THIS_MODULE_PATH}"; ?>/show_group.php" method="post">
    <input type="hidden" name="new_group">
-   <button id="show_new_group" class="form-control btn btn-default" type="button" onclick="show_new_group_form();">New group</button>
+   <span class="badge badge-secondary" style="font-size:1.9rem;"><?php print count($groups);?> group<?php if (count($groups) != 1) { print "s"; }?></span>  &nbsp;  <button id="show_new_group" class="form-control btn btn-default" type="button" onclick="show_new_group_form();">New group</button>
    <input type="text" class="form-control invisible" name="group_name" id="group_name" placeholder="Group name" onkeyup="check_entity_name_validity(document.getElementById('group_name').value,'new_group_div');"><button id="add_group" class="form-control btn btn-primary btn-sm invisible" type="submit">Add</button>
   </form>
  </div>
@@ -86,7 +86,7 @@ render_js_username_check();
  <tbody>
 <?php
 foreach ($groups as $group){
- print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_group.php?group_name=" . urlencode($group) . "'>$group</a></td>\n </tr>\n";
+ print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_group.php?group_name=" . urlencode($group) . "'>$group</a></td>\n </tr>\n";
 }
 ?>
   </tbody>
