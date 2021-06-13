@@ -139,6 +139,7 @@ These settings should only be changed if you're trying to make the user manager 
    
 * `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
    
+* `REMOTE_HTTP_HEADERS_LOGIN`(default: *FALSE*) Enables session managment from a external Service like Authelia. This setting compromisses your security if your not using a Auth-Proxy infront of this application
 
 #### Email sending settings
 

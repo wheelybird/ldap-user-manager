@@ -11,11 +11,13 @@
                     'log_in'          => 'hidden_on_login',
                     'change_password' => 'auth',
                     'account_manager' => 'admin',
-                    'log_out'         => 'auth'
                   );
 
 if ($ACCOUNT_REQUESTS_ENABLED == TRUE) {
   $MODULES['request_account'] = 'hidden_on_login';
+}
+if (!$REMOTE_HTTP_HEADERS_LOGIN) {
+  $MODULES['log_out'] = 'auth';
 }
 
 ?>
