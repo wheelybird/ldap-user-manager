@@ -1,5 +1,4 @@
 <?php
-
 #Security level vars
 
 $VALIDATED = FALSE;
@@ -43,10 +42,13 @@ $DEFAULT_COOKIE_OPTIONS = array( 'expires' => time()+(60 * $SESSION_TIMEOUT),
                                  'samesite' => 'strict'
                                );
 
-validate_passkey_cookie();
 
+if($REMOTE_HTTP_HEADERS_LOGIN) {
+  login_via_headers();
+} else {
+  validate_passkey_cookie();
+}
 ######################################################
-
 function generate_passkey() {
 
  $rnd1 = rand(10000000,100000000000);
@@ -84,7 +86,16 @@ function set_passkey_cookie($user_id,$is_admin) {
  $VALIDATED = TRUE;
 
 }
+function login_via_headers() {
+  global $IS_ADMIN, $USER_ID, $VALIDATED, $LDAP;
+  //['admins_group'];
+  $USER_ID = $_SERVER['HTTP_REMOTE_USER'];
+  $remote_groups = explode(',',$_SERVER['HTTP_REMOTE_GROUPS']);
+  $IS_ADMIN = in_array($LDAP['admins_group'],$remote_groups);
+  // users are always validated as we assume, that the auth server does this
+  $VALIDATED = true;
 
+}
 
 ######################################################
 
@@ -136,7 +147,6 @@ function validate_passkey_cookie() {
    }
   }
  }
-
 }
 
 
