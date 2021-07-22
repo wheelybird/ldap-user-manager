@@ -7,7 +7,7 @@ include_once "ldap_functions.inc.php";
 include_once "module_functions.inc.php";
 set_page_access("admin");
 
-render_header("LDAP manager");
+render_header("$ORGANISATION_NAME account manager");
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -51,8 +51,8 @@ $people = ldap_get_user_list($ldap_connection);
 
 ?>
 <div class="container">
- <form action="/<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post">
-  <button id="add_group" class="btn btn-default" type="submit">New user</button>
+ <form action="<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post">
+  <span class="badge badge-secondary" style="font-size:1.9rem;"><?php print count($people);?> account<?php if (count($people) != 1) { print "s"; }?></span>  &nbsp; <button id="add_group" class="btn btn-default" type="submit">New user</button>
  </form>
  <table class="table table-striped">
   <thead>
@@ -70,7 +70,7 @@ foreach ($people as $account_identifier => $attribs){
 
  $group_membership = ldap_user_group_membership($ldap_connection,$account_identifier);
 
- print " <tr>\n   <td><a href='/$THIS_MODULE_PATH/show_user.php?account_identifier=" . urlencode($account_identifier) . "'>$account_identifier</a></td>\n";
+ print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_user.php?account_identifier=" . urlencode($account_identifier) . "'>$account_identifier</a></td>\n";
  print "   <td>" . $people[$account_identifier]['givenname'] . "</td>\n";
  print "   <td>" . $people[$account_identifier]['sn'] . "</td>\n";
  print "   <td>" . $people[$account_identifier]['mail'] . "</td>\n";

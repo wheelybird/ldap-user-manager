@@ -1,4 +1,4 @@
-FROM php:7.0-apache
+FROM php:8-apache
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -8,11 +8,7 @@ RUN apt-get update && \
         libpng-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-configure gd \
-         --enable-gd-native-ttf \
-         --with-freetype-dir=/usr/include/freetype2 \
-         --with-png-dir=/usr/include \
-         --with-jpeg-dir=/usr/include && \
+RUN docker-php-ext-configure gd --with-freetype && \
     docker-php-ext-install -j$(nproc) gd && \
     libdir=$(find /usr -name "libldap.so*" | sed -e 's/\/usr\///' -e 's/\/libldap.so//') && \
     docker-php-ext-configure ldap --with-libdir=$libdir && \
