@@ -58,25 +58,22 @@ if (isset($mismatched)) {  ?>
 
 <div class="container">
  <div class="col-sm-6">
-   <div class="panel panel-default">
-    <p>Use this form to change your <?php print $ORGANISATION_NAME; ?> password.  When you start typing your new password the gauge at the bottom will show its security strength.
-    Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</p>
-   </div>
- </div>
-</div>
-
-<div class="container">
- <div class="col-sm-6">
 
   <div class="panel panel-default">
    <div class="panel-heading text-center">Change your password</div>
+
+   <ul class="list-group">
+    <li class="list-group-item">Use this form to change your <?php print $ORGANISATION_NAME; ?> password.  When you start typing your new password the gauge at the bottom will show its security strength.
+    Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</li>
+   </ul>
+
    <div class="panel-body text-center">
-   
+
     <form class="form-horizontal" action='' method='post'>
 
      <input type='hidden' id="change_password" name="change_password">
      <input type='hidden' id="pass_score" value="0" name="pass_score">
-     
+
      <div class="form-group" id="password_div">
       <label for="password" class="col-sm-4 control-label">Password</label>
       <div class="col-sm-6">
@@ -108,7 +105,7 @@ if (isset($mismatched)) {  ?>
      <div class="form-group">
        <button type="submit" class="btn btn-default">Change password</button>
      </div>
-     
+
     </form>
 
     <div class="progress">
@@ -125,4 +122,3 @@ if (isset($mismatched)) {  ?>
 render_footer();
 
 ?>
-

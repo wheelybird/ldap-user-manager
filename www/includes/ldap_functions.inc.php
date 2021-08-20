@@ -411,8 +411,8 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- $this_filter = "(&(objectclass=*)$filters)";
- $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter);
+ $this_filter = "(&(cn=*)$filters)";
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter, array("cn", "dn"));
 
  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
@@ -421,13 +421,40 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
  foreach ($result as $record) {
 
   if (isset($record['cn'][0])) {
-
-   array_push($records, $record['cn'][0]);
-
+   $records[$record['cn'][0]] = array('cn' => $record['cn'][0], 'dn' => $record['dn']);
   }
  }
 
- if ($sort == "asc") { sort($records); } else { rsort($records); }
+ if ($sort == "asc") { ksort($records); } else { krsort($records); }
+
+ return(array_slice($records,$start,$entries));
+
+
+}
+
+##################################
+
+
+function ldap_get_group_path_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",$filters=NULL) {
+
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
+
+ $this_filter = "(&(ou=*)$filters)";
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $this_filter, array("ou", "dn"));
+
+ $result = @ ldap_get_entries($ldap_connection, $ldap_search);
+ if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP returned ${result['count']} groups for ${LDAP['group_dn']} when using this filter: $this_filter",0); }
+
+ $records = array();
+ foreach ($result as $record) {
+  if (isset($record['ou'][0]) && ($record['dn'] != $LDAP['group_dn'])) {
+   $path_dn = preg_replace("/^(ou=.+),".$LDAP['group_dn']."$/", "$1", $record['dn']);
+
+   $records[$record['dn']] = array('ou' => $record['ou'][0], 'dn' => $record['dn'], 'path_dn' => $path_dn);
+  }
+ }
+
+ if ($sort == "asc") { ksort($records); } else { krsort($records); }
 
  return(array_slice($records,$start,$entries));
 
@@ -550,7 +577,7 @@ function ldap_user_group_membership($ldap_connection,$username) {
  }
 
  $ldap_search_query = "(&(objectClass=posixGroup)(${LDAP['group_membership_attribute']}=${username}))";
- $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array('cn'));
+ $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array('cn', 'dn'));
  $result = ldap_get_entries($ldap_connection, $ldap_search);
 
  $groups = array();
@@ -567,7 +594,7 @@ function ldap_user_group_membership($ldap_connection,$username) {
 
 ##################################
 
-function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
+function ldap_new_group($ldap_connection,$group_name,$initial_member="",$group_path_dn="") {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
@@ -578,7 +605,7 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
   $new_group = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
   $initial_member = ldap_escape($initial_member, "", LDAP_ESCAPE_FILTER);
 
-  $ldap_search_query = "(cn=$new_group,${LDAP['group_dn']})";
+  $ldap_search_query = "(cn=".$new_group.")";
   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
@@ -588,6 +615,8 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
    $new_gid = $highest_gid + 1;
 
    if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { $objectclasses = array('top','groupOfUniqueNames','posixGroup'); }
+   if (isset($LDAP['group_additional_objectclasses']) and $LDAP['group_additional_objectclasses'] != "")
+     $objectclasses = array_merge($objectclasses, explode(",", $LDAP['group_additional_objectclasses']));
    if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
 
    $new_group_array=array( 'objectClass' => $objectclasses,
@@ -596,7 +625,7 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
                            $LDAP['group_membership_attribute'] => $initial_member
                          );
 
-   $group_dn="cn=$new_group,${LDAP['group_dn']}";
+   $group_dn = empty($group_path_dn) ? "cn=".$new_group.",".$LDAP['group_dn'] : "cn=".$new_group.",".$group_path_dn.",".$LDAP['group_dn'];
 
    $add_group = @ ldap_add($ldap_connection, $group_dn, $new_group_array);
 
@@ -765,7 +794,7 @@ function ldap_new_account($ldap_connection,$account_r) {
                                  'userpassword' => $hashed_pass,
                        );
 
-     $account_attributes = array_merge($account_r, $account_attributes);
+     $account_attributes = array_merge(array_filter($account_r), $account_attributes);
 
      if (!isset($account_attributes['uidnumber']) or !is_numeric($account_attributes['uidnumber'])) {
        $highest_uid = ldap_get_highest_id($ldap_connection,'uid');
@@ -865,7 +894,7 @@ function ldap_add_member_to_group($ldap_connection,$group_name,$username) {
 
   if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
 
-  $group_dn = "cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
+  $group_dn = ldap_get_dn_of_group($ldap_connection, $group_name);
 
   if ($LDAP['group_membership_uses_uid'] == FALSE) {
    $username = "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}";
@@ -900,7 +929,7 @@ function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
   else {
     if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
 
-    $group_dn = "cn=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
+    $group_dn = ldap_get_dn_of_group($ldap_connection, $group_name);
 
     if ($LDAP['group_membership_uses_uid'] == FALSE and $username != "") {
       $username = "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}";

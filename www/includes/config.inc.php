@@ -31,7 +31,10 @@
 
  if (getenv('LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES')) { $LDAP['account_additional_objectclasses'] = strtolower(getenv('LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES')); }
  if (getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES')) { $LDAP['account_additional_attributes'] = getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES'); }
+ if (getenv('LDAP_ACCOUNT_ATTRIBUTES_PERSONAL')) { $LDAP['account_attributes_personal'] = getenv('LDAP_ACCOUNT_ATTRIBUTES_PERSONAL'); }
 
+ if (getenv('LDAP_GROUP_ADDITIONAL_OBJECTCLASSES')) { $LDAP['group_additional_objectclasses'] = getenv('LDAP_GROUP_ADDITIONAL_OBJECTCLASSES'); }
+ if (getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTE')) { $LDAP['group_additional_attribute'] = getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTE'); }
  if (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE')) { $LDAP['group_membership_attribute'] = getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE'); }
  if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) {
    if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == TRUE )   { $LDAP['group_membership_uses_uid']  = TRUE;  }
@@ -77,7 +80,7 @@
  $SMTP['user'] = (getenv('SMTP_USERNAME') ? getenv('SMTP_USERNAME') : NULL);
  $SMTP['pass'] = (getenv('SMTP_PASSWORD') ? getenv('SMTP_PASSWORD') : NULL);
  $SMTP['port'] = (getenv('SMTP_HOST_PORT') ? getenv('SMTP_HOST_PORT') : 25);
- $SMTP['ssl']  = ((strcasecmp(getenv('SMTP_USE_SSL'),'TRUE') == 0) ? TRUE : FALSE); 
+ $SMTP['ssl']  = ((strcasecmp(getenv('SMTP_USE_SSL'),'TRUE') == 0) ? TRUE : FALSE);
  $SMTP['tls']  = ((strcasecmp(getenv('SMTP_USE_TLS'),'TRUE') == 0) ? TRUE : FALSE);
  if ($SMTP['tls'] == TRUE) { $SMTP['ssl'] = FALSE; }
 
@@ -108,6 +111,9 @@
  $NO_HTTPS = ((strcasecmp(getenv('NO_HTTPS'),'TRUE') == 0) ? TRUE : FALSE);
 
  ###
+
+ $CUSTOM_LOGO = (getenv('CUSTOM_LOGO') ? getenv('CUSTOM_LOGO') : FALSE);
+ $CUSTOM_STYLES = (getenv('CUSTOM_STYLES') ? getenv('CUSTOM_STYLES') : FALSE);
 
  $errors = "";
 

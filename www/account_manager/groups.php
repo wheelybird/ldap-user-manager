@@ -48,6 +48,7 @@ if (isset($_POST['delete_group'])) {
 }
 
 $groups = ldap_get_group_list($ldap_connection);
+$group_paths = ldap_get_group_path_list($ldap_connection);
 
 ldap_close($ldap_connection);
 
@@ -63,6 +64,8 @@ render_js_username_check();
   group_form.classList.replace('invisible','visible');
   group_submit.classList.replace('invisible','visible');
 
+  group_path_dn = document.getElementById('group_path_dn');
+  group_path_dn.classList.replace('invisible','visible');
 
  }
 
@@ -73,6 +76,13 @@ render_js_username_check();
   <form action="<?php print "${THIS_MODULE_PATH}"; ?>/show_group.php" method="post">
    <input type="hidden" name="new_group">
    <span class="badge badge-secondary" style="font-size:1.9rem;"><?php print count($groups);?> group<?php if (count($groups) != 1) { print "s"; }?></span>  &nbsp;  <button id="show_new_group" class="form-control btn btn-default" type="button" onclick="show_new_group_form();">New group</button>
+   <select class="form-control invisible" name="group_path_dn" id="group_path_dn">
+     <option></option>
+    <?php
+    foreach ($group_paths as $path)
+     print '<option value="'.$path['path_dn'].'">'.$path['dn'].'</option>';
+    ?>
+   </select>
    <input type="text" class="form-control invisible" name="group_name" id="group_name" placeholder="Group name" onkeyup="check_entity_name_validity(document.getElementById('group_name').value,'new_group_div');"><button id="add_group" class="form-control btn btn-primary btn-sm invisible" type="submit">Add</button>
   </form>
  </div>
@@ -81,12 +91,15 @@ render_js_username_check();
   <thead>
    <tr>
      <th>Group name</th>
+     <th>DN</th>
    </tr>
   </thead>
  <tbody>
 <?php
 foreach ($groups as $group){
- print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_group.php?group_name=" . urlencode($group) . "'>$group</a></td>\n </tr>\n";
+ print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_group.php?group_name=" . urlencode($group['cn']) . "'>".$group['cn']."</a></td>\n";
+ print "   <td>".$group['dn']."</td>\n";
+ print " </tr>\n";
 }
 ?>
   </tbody>

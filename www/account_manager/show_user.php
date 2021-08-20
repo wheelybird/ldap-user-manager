@@ -50,11 +50,11 @@ if ($ldap_search) {
 
  foreach ($attribute_map as $attribute => $attr_r) {
 
-   $$attribute = $user[0][$attribute][0];
+   $$attribute = isset($user[0][$attribute]) ? $user[0][$attribute][0] : "";
 
    if (isset($_POST['update_account']) and isset($_POST[$attribute]) and $_POST[$attribute] != $$attribute) {
      $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
-     $to_update[$attribute] = $$attribute;
+     $to_update[$attribute] = empty($$attribute) ? array() : $$attribute;
    }
    elseif (isset($attr_r['default'])) {
      $$attribute = $attr_r['default'];
@@ -176,7 +176,7 @@ if ($ldap_search) {
 
  $currently_member_of = ldap_user_group_membership($ldap_connection,$account_identifier);
 
- $not_member_of = array_diff($all_groups,$currently_member_of);
+ $not_member_of = array_filter($all_groups, function($group) use ($currently_member_of) { return !in_array($group['cn'], $currently_member_of); });
 
  #########  Add/remove from groups
 
@@ -525,7 +525,7 @@ if ($ldap_search) {
            <ul class="list-group">
             <?php
              foreach ($not_member_of as $group) {
-               print "<li class='list-group-item'>$group</li>\n";
+               print "<li class='list-group-item'>".$group['cn']."</li>\n";
              }
             ?>
            </ul>

@@ -40,16 +40,19 @@ EoHTTPC
 
 
 else
+  if [ ! "$LDAPUSERMANAGER_HTTPS_CRT_FILENAME" ]; then export LDAPUSERMANAGER_HTTPS_CRT_FILENAME="server.crt"; fi
+  if [ ! "$LDAPUSERMANAGER_HTTPS_KEY_FILENAME" ]; then export LDAPUSERMANAGER_HTTPS_KEY_FILENAME="server.key"; fi
+  if [ ! "$LDAPUSERMANAGER_HTTPS_CA_CRT_FILENAME" ]; then export LDAPUSERMANAGER_HTTPS_CA_CRT_FILENAME="chain.pem"; fi
 
   ########################
   #If there aren't any SSL certs then create a CA and then CA-signed certificate
 
-  if [ ! -f "${ssl_dir}/server.key" ] && [ ! -f "${ssl_dir}/server.crt" ]; then
+  if [ ! -f "${ssl_dir}/${LDAPUSERMANAGER_HTTPS_KEY_FILENAME}" ] && [ ! -f "${ssl_dir}/${LDAPUSERMANAGER_HTTPS_CRT_FILENAME}" ]; then
 
     mkdir -p $ssl_dir
     confout="${ssl_dir}/conf"
-    keyout="${ssl_dir}/server.key"
-    certout="${ssl_dir}/server.crt"
+    keyout="${ssl_dir}/${LDAPUSERMANAGER_HTTPS_KEY_FILENAME}"
+    certout="${ssl_dir}/${LDAPUSERMANAGER_HTTPS_CRT_FILENAME}"
     cakey="${ssl_dir}/ca.key"
     cacert="${ssl_dir}/ca.crt"
     serialfile="${ssl_dir}/serial"
@@ -110,7 +113,7 @@ EoCertConf
   ########################
   #Create Apache config
 
-  if [ -f "${ssl_dir}/chain.pem" ]; then ssl_chain="SSLCertificateChainFile ${ssl_dir}/chain.pem"; fi
+  if [ -f "${ssl_dir}/${LDAPUSERMANAGER_HTTPS_CA_CRT_FILENAME}" ]; then ssl_chain="SSLCertificateChainFile ${ssl_dir}/${LDAPUSERMANAGER_HTTPS_CA_CRT_FILENAME}"; fi
 
   cat <<EoHTTPSC >/etc/apache2/sites-enabled/lum.conf
 
@@ -134,8 +137,8 @@ EoCertConf
  </Directory>
 
  SSLEngine On
- SSLCertificateFile /opt/ssl/server.crt
- SSLCertificateKeyFile /opt/ssl/server.key
+ SSLCertificateFile $ssl_dir/$LDAPUSERMANAGER_HTTPS_CRT_FILENAME
+ SSLCertificateKeyFile $ssl_dir/$LDAPUSERMANAGER_HTTPS_KEY_FILENAME
  $ssl_chain
 
 </VirtualHost>
