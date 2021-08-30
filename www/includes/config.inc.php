@@ -32,6 +32,8 @@
  if (getenv('LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES')) { $LDAP['account_additional_objectclasses'] = strtolower(getenv('LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES')); }
  if (getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES')) { $LDAP['account_additional_attributes'] = getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES'); }
 
+ if (getenv('LDAP_GROUP_ADDITIONAL_OBJECTCLASSES')) { $LDAP['group_additional_objectclasses'] = getenv('LDAP_GROUP_ADDITIONAL_OBJECTCLASSES'); }
+ if (getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTE')) { $LDAP['group_additional_attribute'] = getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTE'); }
  if (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE')) { $LDAP['group_membership_attribute'] = getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE'); }
  if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) {
    if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == TRUE )   { $LDAP['group_membership_uses_uid']  = TRUE;  }
