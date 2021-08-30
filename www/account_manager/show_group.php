@@ -7,7 +7,7 @@ include_once "ldap_functions.inc.php";
 include_once "module_functions.inc.php";
 set_page_access("admin");
 
-render_header("LDAP manager");
+render_header("$ORGANISATION_NAME account manager");
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -37,16 +37,30 @@ render_footer();
 exit(0);
 }
 
-if (isset($_POST['new_group'])) {
- $group_add = ldap_new_group($ldap_connection,$group_cn);
-}
-
 
 ######################################################################################
 
+if (isset($_POST['new_group'])) {
+  $new_group = TRUE;
+  $current_members = array();
+  $full_dn = "Add members to create the new group";
+  $has_been = "";
+}
+elseif (isset($_POST['initialise_group'])) {
+  $new_group = FALSE;
+  $initialise_group = TRUE;
+  $current_members = array();
+  $full_dn = "cn=$group_cn,${LDAP['group_dn']}";
+  $has_been = "created";
+}
+else {
+  $new_group = FALSE;
+  $current_members = ldap_get_group_members($ldap_connection,$group_cn);
+  $full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
+  $has_been = "updated";
+}
 
-$current_members = ldap_get_group_members($ldap_connection,$group_cn);
-$full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
+
 $all_accounts = ldap_get_user_list($ldap_connection);
 $all_people = array();
 
@@ -68,17 +82,22 @@ if (isset($_POST["update_members"])) {
  }
 
  if ($group_cn == $LDAP['admins_group'] and !array_search($USER_ID, $updated_membership)){
-    array_push($updated_membership,$USER_ID);
+   array_push($updated_membership,$USER_ID);
  }
 
  $members_to_del = array_diff($current_members,$updated_membership);
  $members_to_add = array_diff($updated_membership,$current_members);
 
- foreach ($members_to_del as $this_member) {
-  ldap_delete_member_from_group($ldap_connection,$group_cn,$this_member);
+ if ($initialise_group == TRUE) {
+   $initial_member = array_shift($members_to_add);
+   $group_add = ldap_new_group($ldap_connection,$group_cn,$initial_member);
  }
  foreach ($members_to_add as $this_member) {
   ldap_add_member_to_group($ldap_connection,$group_cn,$this_member);
+ }
+
+ foreach ($members_to_del as $this_member) {
+  ldap_delete_member_from_group($ldap_connection,$group_cn,$this_member);
  }
 
  $non_members = array_diff($all_people,$updated_membership);
@@ -92,7 +111,7 @@ if (isset($_POST["update_members"])) {
   </script>
   <div class="alert alert-success" role="alert">
    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <p class="text-center">The group has been updated.</p>
+   <p class="text-center">The group has been <?php print $has_been; ?>.</p>
   </div>
 
  <?php
@@ -213,7 +232,7 @@ ldap_close($ldap_connection);
   <div class="panel-heading clearfix">
    <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $group_cn; ?><?php if ($group_cn == $LDAP["admins_group"]) { print " <sup>(admin group)</sup>" ; } ?></h3>
    <button class="btn btn-warning pull-right" onclick="show_delete_group_button();" <?php if ($group_cn == $LDAP["admins_group"]) { print "disabled"; } ?>>Delete group</button>
-   <form action="/<?php print $THIS_MODULE_PATH; ?>/groups.php" method="post"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
+   <form action="<?php print "${THIS_MODULE_PATH}"; ?>/groups.php" method="post"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
   </div>
   <ul class="list-group">
    <li class="list-group-item"><?php print $full_dn; ?></li>
@@ -263,6 +282,7 @@ ldap_close($ldap_connection);
          <form id="group_members" action="<?php print $CURRENT_PAGE; ?>" method="post">
           <input type="hidden" name="update_members">
           <input type="hidden" name="group_name" value="<?php print urlencode($group_cn); ?>">
+          <?php if ($new_group == TRUE) { ?><input type="hidden" name="initialise_group"><?php } ?>
          </form>
          <button id="submit_members" class="btn btn-info" disabled type="submit" onclick="update_form_with_users()">Save</button>
         </div>

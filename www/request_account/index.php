@@ -3,9 +3,9 @@
 set_include_path( ".:" . __DIR__ . "/../includes/");
 session_start();
 
-include "web_functions.inc.php";
+include_once "web_functions.inc.php";
 
-render_header("Request an account");
+render_header("$ORGANISATION_NAME - request an account");
 
 if ($ACCOUNT_REQUESTS_ENABLED == FALSE) {
 
@@ -65,30 +65,29 @@ if($_POST) {
 
     $mail_subject = "$firstname $lastname has requested an account for $ORGANISATION_NAME.";
 
-$link_url="${SITE_PROTOCOL}${SERVER_HOSTNAME}/account_manager/new_user.php?account_request&first_name=$firstname&last_name=$lastname&email=$email";
+$link_url="${SITE_PROTOCOL}${SERVER_HOSTNAME}${SERVER_PATH}account_manager/new_user.php?account_request&first_name=$firstname&last_name=$lastname&email=$email";
 
 if (!isset($email)) { $email = "n/a"; }
 if (!isset($notes)) { $notes = "n/a"; }
 
     $mail_body = <<<EoT
 A request for an $ORGANISATION_NAME account has been sent:
-
-First name: $firstname
-Last name: $lastname
-Email: $email
-Notes: $notes
-
-You can create the account at $link_url
-
+<p>
+First name: <b>$firstname</b><br>
+Last name: <b>$lastname</b><br>
+Email: <b>$email</b><br>
+Notes: <pre>$notes</pre><br>
+<p>
+<a href="$link_url">Create this account.</a>
 EoT;
 
      include_once "mail_functions.inc.php";
      $sent_email = send_email($ACCOUNT_REQUESTS_EMAIL,"$ORGANISATION_NAME account requests",$mail_subject,$mail_body);
      if ($sent_email) {
-       $sent_email_message .= "  Thank you. The request was sent and the administrator will process it as soon as possible.";
+       $sent_email_message = "  Thank you. The request was sent and the administrator will process it as soon as possible.";
      }
      else {
-       $sent_email_message .= "  Unfortunately the request wasn't sent because of a technical problem.";
+       $sent_email_message = "  Unfortunately the request wasn't sent because of a technical problem.";
      }
      ?>
       <div class="container">
