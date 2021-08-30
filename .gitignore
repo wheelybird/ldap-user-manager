@@ -1,2 +1,4 @@
 .idea
-ldap-user-manager.iml
+*.iml
+*.sublime-project
+*.sublime-workspace
