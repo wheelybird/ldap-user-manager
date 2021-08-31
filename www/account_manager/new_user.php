@@ -14,7 +14,7 @@ if ( isset($_POST['setup_admin_account']) ) {
  validate_setup_cookie();
  set_page_access("setup");
 
- $completed_action="${SERVER_PATH}/log_in";
+ $completed_action="${SERVER_PATH}log_in";
  $page_title="New administrator account";
 
  render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
