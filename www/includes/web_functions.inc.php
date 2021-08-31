@@ -229,7 +229,7 @@ function log_out($method='normal') {
 
 function render_header($title="",$menu=TRUE) {
 
- global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS, $CUSTOM_STYLES, $SERVER_PATH;
+ global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS, $SERVER_PATH, $CUSTOM_STYLES;
 
  if (empty($title)) { $title = $SITE_NAME; }
 
@@ -278,7 +278,7 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $SITE_NAME, $MODULES, $THIS_MODULE, $VALIDATED, $IS_ADMIN, $USER_ID, $CUSTOM_LOGO, $SERVER_PATH;
+ global $SITE_NAME, $MODULES, $THIS_MODULE, $VALIDATED, $IS_ADMIN, $USER_ID, $SERVER_PATH, $CUSTOM_LOGO;
 
  ?>
   <nav class="navbar navbar-default">

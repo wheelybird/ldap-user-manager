@@ -189,9 +189,9 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 
 #### Website customization
 
-* `$CUSTOM_LOGO` (default: *FALSE*)*: If this is defined with path to image file, then this image will be displayed in header. You need also mount volume with this file. 
+* `$CUSTOM_LOGO` (default: *FALSE*): If this is defined with path to image file, then this image will be displayed in header. You need also mount volume with this file.
 
-* `$CUSTOM_STYLES` (default: *FALSE*)*:  If this is defined with path to css file, then this style will be used in header. Also helps vith logo positioninig. You need also mount volume with this file.
+* `$CUSTOM_STYLES` (default: *FALSE*):  If this is defined with path to css file, then this style will be used in header. Also helps vith logo positioninig. You need also mount volume with this file.
 
 docker-compose.yml example:
 
