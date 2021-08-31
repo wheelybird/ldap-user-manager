@@ -111,7 +111,11 @@ These settings should only be changed if you're trying to make the user manager 
 * `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The account attribute used as the account identifier.  See [Account names](#account-names) for more information.
    
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user's account to a group.  When the `groupOfMembers` objectClass is detected `FORCE_RFC2307BIS` is `TRUE` it defaults to `uniqueMember`, otherwise it'll default to `memberUID`. Explicitly setting this variable will override any default.
-   
+
+* `LDAP_GROUP_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating an group.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
+
+* `LDAP_GROUP_ADDITIONAL_ATTRIBUTE` (no default): A comma-separated list of extra attributes to display when creating an group.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
+
 * `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
 
 * `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` (no default): A comma-separated list of extra attributes to display when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
