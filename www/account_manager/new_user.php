@@ -8,25 +8,26 @@ include_once "module_functions.inc.php";
 
 $attribute_map = ldap_complete_account_attribute_array();
 
-if ( $_POST['setup_admin_account'] ) {
+if ( isset($_POST['setup_admin_account']) ) {
  $admin_setup = TRUE;
 
  validate_setup_cookie();
  set_page_access("setup");
 
- $completed_action="/log_in";
+ $completed_action="${SERVER_PATH}log_in";
  $page_title="New administrator account";
 
- render_header("Setup administrator account", FALSE);
+ render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
 
 }
 else {
  set_page_access("admin");
 
- $completed_action="/$THIS_MODULE_PATH/";
+ $completed_action="${THIS_MODULE_PATH}/";
  $page_title="New account";
+ $admin_setup = FALSE;
 
- render_header();
+ render_header("$ORGANISATION_NAME account manager");
  render_submenu();
 }
 
@@ -37,7 +38,7 @@ $weak_password = FALSE;
 $invalid_email = FALSE;
 $disabled_email_tickbox = TRUE;
 $invalid_cn = FALSE;
-$invalid_account_attribute = FALSE;
+$invalid_account_identifier = FALSE;
 
 $new_account_r = array();
 
@@ -48,7 +49,7 @@ foreach ($attribute_map as $attribute => $attr_r) {
  elseif (isset($attr_r['default'])) {
   $$attribute = $attr_r['default'];
  }
- $new_account_r[$attribute] = $$attribute;
+ if (isset($$attribute)) { $new_account_r[$attribute] = $$attribute; }
 }
 
 ##
@@ -61,7 +62,7 @@ if (isset($_GET['account_request'])) {
   $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
   $new_account_r['sn'] = $sn;
 
-  $uid = generate_username($first_name,$last_name);
+  $uid = generate_username($givenname,$sn);
   $new_account_r['uid'] = $uid;
 
   if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
@@ -92,7 +93,7 @@ if (isset($_POST['create_account'])) {
  $password  = $_POST['password'];
  $new_account_r['password'] = $password;
  $account_identifier = $new_account_r[$LDAP["account_attribute"]];
- 
+
  if (!isset($cn) or $cn == "") { $invalid_cn = TRUE; }
  if ((!isset($account_identifier) or $account_identifier == "") and $invalid_cn != TRUE) { $invalid_account_identifier = TRUE; }
  if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
@@ -121,19 +122,12 @@ if (isset($_POST['create_account'])) {
 
     if (isset($send_user_email) and $send_user_email == TRUE) {
 
-      $mail_subject = "Your $ORGANISATION_NAME account has been created.";
-
-$mail_body = <<<EoT
-You've been set up with an account for $ORGANISATION_NAME.  Your credentials are:
-
-Username: $account_identifier
-Password: $password
-
-You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password and log in using your new credentials.  This will take you to a page where you can change your password.
-EoT;
-
       include_once "mail_functions.inc.php";
-      $sent_email = send_email($mail,"$first_name $last_name",$mail_subject,$mail_body);
+
+      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname, $sn);
+      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname, $sn);
+
+      $sent_email = send_email($mail,"$givenname $sn",$mail_subject,$mail_body);
       $creation_message = "The account was created";
       if ($sent_email) {
         $creation_message .= " and an email sent to $mail.";
@@ -151,6 +145,10 @@ EoT;
        </div>
        <?php
       }
+     #Tidy up empty uniquemember entries left over from the setup wizard
+     $USER_ID="tmp_admin";
+     ldap_delete_member_from_group($ldap_connection, $LDAP['admins_group'], "");
+     if (isset($DEFAULT_USER_GROUP)) { ldap_delete_member_from_group($ldap_connection, $DEFAULT_USER_GROUP, ""); }
     }
 
    ?>
@@ -215,16 +213,18 @@ render_js_username_generator('givenname','sn','uid','uid_div');
 render_js_cn_generator('givenname','sn','cn','cn_div');
 render_js_email_generator('uid','mail');
 
+$tabindex=1;
+
 ?>
-<script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
-<script type="text/javascript" src="/js/zxcvbn-bootstrap-strength-meter.js"></script>
+<script src="<?php print $SERVER_PATH; ?>js/zxcvbn.min.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">
  $(document).ready(function(){
    $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
  });
 </script>
-<script type="text/javascript" src="/js/generate_passphrase.js"></script>
-<script type="text/javascript" src="/js/wordlist.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/generate_passphrase.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/wordlist.js"></script>
 <script>
 
  function check_passwords_match() {
@@ -291,34 +291,34 @@ render_js_email_generator('uid','mail');
 
   foreach ($attribute_map as $attribute => $attr_r) {
     $label   = $attr_r['label'];
-    $onkeyup = $attr_r['onkeyup'];
     if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
   ?>
      <div class="form-group" id="<?php print $attribute; ?>_div">
       <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
       <div class="col-sm-6">
-       <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
-         if (isset($onkeyup)) { print "onkeyup=\"$onkeyup;\""; } ?>>
+       <input tabindex="<?php print $tabindex; ?>" type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
+         if (isset($attr_r['onkeyup'])) { print "onkeyup=\"${attr_r['onkeyup']};\""; } ?>>
       </div>
      </div>
   <?php
+   $tabindex++;
   }
 ?>
 
      <div class="form-group" id="password_div">
       <label for="password" class="col-sm-3 control-label">Password</label>
       <div class="col-sm-6">
-       <input tabindex="5" type="text" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm');">
+       <input tabindex="<?php print $tabindex+1; ?>" type="text" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm');">
       </div>
       <div class="col-sm-1">
-       <input tabindex="7" type="button" class="btn btn-sm" id="password_generator" onclick="random_password();" value="Generate password">
+       <input tabindex="<?php print $tabindex+2; ?>" type="button" class="btn btn-sm" id="password_generator" onclick="random_password();" value="Generate password">
       </div>
      </div>
 
      <div class="form-group" id="confirm_div">
       <label for="confirm" class="col-sm-3 control-label">Confirm</label>
       <div class="col-sm-6">
-       <input tabindex="6" type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
+       <input tabindex="<?php print $tabindex+3; ?>" type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
       </div>
      </div>
 
@@ -326,13 +326,13 @@ render_js_email_generator('uid','mail');
       <div class="form-group" id="send_email_div">
        <label for="send_email" class="col-sm-3 control-label"> </label>
        <div class="col-sm-6">
-        <input tabindex="8" type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" <?php if ($disabled_email_tickbox == TRUE) { print "disabled"; } ?>>  Email these credentials to the user?
+        <input tabindex="<?php print $tabindex+4; ?>" type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" <?php if ($disabled_email_tickbox == TRUE) { print "disabled"; } ?>>  Email these credentials to the user?
        </div>
       </div>
 <?php } ?>
 
      <div class="form-group">
-       <button tabindex="9" type="submit" class="btn btn-warning">Create account</button>
+       <button tabindex="<?php print $tabindex+5; ?>" type="submit" class="btn btn-warning">Create account</button>
      </div>
 
     </form>

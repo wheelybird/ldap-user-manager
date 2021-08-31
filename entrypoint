@@ -2,8 +2,15 @@
 set -e
 
 ssl_dir="/opt/ssl"
+php_dir="/opt/ldap_user_manager"
 
-if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME=ldapusermanager.org; fi
+if [ ! "$SERVER_HOSTNAME" ]; then export SERVER_HOSTNAME="ldapusermanager.org"; fi
+if [ ! "$SERVER_PATH" ]; then
+  export SERVER_PATH="/";
+  apache_alias=""
+else
+  apache_alias="Alias $SERVER_PATH $php_dir"
+fi
 
 #If LDAP_TLS_CACERT is set then write it out as a file
 #and set up the LDAP client conf to use it.
@@ -20,11 +27,11 @@ if [ "${NO_HTTPS,,}" == "true" ]; then
 <VirtualHost *:80>
 
  ServerName $SERVER_HOSTNAME
- DocumentRoot /opt/ldap_user_manager
-
+ DocumentRoot $php_dir
+ $apache_alias
  DirectoryIndex index.php index.html
 
- <Directory /opt/ldap_user_manager>
+ <Directory $php_dir>
    Require all granted
  </Directory>
 
@@ -107,8 +114,6 @@ EoCertConf
 
   cat <<EoHTTPSC >/etc/apache2/sites-enabled/lum.conf
 
-Listen 443
-
 <VirtualHost *:80>
 
  RewriteEngine On
@@ -119,11 +124,12 @@ Listen 443
 <VirtualHost _default_:443>
 
  ServerName $SERVER_HOSTNAME
- DocumentRoot /opt/ldap_user_manager
 
+ DocumentRoot $php_dir
+ $apache_alias
  DirectoryIndex index.php index.html
 
- <Directory /opt/ldap_user_manager>
+ <Directory $php_dir>
    Require all granted
  </Directory>
 
@@ -136,6 +142,8 @@ Listen 443
 EoHTTPSC
 
 fi
+
+cat /etc/apache2/sites-enabled/lum.conf
 
 ########################
 #Run Apache

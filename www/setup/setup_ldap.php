@@ -9,7 +9,7 @@ include_once "module_functions.inc.php";
 validate_setup_cookie();
 set_page_access("setup");
 
-render_header();
+render_header("$ORGANISATION_NAME account manager setup");
 
 $ldap_connection = open_ldap_connection();
 
@@ -138,7 +138,7 @@ if (isset($_POST['fix_problems'])) {
 
   ?>
   <div class="form-group">
-  <form action="<?php print "/account_manager/new_user.php"; ?>" method="post">
+  <form action="<?php print "${SERVER_PATH}account_manager/new_user.php"; ?>" method="post">
   <input type="hidden" name="setup_admin_account">
   <?php
   print "$li_fail The LDAP administration group is empty. ";
@@ -167,7 +167,7 @@ if (isset($_POST['fix_problems'])) {
  ?>
  </form>
  <div class='well'>
-  <form action="/">
+  <form action="<?php print $THIS_MODULE_PATH; ?>">
    <input type='submit' class="btn btn-success center-block" value='Finished' class='center-block'>
   </form>
  </div>
@@ -186,7 +186,7 @@ if (isset($_POST['fix_problems'])) {
  ?>
  </form>
  <div class='well'>
-  <form action="/setup/run_checks.php">
+  <form action="<?php print $THIS_MODULE_PATH; ?>/run_checks.php">
    <input type='submit' class="btn btn-danger center-block" value='< Re-run setup' class='center-block'>
   </form>
  </div>
