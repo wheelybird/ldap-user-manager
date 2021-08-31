@@ -7,7 +7,7 @@ include_once "ldap_functions.inc.php";
 include_once "module_functions.inc.php";
 set_page_access("admin");
 
-render_header();
+render_header("$ORGANISATION_NAME account manager");
 render_submenu();
 
 $invalid_password = FALSE;
@@ -107,18 +107,11 @@ if ($ldap_search) {
   $sent_email_message="";
   if ($updated_account and isset($mail) and $can_send_email == TRUE and isset($_POST['send_email'])) {
 
-      $mail_subject = "Your $ORGANISATION_NAME password has been reset.";
-
-$mail_body = <<<EoT
-Your password for $ORGANISATION_NAME has been reset.  Your new credentials are:
-
-Username: $account_identifier
-Password: $password
-
-You should change your password as soon as possible.  Go to ${SITE_PROTOCOL}${SERVER_HOSTNAME}/change_password and log in using your new credentials.  This will take you to a page where you can change your password.
-EoT;
-
       include_once "mail_functions.inc.php";
+
+      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname, $sn);
+      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname, $sn);
+
       $sent_email = send_email($mail,"$givenname $sn",$mail_subject,$mail_body);
       if ($sent_email) {
         $sent_email_message .= "  An email sent to $mail.";
@@ -236,15 +229,15 @@ EoT;
 
 
 ?>
-<script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
-<script type="text/javascript" src="/js/zxcvbn-bootstrap-strength-meter.js"></script>
+<script src="<?php print $SERVER_PATH; ?>js/zxcvbn.min.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">
  $(document).ready(function(){
    $("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });
  });
 </script>
-<script type="text/javascript" src="/js/generate_passphrase.js"></script>
-<script type="text/javascript" src="/js/wordlist.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/generate_passphrase.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/wordlist.js"></script>
 <script>
 
  function show_delete_user_button() {
@@ -381,7 +374,7 @@ EoT;
     <div class="panel-heading clearfix">
      <span class="panel-title pull-left"><h3><?php print $account_identifier; ?></h3></span>
      <button class="btn btn-warning pull-right align-self-end" style="margin-top: auto;" onclick="show_delete_user_button();" <?php if ($account_identifier == $USER_ID) { print "disabled"; }?>>Delete account</button>
-     <form action="/<?php print $THIS_MODULE_PATH; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
+     <form action="<?php print "${THIS_MODULE_PATH}"; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
     </div>
     <ul class="list-group">
       <li class="list-group-item"><?php print $dn; ?></li>
@@ -397,8 +390,8 @@ EoT;
 <?php
 
   foreach ($attribute_map as $attribute => $attr_r) {
-    $label   = $attr_r['label'];
-    $onkeyup = $attr_r['onkeyup'];
+    $label = $attr_r['label'];
+    if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
     if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
   ?>
      <div class="form-group" id="<?php print $attribute; ?>_div">

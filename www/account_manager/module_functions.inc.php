@@ -24,7 +24,7 @@ function render_submenu() {
        else {
         print '<li>';
        }
-       print "<a href='/${THIS_MODULE_PATH}/{$path}'>" . ucwords($submodule) . "</a></li>\n";
+       print "<a href='${THIS_MODULE_PATH}/{$path}'>" . ucwords($submodule) . "</a></li>\n";
 
       }
      ?>

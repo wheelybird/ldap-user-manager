@@ -13,16 +13,16 @@ if (isset($_POST["admin_password"])) {
 
  if ($user_auth != FALSE) {
   set_setup_cookie($user_auth);
-  header("Location: //${_SERVER["HTTP_HOST"]}/${THIS_MODULE_PATH}/run_checks.php\n\n");
+  header("Location: //${_SERVER["HTTP_HOST"]}${THIS_MODULE_PATH}/run_checks.php\n\n");
  }
  else {
-  header("Location: //${_SERVER["HTTP_HOST"]}/${THIS_MODULE_PATH}/index.php?invalid\n\n");
+  header("Location: //${_SERVER["HTTP_HOST"]}${THIS_MODULE_PATH}/index.php?invalid\n\n");
  }
 
 }
 else {
 
- render_header("Setup log in");
+ render_header("$ORGANISATION_NAME account manager setup - log in");
 
  if (isset($_GET["invalid"])) {
  ?>

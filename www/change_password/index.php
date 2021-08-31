@@ -18,7 +18,7 @@ if (isset($_POST['change_password'])) {
   $ldap_connection = open_ldap_connection();
   ldap_change_password($ldap_connection,$USER_ID,$_POST['password']) or die("change_ldap_password() failed.");
 
-  render_header("Password changed");
+  render_header("$ORGANISATION_NAME account manager - password changed");
   ?>
   <div class="alert alert-success">
   <p class="text-center">Your password has been changed.</p>
@@ -30,7 +30,7 @@ if (isset($_POST['change_password'])) {
 
 }
 
-render_header('Change your LDAP password');
+render_header("Change your $ORGANISATION_NAME password");
 
 if (isset($not_strong_enough)) {  ?>
 <div class="alert alert-warning">
@@ -52,15 +52,24 @@ if (isset($mismatched)) {  ?>
 
 ?>
 
-<script src="//cdnjs.cloudflare.com/ajax/libs/zxcvbn/1.0/zxcvbn.min.js"></script>
-<script type="text/javascript" src="/js/zxcvbn-bootstrap-strength-meter.js"></script>
+<script src="<?php print $SERVER_PATH; ?>js/zxcvbn.min.js"></script>
+<script type="text/javascript" src="<?php print $SERVER_PATH; ?>js/zxcvbn-bootstrap-strength-meter.js"></script>
 <script type="text/javascript">$(document).ready(function(){	$("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });});</script>
 
 <div class="container">
- <div class="col-sm-8">
+ <div class="col-sm-6">
+   <div class="panel panel-default">
+    <p>Use this form to change your <?php print $ORGANISATION_NAME; ?> password.  When you start typing your new password the gauge at the bottom will show its security strength.
+    Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</p>
+   </div>
+ </div>
+</div>
 
-  <div class="panel panel-default"> 
-   <div class="panel-heading text-center">Change password</div>
+<div class="container">
+ <div class="col-sm-6">
+
+  <div class="panel panel-default">
+   <div class="panel-heading text-center">Change your password</div>
    <div class="panel-body text-center">
    
     <form class="form-horizontal" action='' method='post'>

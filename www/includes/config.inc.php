@@ -35,7 +35,10 @@
  $LDAP['account_additional_attributes_personal'] = ((strcasecmp(getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES_PERSONAL'), 'TRUE') == 0) ? TRUE : FALSE);
 
  if (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE')) { $LDAP['group_membership_attribute'] = getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE'); }
- if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID') and strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == TRUE )  { $LDAP['group_membership_uses_uid']  = TRUE; }
+ if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) {
+   if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == TRUE )   { $LDAP['group_membership_uses_uid']  = TRUE;  }
+   if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == FALSE )  { $LDAP['group_membership_uses_uid']  = FALSE; }
+ }
 
  $LDAP['require_starttls'] = ((strcasecmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : FALSE);
  $LDAP['ignore_cert_errors'] = ((strcasecmp(getenv('LDAP_IGNORE_CERT_ERRORS'),'TRUE') == 0) ? TRUE : FALSE);
@@ -46,7 +49,9 @@
 
  $ORGANISATION_NAME = (getenv('ORGANISATION_NAME') ? getenv('ORGANISATION_NAME') : 'LDAP');
  $SITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : "$ORGANISATION_NAME user manager");
+
  $SERVER_HOSTNAME = (getenv('SERVER_HOSTNAME') ? getenv('SERVER_HOSTNAME') : "ldapusermanager.org");
+ $SERVER_PATH = (getenv('SERVER_PATH') ? getenv('SERVER_PATH') : "/");
 
  $ENFORCE_SAFE_SYSTEM_NAMES = ((strcasecmp(getenv('ENFORCE_SAFE_SYSTEM_NAMES'),'FALSE') == 0) ? FALSE : TRUE);
  $POSIX_USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
@@ -74,7 +79,9 @@
  $SMTP['user'] = (getenv('SMTP_USERNAME') ? getenv('SMTP_USERNAME') : NULL);
  $SMTP['pass'] = (getenv('SMTP_PASSWORD') ? getenv('SMTP_PASSWORD') : NULL);
  $SMTP['port'] = (getenv('SMTP_HOST_PORT') ? getenv('SMTP_HOST_PORT') : 25);
+ $SMTP['ssl']  = ((strcasecmp(getenv('SMTP_USE_SSL'),'TRUE') == 0) ? TRUE : FALSE); 
  $SMTP['tls']  = ((strcasecmp(getenv('SMTP_USE_TLS'),'TRUE') == 0) ? TRUE : FALSE);
+ if ($SMTP['tls'] == TRUE) { $SMTP['ssl'] = FALSE; }
 
  $SMTP['debug_level'] = getenv('SMTP_LOG_LEVEL');
  if (!is_numeric($SMTP['debug_level']) or $SMTP['debug_level'] >4 or $SMTP['debug_level'] <0) { $SMTP['debug_level'] = 0; }
@@ -87,7 +94,6 @@
  $EMAIL['from_name'] = (getenv('EMAIL_FROM_NAME') ? getenv('EMAIL_FROM_NAME') : $SITE_NAME );
 
  if ($SMTP['host'] != "") { $EMAIL_SENDING_ENABLED = TRUE; } else { $EMAIL_SENDING_ENABLED = FALSE; }
-
 
  ###
 
