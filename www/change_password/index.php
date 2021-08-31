@@ -68,12 +68,12 @@ if (isset($mismatched)) {  ?>
    </ul>
 
    <div class="panel-body text-center">
-   
+
     <form class="form-horizontal" action='' method='post'>
 
      <input type='hidden' id="change_password" name="change_password">
      <input type='hidden' id="pass_score" value="0" name="pass_score">
-     
+
      <div class="form-group" id="password_div">
       <label for="password" class="col-sm-4 control-label">Password</label>
       <div class="col-sm-6">
@@ -105,7 +105,7 @@ if (isset($mismatched)) {  ?>
      <div class="form-group">
        <button type="submit" class="btn btn-default">Change password</button>
      </div>
-     
+
     </form>
 
     <div class="progress">
@@ -122,4 +122,3 @@ if (isset($mismatched)) {  ?>
 render_footer();
 
 ?>
-

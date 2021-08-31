@@ -1,0 +1,9 @@
+/*!
+ * LDAP user manager custom styles
+ */
+
+.navbar-brand .logo {
+	margin-top: -7px;
+	width: 30px;
+	height: 30px;
+}

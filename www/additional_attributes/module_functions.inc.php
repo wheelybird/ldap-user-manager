@@ -1,47 +1,30 @@
 <?php
 
-
-
 ##################################
 
-function ldap_additional_account_attribute_array() {
+function ldap_personal_account_attribute_array() {
+  global $LDAP;
 
- global $LDAP;
+  $personal_attributes_r = array();
 
-  $additional_attributes_r = array();
+  if (isset($LDAP['account_attributes_personal'])) {
+    $account_attribute_r = ldap_complete_account_attribute_array();
 
- if (isset($LDAP['account_additional_attributes'])) {
+    $user_attribute_r = explode(",", $LDAP['account_attributes_personal']);
 
-  $user_attribute_r = explode(",", $LDAP['account_additional_attributes']);
+    foreach ($user_attribute_r as $this_attr) {
+      $attr_name = strtolower(filter_var($this_attr, FILTER_SANITIZE_STRING));
 
-  foreach ($user_attribute_r as $this_attr) {
-
-    $this_r = array();
-    $kv = explode(":", $this_attr);
-    $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_STRING));
-
-    if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
-
-     if (isset($kv[1]) and $kv[1] != "") {
-      $this_r['label'] = filter_var($kv[1], FILTER_SANITIZE_STRING);
-     }
-     else {
-      $this_r['label'] = $attr_name;
-     }
-
-     if (isset($kv[2]) and $kv[2] != "") {
-      $this_r['default'] = filter_var($kv[2], FILTER_SANITIZE_STRING);
-     }
-
-     $additional_attributes_r[$attr_name] = $this_r;
-
-   }
+      // Regular attribute name.
+      if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
+        // Attribute exists in Account.
+        if (isset($account_attribute_r[$attr_name]))
+          $personal_attributes_r[$attr_name] = $account_attribute_r[$attr_name];
+      }
+    }
   }
- }
 
- return($additional_attributes_r);
-
+  return($personal_attributes_r);
 }
-
 
 ?>
