@@ -49,9 +49,9 @@ validate_passkey_cookie();
 
 function generate_passkey() {
 
- $rnd1 = rand(10000000,100000000000);
- $rnd2 = rand(10000000,100000000000);
- $rnd3 = rand(10000000,100000000000);
+ $rnd1 = rand(10000000, (int)100000000000);
+ $rnd2 = rand(10000000, (int)100000000000);
+ $rnd3 = rand(10000000, (int)100000000000);
  return sprintf("%0x",$rnd1) . sprintf("%0x",$rnd2) . sprintf("%0x",$rnd3);
 
 }
