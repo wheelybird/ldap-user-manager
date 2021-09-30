@@ -11,6 +11,7 @@ render_header("$ORGANISATION_NAME account manager");
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
+$initialise_group = FALSE;
 
 
 if (!isset($_POST['group_name']) and !isset($_GET['group_name'])) {
@@ -279,7 +280,7 @@ ldap_close($ldap_connection);
          <button class="btn btn-default btn-sm move-right">
           <span class="glyphicon glyphicon-chevron-right"></span>
          </button>
-         <form id="group_members" action="<?php print $CURRENT_PAGE; ?>" method="post">
+         <form id="group_members" action="<?php print "${THIS_MODULE_PATH}"; ?>/show_group.php" method="post">
           <input type="hidden" name="update_members">
           <input type="hidden" name="group_name" value="<?php print urlencode($group_cn); ?>">
           <?php if ($new_group == TRUE) { ?><input type="hidden" name="initialise_group"><?php } ?>

@@ -5,6 +5,8 @@ set_include_path( ".:" . __DIR__ . "/../includes/");
 include "web_functions.inc.php";
 include "ldap_functions.inc.php";
 
+global $SERVER_PATH;
+
 if (isset($_GET["unauthorised"])) { $display_unauth = TRUE; }
 if (isset($_GET["session_timeout"])) { $display_logged_out = TRUE; }
 if (isset($_GET["redirect_to"])) { $redirect_to = $_GET["redirect_to"]; }
@@ -31,16 +33,16 @@ if (isset($_POST["user_id"]) and isset($_POST["password"])) {
 
   set_passkey_cookie($user_auth,$is_admin);
   if (isset($_POST["redirect_to"])) {
-   header("Location: //${_SERVER['HTTP_HOST']}" . base64_decode($_POST['redirect_to']) . "\n\n");
+   header("Location: //${_SERVER['HTTP_HOST']}" . $SERVER_PATH . base64_decode($_POST['redirect_to']) . "/\n\n");
   }
   else {
 
    if ($IS_ADMIN) { $default_module = "account_manager"; } else { $default_module = "change_password"; }
-   header("Location: //${_SERVER['HTTP_HOST']}${SERVER_PATH}$default_module?logged_in\n\n");
+     header("Location: //${_SERVER['HTTP_HOST']}" . $SERVER_PATH . $default_module . "/?logged_in\n\n");
   }
  }
  else {
-  header("Location: //${_SERVER['HTTP_HOST']}${THIS_MODULE_PATH}/index.php?invalid\n\n");
+    header("Location: //${_SERVER['HTTP_HOST']}" . $SERVER_PATH . $THIS_MODULE_PATH . "/index.php?invalid\n\n");
  }
 
 }
