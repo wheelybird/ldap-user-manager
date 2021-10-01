@@ -5,7 +5,6 @@ set_include_path( ".:" . __DIR__ . "/../includes/");
 include "web_functions.inc.php";
 include "ldap_functions.inc.php";
 
-global $SERVER_PATH;
 
 if (isset($_GET["unauthorised"])) { $display_unauth = TRUE; }
 if (isset($_GET["session_timeout"])) { $display_logged_out = TRUE; }
@@ -33,6 +32,7 @@ if (isset($_POST["user_id"]) and isset($_POST["password"])) {
 
   set_passkey_cookie($user_auth,$is_admin);
   if (isset($_POST["redirect_to"])) {
+   //TODO: not sure if $SERVER_PATH is needed here
    header("Location: //${_SERVER['HTTP_HOST']}" . $SERVER_PATH . base64_decode($_POST['redirect_to']) . "/\n\n");
   }
   else {
@@ -42,7 +42,7 @@ if (isset($_POST["user_id"]) and isset($_POST["password"])) {
   }
  }
  else {
-    header("Location: //${_SERVER['HTTP_HOST']}" . $SERVER_PATH . $THIS_MODULE_PATH . "/index.php?invalid\n\n");
+    header("Location: //${_SERVER['HTTP_HOST']}" . $THIS_MODULE_PATH . "/index.php?invalid\n\n");
  }
 
 }

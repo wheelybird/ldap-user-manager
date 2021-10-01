@@ -499,7 +499,7 @@ if ($ldap_search) {
           <button class="btn btn-default btn-sm move-right">
            <span class="glyphicon glyphicon-chevron-right"></span>
           </button>
-          <form id="update_with_groups" action="<?php print $CURRENT_PAGE; ?>" method="post">
+          <form id="update_with_groups" action="<?php print "${THIS_MODULE_PATH}"; ?>/show_user.php" method="post">
            <input type="hidden" name="update_member_of">
            <input type="hidden" name="account_identifier" value="<?php print $account_identifier; ?>">
           </form>
