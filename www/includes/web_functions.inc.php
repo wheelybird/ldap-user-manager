@@ -7,7 +7,6 @@ $IS_ADMIN = FALSE;
 $IS_SETUP_ADMIN = FALSE;
 $ACCESS_LEVEL_NAME = array('account','admin');
 unset($USER_ID);
-$CURRENT_PAGE=htmlentities($_SERVER['PHP_SELF']);
 $SENT_HEADERS = FALSE;
 $SESSION_TIMED_OUT = FALSE;
 
@@ -36,13 +35,6 @@ include ("modules.inc.php");   # module definitions
 if (substr($SERVER_PATH, -1) != "/") { $SERVER_PATH .= "/"; }
 $THIS_MODULE_PATH="${SERVER_PATH}${THIS_MODULE}";
 
-$DEFAULT_COOKIE_OPTIONS = array( 'expires' => time()+(60 * $SESSION_TIMEOUT),
-                                 'path' => $SERVER_PATH,
-                                 'domain' => '',
-                                 'secure' => TRUE,
-                                 'samesite' => 'strict'
-                               );
-
 validate_passkey_cookie();
 
 ######################################################
@@ -63,7 +55,7 @@ function set_passkey_cookie($user_id,$is_admin) {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $SESSION_TIMEOUT, $VALIDATED, $USER_ID, $IS_ADMIN, $log_prefix, $SESSION_DEBUG, $DEFAULT_COOKIE_OPTIONS;
+ global $SESSION_TIMEOUT, $VALIDATED, $USER_ID, $IS_ADMIN, $log_prefix, $SESSION_DEBUG;
 
 
  $passkey = generate_passkey();
@@ -76,10 +68,10 @@ function set_passkey_cookie($user_id,$is_admin) {
  }
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
  @ file_put_contents("/tmp/$filename","$passkey:$admin_val:$this_time");
- setcookie('orf_cookie', "$user_id:$passkey", $DEFAULT_COOKIE_OPTIONS);
- $sessto_cookie_opts = $DEFAULT_COOKIE_OPTIONS;
- $sessto_cookie_opts['expires'] = $this_time+7200;
- setcookie('sessto_cookie', $this_time+(60 * $SESSION_TIMEOUT), $sessto_cookie_opts);
+
+ setcookie('orf_cookie', "$user_id:$passkey", $this_time+(60 * $SESSION_TIMEOUT), '/', '', '', TRUE);
+ setcookie('sessto_cookie', $this_time+(60 * $SESSION_TIMEOUT), $this_time+7200, '/', '', '', TRUE);
+
  if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: user $user_id validated (IS_ADMIN=${IS_ADMIN}), sent orf_cookie to the browser.",0); }
  $VALIDATED = TRUE;
 
@@ -146,16 +138,16 @@ function set_setup_cookie() {
 
  # Create a random value, store it locally and set it in a cookie.
 
- global $SESSION_TIMEOUT, $IS_SETUP_ADMIN, $log_prefix, $SESSION_DEBUG, $DEFAULT_COOKIE_OPTIONS;
+ global $SESSION_TIMEOUT, $IS_SETUP_ADMIN, $log_prefix, $SESSION_DEBUG;
 
  $passkey = generate_passkey();
  $this_time=time();
 
  $IS_SETUP_ADMIN = TRUE;
 
- file_put_contents("/tmp/ldap_setup","$passkey:$this_time");
+ @ file_put_contents("/tmp/ldap_setup","$passkey:$this_time");
 
- setcookie('setup_cookie', $passkey, $DEFAULT_COOKIE_OPTIONS);
+ setcookie('setup_cookie', "$passkey", $this_time+(60 * $SESSION_TIMEOUT), '/', '', '', TRUE);
 
  if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: sent setup_cookie to the client.",0); }
 
@@ -206,15 +198,10 @@ function log_out($method='normal') {
 
  global $USER_ID, $SERVER_PATH, $DEFAULT_COOKIE_OPTIONS;
 
- $this_time=time();
+ $expire_time=time()-20000;
 
- $orf_cookie_opts = $DEFAULT_COOKIE_OPTIONS;
- $orf_cookie_opts['expires'] = $this_time-20000;
- $sessto_cookie_opts = $DEFAULT_COOKIE_OPTIONS;
- $sessto_cookie_opts['expires'] = $this_time-20000;
-
- setcookie('orf_cookie', "", $DEFAULT_COOKIE_OPTIONS);
- setcookie('sessto_cookie', "", $DEFAULT_COOKIE_OPTIONS);
+ setcookie('orf_cookie', "", $expire_time, '/', '', '', TRUE);
+ setcookie('sessto_cookie', "", $expire_time, '/', '', '', TRUE);
 
  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $USER_ID);
  @ unlink("/tmp/$filename");

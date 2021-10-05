@@ -55,6 +55,7 @@ elseif (isset($_POST['initialise_group'])) {
 }
 else {
   $new_group = FALSE;
+  $initialise_group = TRUE;
   $current_members = ldap_get_group_members($ldap_connection,$group_cn);
   $full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
   $has_been = "updated";
@@ -279,7 +280,7 @@ ldap_close($ldap_connection);
          <button class="btn btn-default btn-sm move-right">
           <span class="glyphicon glyphicon-chevron-right"></span>
          </button>
-         <form id="group_members" action="<?php print $CURRENT_PAGE; ?>" method="post">
+         <form id="group_members" action="<?php print "${THIS_MODULE_PATH}"; ?>/show_group.php" method="post">
           <input type="hidden" name="update_members">
           <input type="hidden" name="group_name" value="<?php print urlencode($group_cn); ?>">
           <?php if ($new_group == TRUE) { ?><input type="hidden" name="initialise_group"><?php } ?>

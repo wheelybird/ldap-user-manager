@@ -81,12 +81,22 @@ Configuration is via environmental variables.  Please bear the following in mind
 
 ### Optional:
 
-#### Organisation settings
+
+#### Web server settings
 
 * `SERVER_HOSTNAME` (default: *ldapusername.org*):  The hostname that this interface will be served from.
    
 * `SERVER_PATH` (default: */*): The path to the user manager on the webserver.  Useful if running this behind a reverse proxy.
+
+* `SERVER_PORT` (default: *80 or 80+443*): The port the webserver inside the container will listen on.  If undefined then the internal webserver will listen on ports 80 and 443 (if `NO_HTTPS` is true it's just 80) and HTTP traffic is redirected to HTTPS.  When set this will disable the redirection and the internal webserver will listen for HTTPS traffic on this port (or for HTTP traffic if `NO_HTTPS` is true).  This is for use when the container's Docker network mode is set to `host`.
+
+* `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
    
+* `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
+
+
+#### Organisation settings
+
 * `ORGANISATION_NAME`: (default: *LDAP*): Your organisation's name.
    
 * `SITE_NAME` (default: *{ORGANISATION_NAME} user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".
@@ -173,13 +183,6 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 
 * `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
 
-**Site security settings**   
-
-#### Website security
-
-* `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
-   
-* `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
 #### Debugging settings
 
