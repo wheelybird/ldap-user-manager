@@ -50,7 +50,7 @@ elseif (isset($_POST['initialise_group'])) {
   $new_group = FALSE;
   $initialise_group = TRUE;
   $current_members = array();
-  $full_dn = "cn=$group_cn,${LDAP['group_dn']}";
+  $full_dn = "${LDAP['group_attribute']}=$group_cn,${LDAP['group_dn']}";
   $has_been = "created";
 }
 else {
