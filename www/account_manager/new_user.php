@@ -62,7 +62,7 @@ if (isset($_GET['account_request'])) {
   $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
   $new_account_r['sn'] = $sn;
 
-  $uid = generate_username($givenname,$sn);
+  $uid = filter_var($_GET['username'], FILTER_SANITIZE_STRING);
   $new_account_r['uid'] = $uid;
 
   if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
