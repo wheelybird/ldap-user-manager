@@ -366,6 +366,29 @@ if ($ldap_search) {
  }
 
 </script>
+<style type='text/css'>
+  .dual-list .list-group {
+      margin-top: 8px;
+  }
+
+  .list-left li, .list-right li {
+      cursor: pointer;
+  }
+
+  .list-arrows {
+      padding-top: 100px;
+  }
+
+  .list-arrows button {
+          margin-bottom: 20px;
+  }
+
+  .right_button {
+    width: 200px;
+    float: right;
+  }
+</style>
+
 
 <div class="container">
  <div class="col-sm-8 col-md-offset-2">

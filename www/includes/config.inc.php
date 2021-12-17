@@ -35,8 +35,8 @@
 
  if (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE')) { $LDAP['group_membership_attribute'] = getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE'); }
  if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) {
-   if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == TRUE )   { $LDAP['group_membership_uses_uid']  = TRUE;  }
-   if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == FALSE )  { $LDAP['group_membership_uses_uid']  = FALSE; }
+   if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == 'TRUE' )   { $LDAP['group_membership_uses_uid']  = TRUE;  }
+   if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == 'FALSE' )  { $LDAP['group_membership_uses_uid']  = FALSE; }
  }
 
  $LDAP['require_starttls'] = ((strcasecmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : FALSE);
