@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - 'master'
-      - 'gh-action'
     tags:
-      - '*.*.*'
+      - v'*.*'
 
 jobs:
   docker:
