@@ -4,7 +4,7 @@ set -e
 ssl_dir="/opt/ssl"
 php_dir="/opt/ldap_user_manager"
 
-# List of potentially sensitive env_vars to check for _FILE env_var to avoid exposing in config.
+# List of environment variables to check for appended _FILE environment variable
 env_var_list=(
   ACCEPT_WEAK_PASSWORDS
   ACCOUNT_REQUESTS_EMAIL
@@ -60,11 +60,11 @@ env_var_list=(
 
 env_file_replace() {
   for env_var in "${env_var_list[@]}"; do
-    secret_file=_FILE
-    env_var_secret_file=$env_var$secret_file
-    if [[ ${!env_var_secret_file+x} ]]; then
-      echo Setting $env_var from $env_var_secret_file
-      export ${env_var}=$(cat ${!env_var_secret_file})
+    append=_FILE
+    env_var_file=$env_var$append
+    if [[ ${!env_var_file+x} ]]; then
+      echo Setting $env_var from $env_var_file
+      export ${env_var}=$(cat ${!env_var_file})
     fi
   done
 }
