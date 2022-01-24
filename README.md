@@ -64,7 +64,7 @@ Change the variable values to suit your environment.  Now go to https://lum.exam
 Configuration is via environmental variables.  Please bear the following in mind:
 
  * This tool needs to bind to LDAP as a user that has the permissions to modify everything under the base DN.
- * This interface is designed to work with a fresh LDAP server and should only be against existing, populated LDAP directories with caution and at your own risk.
+ * This interface is designed to work with a fresh LDAP server and should only be used against existing populated LDAP directories with caution and at your own risk.
 
 ### Mandatory:
 
