@@ -100,7 +100,7 @@ if (isset($_POST['create_account'])) {
  if (isset($mail) and !is_valid_email($mail)) { $invalid_email = TRUE; }
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
  if ($password != $_POST['password_match']) { $mismatched_passwords = TRUE; }
- if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$POSIX_REGEX/",$account_identifier)) { $invalid_account_identifier = TRUE; }
+ if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$USERNAME_REGEX/",$account_identifier)) { $invalid_account_identifier = TRUE; }
  if (isset($_POST['send_email']) and isset($mail) and $EMAIL_SENDING_ENABLED == TRUE) { $send_user_email = TRUE; }
 
  if (     isset($givenname)

@@ -397,7 +397,7 @@ function is_valid_email($email) {
 
 function render_js_username_check(){
 
- global $POSIX_REGEX, $ENFORCE_SAFE_SYSTEM_NAMES;
+ global $USERNAME_REGEX, $ENFORCE_SAFE_SYSTEM_NAMES;
 
  if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
 
@@ -406,7 +406,7 @@ function render_js_username_check(){
 
  function check_entity_name_validity(name,div_id) {
 
-  var check_regex = /$POSIX_REGEX/;
+  var check_regex = /$USERNAME_REGEX/;
 
   if (! check_regex.test(name) ) {
    document.getElementById(div_id).classList.add("has-error");
