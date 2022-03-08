@@ -294,7 +294,7 @@ If you need to use this user manager with an existing LDAP directory and your ac
 `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` is a comma-separated list of objectClasses to add when creating the account record.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
 
 To add extra fields for new attributes you need to pass a comma-separated string of the attributes and optionally the label for the attribute (which will be shown on the user form) and a default value to `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` separated by colons (`:`).   
-The format for configuring an attribute is: `attribute1:label1,default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
+The format for configuring an attribute is: `attribute1:label1:default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
 An example (for the couriermailaccount objectClass) would be: `mailbox:Mailbox:domain.com,quota:Mail quota:20`   
    
 ObjectClasses often have attributes that must have a value, so you should definitely set a default for those attributes.   
