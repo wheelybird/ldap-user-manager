@@ -187,7 +187,7 @@ else {
 }
 
 
-$defgroup_filter  = "(&(objectclass=posixGroup)(cn=${DEFAULT_USER_GROUP}))";
+$defgroup_filter  = "(&(objectclass=posixGroup)(${LDAP['group_attribute']}=${DEFAULT_USER_GROUP}))";
 $ldap_defgroup_search = ldap_search($ldap_connection, "${LDAP['base_dn']}", $defgroup_filter);
 $defgroup_result = ldap_get_entries($ldap_connection, $ldap_defgroup_search);
 
@@ -207,7 +207,7 @@ else {
 }
 
 
-$adminsgroup_filter  = "(&(objectclass=posixGroup)(cn=${LDAP['admins_group']}))";
+$adminsgroup_filter  = "(&(objectclass=posixGroup)(${LDAP['group_attribute']}=${LDAP['admins_group']}))";
 $ldap_adminsgroup_search = ldap_search($ldap_connection, "${LDAP['base_dn']}", $adminsgroup_filter);
 $adminsgroup_result = ldap_get_entries($ldap_connection, $ldap_adminsgroup_search);
 

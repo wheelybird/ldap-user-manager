@@ -64,7 +64,7 @@ Change the variable values to suit your environment.  Now go to https://lum.exam
 Configuration is via environmental variables.  Please bear the following in mind:
 
  * This tool needs to bind to LDAP as a user that has the permissions to modify everything under the base DN.
- * This interface is designed to work with a fresh LDAP server and should only be against existing, populated LDAP directories with caution and at your own risk.
+ * This interface is designed to work with a fresh LDAP server and should only be used against existing populated LDAP directories with caution and at your own risk.
 
 ### Mandatory:
 
@@ -81,12 +81,22 @@ Configuration is via environmental variables.  Please bear the following in mind
 
 ### Optional:
 
-#### Organisation settings
+
+#### Web server settings
 
 * `SERVER_HOSTNAME` (default: *ldapusername.org*):  The hostname that this interface will be served from.
    
 * `SERVER_PATH` (default: */*): The path to the user manager on the webserver.  Useful if running this behind a reverse proxy.
+
+* `SERVER_PORT` (default: *80 or 80+443*): The port the webserver inside the container will listen on.  If undefined then the internal webserver will listen on ports 80 and 443 (if `NO_HTTPS` is true it's just 80) and HTTP traffic is redirected to HTTPS.  When set this will disable the redirection and the internal webserver will listen for HTTPS traffic on this port (or for HTTP traffic if `NO_HTTPS` is true).  This is for use when the container's Docker network mode is set to `host`.
+
+* `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
    
+* `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
+
+
+#### Organisation settings
+
 * `ORGANISATION_NAME`: (default: *LDAP*): Your organisation's name.
    
 * `SITE_NAME` (default: *{ORGANISATION_NAME} user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".
@@ -165,21 +175,12 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 * `NEW_ACCOUNT_EMAIL_SUBJECT`, `NEW_ACCOUNT_EMAIL_BODY`, `RESET_PASSWORD_EMAIL_SUBJECT` & `RESET_PASSWORD_EMAIL_BODY`: Change the email contents for emails sent to users when you create an account or reset a password.  See [Sending emails](#sending_emails) for full details.
 
 
-**Account requests**
-
 #### Account request settings
 
 * `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.  
 
 * `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
 
-**Site security settings**   
-
-#### Website security
-
-* `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
-   
-* `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
 #### Debugging settings
 
@@ -294,7 +295,7 @@ If you need to use this user manager with an existing LDAP directory and your ac
 `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` is a comma-separated list of objectClasses to add when creating the account record.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
 
 To add extra fields for new attributes you need to pass a comma-separated string of the attributes and optionally the label for the attribute (which will be shown on the user form) and a default value to `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` separated by colons (`:`).   
-The format for configuring an attribute is: `attribute1:label1,default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
+The format for configuring an attribute is: `attribute1:label1:default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
 An example (for the couriermailaccount objectClass) would be: `mailbox:Mailbox:domain.com,quota:Mail quota:20`   
    
 ObjectClasses often have attributes that must have a value, so you should definitely set a default for those attributes.   

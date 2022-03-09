@@ -17,6 +17,7 @@ fi
 
 if [ "$LDAP_TLS_CACERT" ]; then
   echo "$LDAP_TLS_CACERT" >/opt/ca.crt
+  mkdir -p /etc/ldap  
   sed -i "s/TLS_CACERT.*/TLS_CACERT \/opt\/ca.crt/" /etc/ldap/ldap.conf
 fi
 
@@ -24,7 +25,7 @@ if [ "${NO_HTTPS,,}" == "true" ]; then
 
   cat <<EoHTTPC >/etc/apache2/sites-enabled/lum.conf
 
-<VirtualHost *:80>
+<VirtualHost *:${SERVER_PORT:-80}>
 
  ServerName $SERVER_HOSTNAME
  DocumentRoot $php_dir
@@ -38,6 +39,8 @@ if [ "${NO_HTTPS,,}" == "true" ]; then
 </VirtualHost>
 EoHTTPC
 
+
+  echo "Listen ${SERVER_PORT:-80}" > /etc/apache2/ports.conf
 
 else
 
@@ -112,7 +115,14 @@ EoCertConf
 
   if [ -f "${ssl_dir}/chain.pem" ]; then ssl_chain="SSLCertificateChainFile ${ssl_dir}/chain.pem"; fi
 
-  cat <<EoHTTPSC >/etc/apache2/sites-enabled/lum.conf
+  echo  > /etc/apache2/sites-enabled/lum.conf
+  echo  > /etc/apache2/ports.conf
+
+  if [ ! "$SERVER_PORT" ]; then
+
+    echo "Listen 80" > /etc/apache2/ports.conf
+
+    cat <<EoHTTPrd >/etc/apache2/sites-enabled/lum.conf
 
 <VirtualHost *:80>
 
@@ -121,7 +131,15 @@ EoCertConf
 
 </VirtualHost>
 
-<VirtualHost _default_:443>
+EoHTTPrd
+
+  fi
+
+  echo "Listen ${SERVER_PORT:-443}" >> /etc/apache2/ports.conf
+  
+  cat <<EoHTTPSC >>/etc/apache2/sites-enabled/lum.conf
+
+<VirtualHost _default_:${SERVER_PORT:-443}>
 
  ServerName $SERVER_HOSTNAME
 
@@ -142,8 +160,6 @@ EoCertConf
 EoHTTPSC
 
 fi
-
-cat /etc/apache2/sites-enabled/lum.conf
 
 ########################
 #Run Apache

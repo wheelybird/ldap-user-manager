@@ -9,6 +9,7 @@ set_page_access("user");
 
 if (isset($_POST['change_password'])) {
 
+ if (!$_POST['password']) { $not_strong_enough = 1; }
  if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $not_strong_enough = 1; }
  if (preg_match("/\"|'/",$_POST['password'])) { $invalid_chars = 1; }
  if ($_POST['password'] != $_POST['password_match']) { $mismatched = 1; }
@@ -58,18 +59,15 @@ if (isset($mismatched)) {  ?>
 
 <div class="container">
  <div class="col-sm-6">
-   <div class="panel panel-default">
-    <p>Use this form to change your <?php print $ORGANISATION_NAME; ?> password.  When you start typing your new password the gauge at the bottom will show its security strength.
-    Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</p>
-   </div>
- </div>
-</div>
-
-<div class="container">
- <div class="col-sm-6">
 
   <div class="panel panel-default">
    <div class="panel-heading text-center">Change your password</div>
+
+   <ul class="list-group">
+    <li class="list-group-item">Use this form to change your <?php print $ORGANISATION_NAME; ?> password.  When you start typing your new password the gauge at the bottom will show its security strength.
+    Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</li>
+   </ul>
+
    <div class="panel-body text-center">
    
     <form class="form-horizontal" action='' method='post'>

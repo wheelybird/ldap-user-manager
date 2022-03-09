@@ -50,17 +50,23 @@ elseif (isset($_POST['initialise_group'])) {
   $new_group = FALSE;
   $initialise_group = TRUE;
   $current_members = array();
-  $full_dn = "cn=$group_cn,${LDAP['group_dn']}";
+  $full_dn = "${LDAP['group_attribute']}=$group_cn,${LDAP['group_dn']}";
   $has_been = "created";
 }
 else {
   $new_group = FALSE;
+  $initialise_group = TRUE;
   $current_members = ldap_get_group_members($ldap_connection,$group_cn);
   $full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
   $has_been = "updated";
 }
 
 
+######################################################################################
+
+
+$current_members = ldap_get_group_members($ldap_connection,$group_cn);
+$full_dn = ldap_get_dn_of_group($ldap_connection,$group_cn);
 $all_accounts = ldap_get_user_list($ldap_connection);
 $all_people = array();
 

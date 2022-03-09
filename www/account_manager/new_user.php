@@ -14,7 +14,7 @@ if ( isset($_POST['setup_admin_account']) ) {
  validate_setup_cookie();
  set_page_access("setup");
 
- $completed_action="${SERVER_PATH}/log_in";
+ $completed_action="${SERVER_PATH}log_in";
  $page_title="New administrator account";
 
  render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
@@ -291,6 +291,7 @@ $tabindex=1;
 
   foreach ($attribute_map as $attribute => $attr_r) {
     $label   = $attr_r['label'];
+    $onkeyup = $attr_r['onkeyup'];
     if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
   ?>
      <div class="form-group" id="<?php print $attribute; ?>_div">
