@@ -115,6 +115,8 @@ These settings should only be changed if you're trying to make the user manager 
 * `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
 
 * `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` (no default): A comma-separated list of extra attributes to display when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
+
+* `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES_PERSONAL` (default: *FALSE*): If *TRUE* then user is able to modify all his account additional attributes himself in module "Additional Attributes" (also some account additional attributes have to be set), otherwise just admin is able to update them. Personal account attributes can be e.g. SSH public key.
    
 * `LDAP_GROUP_MEMBERSHIP_USES_UID` (default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username, otherwise it's the member's full DN.  When the `groupOfMembers` objectClass is detected or `FORCE_RFC2307BIS` is `TRUE` it  defaults to `FALSE`, otherwise it'll default to `TRUE`. Explicitly setting this variable will override the default.
    
@@ -180,6 +182,24 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 * `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
    
 * `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
+
+#### Website customization
+
+* `$CUSTOM_LOGO` (default: *FALSE*)*: If this is defined with path to image file, then this image will be displayed in header. You need also mount volume with this file. 
+
+* `$CUSTOM_STYLES` (default: *FALSE*)*:  If this is defined with path to css file, then this style will be used in header. Also helps vith logo positioninig. You need also mount volume with this file.
+
+docker-compose.yml example:
+
+```yaml
+ldap-user-manager:
+  environment:
+    CUSTOM_LOGO: "../gfx/logo.svg"
+    CUSTOM_STYLES: "../css/custom.css"
+  volumes:
+    - '/opt/openldap/www/gfx:/opt/ldap_user_manager/gfx'
+    - '/opt/openldap/www/css:/opt/ldap_user_manager/css'
+```
 
 #### Debugging settings
 

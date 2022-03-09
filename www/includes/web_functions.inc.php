@@ -229,7 +229,7 @@ function log_out($method='normal') {
 
 function render_header($title="",$menu=TRUE) {
 
- global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS, $SERVER_PATH;
+ global $SITE_NAME, $IS_ADMIN, $SENT_HEADERS, $SERVER_PATH, $CUSTOM_STYLES;
 
  if (empty($title)) { $title = $SITE_NAME; }
 
@@ -242,6 +242,7 @@ function render_header($title="",$menu=TRUE) {
  <meta charset="utf-8">
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <link rel="stylesheet" href="<?php print $SERVER_PATH; ?>bootstrap/css/bootstrap.min.css">
+ <?php if ($CUSTOM_STYLES) echo '<link rel="stylesheet" href="'.$CUSTOM_STYLES.'">' ?>
  <script src="<?php print $SERVER_PATH; ?>js/jquery-3.6.0.min.js"></script>
  <script src="<?php print $SERVER_PATH; ?>bootstrap/js/bootstrap.min.js"></script>
 </HEAD>
@@ -277,14 +278,15 @@ function render_menu() {
  #Render the navigation menu.
  #The menu is dynamically rendered the $MODULES hash
 
- global $SITE_NAME, $MODULES, $THIS_MODULE, $VALIDATED, $IS_ADMIN, $USER_ID, $SERVER_PATH;
+ global $SITE_NAME, $MODULES, $THIS_MODULE, $VALIDATED, $IS_ADMIN, $USER_ID, $SERVER_PATH, $CUSTOM_LOGO;
 
  ?>
   <nav class="navbar navbar-default">
    <div class="container-fluid">
-     <div class="navbar-header">
-       <a class="navbar-brand" href="#"><?php print $SITE_NAME ?></a>
-     </div>
+   <div class="navbar-header"><?php
+      if ($CUSTOM_LOGO) echo '<span class="navbar-brand"><img src="'.$CUSTOM_LOGO.'" class="logo" alt="logo"></span>'
+     ?><a class="navbar-brand" href="./"><?php print $SITE_NAME ?></a>
+   </div>
      <ul class="nav navbar-nav">
      <?php
      foreach ($MODULES as $module => $access) {
