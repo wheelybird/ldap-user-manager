@@ -44,17 +44,20 @@ $DEFAULT_COOKIE_OPTIONS = array( 'expires' => time()+(60 * $SESSION_TIMEOUT),
 
 validate_passkey_cookie();
 
-if($REMOTE_HTTP_HEADERS_LOGIN) {
+if ($REMOTE_HTTP_HEADERS_LOGIN) {
   login_via_headers();
 } else {
   validate_passkey_cookie();
 }
+
+
 ######################################################
+
 function generate_passkey() {
 
- $rnd1 = rand(10000000, (int)100000000000);
- $rnd2 = rand(10000000, (int)100000000000);
- $rnd3 = rand(10000000, (int)100000000000);
+ $rnd1 = mt_rand(10000000, mt_getrandmax());
+ $rnd2 = mt_rand(10000000, mt_getrandmax());
+ $rnd3 = mt_rand(10000000, mt_getrandmax());
  return sprintf("%0x",$rnd1) . sprintf("%0x",$rnd2) . sprintf("%0x",$rnd3);
 
 }
@@ -87,7 +90,12 @@ function set_passkey_cookie($user_id,$is_admin) {
  $VALIDATED = TRUE;
 
 }
+
+
+######################################################
+
 function login_via_headers() {
+
   global $IS_ADMIN, $USER_ID, $VALIDATED, $LDAP;
   //['admins_group'];
   $USER_ID = $_SERVER['HTTP_REMOTE_USER'];
@@ -97,6 +105,7 @@ function login_via_headers() {
   $VALIDATED = true;
 
 }
+
 
 ######################################################
 
@@ -438,6 +447,7 @@ EoCheckJS;
 
 }
 
+
 ######################################################
 
 function generate_username($fn,$ln) {
@@ -448,11 +458,12 @@ function generate_username($fn,$ln) {
   $username = str_replace('{first_name}',strtolower($fn), $username);
   $username = str_replace('{first_name_initial}',strtolower($fn[0]), $username);
   $username = str_replace('{last_name}',strtolower($ln), $username);
-  $username = str_replace('{first_name_initial}',strtolower($ln[0]), $username);
+  $username = str_replace('{last_name_initial}',strtolower($ln[0]), $username);
 
   return $username;
 
 }
+
 
 ######################################################
 
@@ -494,6 +505,7 @@ EoRenderJS;
 
 }
 
+
 ######################################################
 
 function render_js_cn_generator($firstname_field_id,$lastname_field_id,$cn_field_id,$cn_div_id) {
@@ -530,6 +542,7 @@ function render_js_cn_generator($firstname_field_id,$lastname_field_id,$cn_field
 EoRenderCNJS;
 
 }
+
 
 ######################################################
 

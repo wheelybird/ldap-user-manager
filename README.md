@@ -157,7 +157,7 @@ These settings should only be changed if you're trying to make the user manager 
    
 * `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
    
-* `REMOTE_HTTP_HEADERS_LOGIN`(default: *FALSE*) Enables session managment from a external Service like Authelia. This setting compromisses your security if your not using a Auth-Proxy infront of this application
+* `REMOTE_HTTP_HEADERS_LOGIN`(default: *FALSE*) Enables session managment from an external service like Authelia. _This setting will compromise your security if you're not using an Auth-Proxy in front of this application_.
 
 #### Email sending settings
 
@@ -312,13 +312,19 @@ If you need to use this user manager with an existing LDAP directory and your ac
 
 `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` is a comma-separated list of objectClasses to add when creating the account record.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
 
-To add extra fields for new attributes you need to pass a comma-separated string of the attributes and optionally the label for the attribute (which will be shown on the user form) and a default value to `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` separated by colons (`:`).   
-The format for configuring an attribute is: `attribute1:label1,default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
-An example (for the couriermailaccount objectClass) would be: `mailbox:Mailbox:domain.com,quota:Mail quota:20`   
-   
-ObjectClasses often have attributes that must have a value, so you should definitely set a default for those attributes.   
+`LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` is a comma-separated list of attributes to be displayed as extra fields on the account management pages.    
+By default these fields will be empty, with the field named for the attribute, but you can set the field labels and optionally the default values by appending the attribute names with colon-separated values like so: `attribute_name:label:default_value`.   
+Multiple attributes are separated by commas, so you can define the label and default values for several attributes as follows:  `attribute1:label1:default_value1,attribute2:label2:default_value2,attribute3:label3`.   
 
-This is advanced stuff and the user manager doesn't attempt to validate any objectClasses or any attributes, labels or default values you pass in.  It's up to you to ensure that your LDAP server has the appropriate schemas and that the labels and values are sane.
+As an example, to set a mailbox name and quota for the `couriermailaccount` schema you can pass these variables to the container:   
+```
+LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=couriermailaccount
+LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES="mailbox:Mailbox:domain.com,quota:Mail quota:20"
+```
+   
+ObjectClasses often have attributes that must have a value, so you'll need to set a default for those attributes otherwise you'll get errors if you forget to fill in the fields.   
+
+This is advanced usage and the user manager doesn't attempt to validate any objectClasses, attributes, labels or default values you pass in.  It's up to you to ensure that your LDAP server has the appropriate schemas and that the labels and values are sane.
 
 ***
 
