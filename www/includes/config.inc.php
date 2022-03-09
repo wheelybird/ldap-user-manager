@@ -110,6 +110,12 @@
 
  ###
 
+ ###
+
+ $REMOTE_HTTP_HEADERS_LOGIN = ((strcasecmp(getenv('REMOTE_HTTP_HEADERS_LOGIN'),'TRUE') == 0) ? TRUE : FALSE);
+ 
+ ###
+
  $errors = "";
 
  if (empty($LDAP['uri'])) {
