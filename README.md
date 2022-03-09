@@ -64,7 +64,7 @@ Change the variable values to suit your environment.  Now go to https://lum.exam
 Configuration is via environmental variables.  Please bear the following in mind:
 
  * This tool needs to bind to LDAP as a user that has the permissions to modify everything under the base DN.
- * This interface is designed to work with a fresh LDAP server and should only be used against existing populated LDAP directories with caution and at your own risk.
+ * This interface is designed to work with a fresh LDAP server and should only be against existing, populated LDAP directories with caution and at your own risk.
 
 ### Mandatory:
 
@@ -91,7 +91,13 @@ Configuration is via environmental variables.  Please bear the following in mind
 * `SERVER_PORT` (default: *80 or 80+443*): The port the webserver inside the container will listen on.  If undefined then the internal webserver will listen on ports 80 and 443 (if `NO_HTTPS` is true it's just 80) and HTTP traffic is redirected to HTTPS.  When set this will disable the redirection and the internal webserver will listen for HTTPS traffic on this port (or for HTTP traffic if `NO_HTTPS` is true).  This is for use when the container's Docker network mode is set to `host`.
 
 * `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
-   
+
+* `SERVER_KEY_FILENAME`: (default *server.key*): The filename of the HTTPS server key file. See [HTTPS certificates](#https-certificates)
+
+* `SERVER_CERT_FILENAME`: (default *server.crt*): The filename of the HTTPS certficate file. See [HTTPS certificates](#https-certificates)
+
+* `CA_CERT_FILENAME`: (default *ca.crt*): The filename of the HTTPS server key file. See [HTTPS certificates](#https-certificates)
+
 * `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
 
@@ -118,7 +124,9 @@ Configuration is via environmental variables.  Please bear the following in mind
 
 These settings should only be changed if you're trying to make the user manager work with an LDAP directory that's already populated and the defaults don't work.
    
-* `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The account attribute used as the account identifier.  See [Account names](#account-names) for more information.
+* `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The attribute used as the account identifier.  See [Account names](#account-names) for more information.
+   
+* `LDAP_GROUP_ATTRIBUTE` (default: *cn*):  The attribute used as the group identifier.
    
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user's account to a group.  When the `groupOfMembers` objectClass is detected `FORCE_RFC2307BIS` is `TRUE` it defaults to `uniqueMember`, otherwise it'll default to `memberUID`. Explicitly setting this variable will override any default.
    
@@ -175,6 +183,8 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 * `NEW_ACCOUNT_EMAIL_SUBJECT`, `NEW_ACCOUNT_EMAIL_BODY`, `RESET_PASSWORD_EMAIL_SUBJECT` & `RESET_PASSWORD_EMAIL_BODY`: Change the email contents for emails sent to users when you create an account or reset a password.  See [Sending emails](#sending_emails) for full details.
 
 
+**Account requests**
+
 #### Account request settings
 
 * `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.  
@@ -229,13 +239,20 @@ If you're using LDAP for server accounts then you'll find there are  normally co
 ***
 
 ## HTTPS certificates
-When `NO_HTTPS` is set to **FALSE** (the default), the user manager expects to find SSL files at `/opt/ssl/server.key` and `/opt/ssl/server.crt`.  These certificates should match `SERVER_HOSTNAME`.  If these files aren't found then the startup script will create self-signed certificates based on `SERVER_HOSTNAME`.  To use your own key and certificate then you need to bind-mount a directory containing them to `/opt/ssl`.  You can also add a certificate chain file (the Apache `SSLCertificateChainFile` option) if needed - name it `chain.pem` and place it in the same directory as `server.key` and `server.crt` .
-   
-For example, if your key and certificate files are in `/home/myaccount/ssl` you can bind-mount that folder by adding this line to the docker run example above, just after the last line starting with `-e`:
-```
--v /home/myaccount/ssl:/opt/ssl \
+The user manager runs in HTTPS mode by default and so uses HTTPS certificates.  You can pass in your own certificates by bind-mounting a local path to `/opt/ssl` in the container and then  specifying the names of the files via `SERVER_KEY_FILENAME`, `SERVER_CERT_FILENAME` and optionally `CA_CERT_FILENAME` (this will set Apache's `SSLCertificateChainFile` directive).   
+If the certificate and key files don't exist then a self-signed certificate will be created when the container starts.
 
+When using your own certificates, the certificate's common name (or one of the alternative names) need to match the value you set for `SERVER_HOSTNAME`.
+   
+For example, if your key and certificate files are in `/home/myaccount/ssl` you can bind-mount that folder by adding these lines to the `docker run` example above (place them above the final line):
 ```
+-e "SERVER_KEY_FILENAME=lum.example.com.key" \
+-e "SERVER_CERT_FILENAME=lum.example.com.crt" \
+-e "CA_CERT_FILENAME=ca_bundle.pem" \
+-v /home/myaccount/ssl:/opt/ssl \
+```
+
+If you don't want to use HTTPS certificates then set `NO_HTTPS` to **TRUE** to run in HTTP mode.  It's advised that you only do this when testing.
 
 ***
 
@@ -295,7 +312,7 @@ If you need to use this user manager with an existing LDAP directory and your ac
 `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` is a comma-separated list of objectClasses to add when creating the account record.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
 
 To add extra fields for new attributes you need to pass a comma-separated string of the attributes and optionally the label for the attribute (which will be shown on the user form) and a default value to `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` separated by colons (`:`).   
-The format for configuring an attribute is: `attribute1:label1:default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
+The format for configuring an attribute is: `attribute1:label1,default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
 An example (for the couriermailaccount objectClass) would be: `mailbox:Mailbox:domain.com,quota:Mail quota:20`   
    
 ObjectClasses often have attributes that must have a value, so you should definitely set a default for those attributes.   

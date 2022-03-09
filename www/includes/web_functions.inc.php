@@ -397,7 +397,7 @@ function is_valid_email($email) {
 
 function render_js_username_check(){
 
- global $POSIX_REGEX, $ENFORCE_SAFE_SYSTEM_NAMES;
+ global $USERNAME_REGEX, $ENFORCE_SAFE_SYSTEM_NAMES;
 
  if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
 
@@ -406,7 +406,7 @@ function render_js_username_check(){
 
  function check_entity_name_validity(name,div_id) {
 
-  var check_regex = /$POSIX_REGEX/;
+  var check_regex = /$USERNAME_REGEX/;
 
   if (! check_regex.test(name) ) {
    document.getElementById(div_id).classList.add("has-error");
@@ -431,9 +431,9 @@ EoCheckJS;
 
 function generate_username($fn,$ln) {
 
-  global $POSIX_USERNAME_FORMAT;
+  global $USERNAME_FORMAT;
 
-  $username = $POSIX_USERNAME_FORMAT;
+  $username = $USERNAME_FORMAT;
   $username = str_replace('{first_name}',strtolower($fn), $username);
   $username = str_replace('{first_name_initial}',strtolower($fn[0]), $username);
   $username = str_replace('{last_name}',strtolower($ln), $username);
@@ -450,7 +450,7 @@ function render_js_username_generator($firstname_field_id,$lastname_field_id,$us
  #Parameters are the IDs of the input fields and username name div in the account creation form.
  #The div will be set to warning if the username is invalid.
 
- global $POSIX_USERNAME_FORMAT, $ENFORCE_SAFE_SYSTEM_NAMES;
+ global $USERNAME_FORMAT, $ENFORCE_SAFE_SYSTEM_NAMES;
 
   $remove_accents="";
   if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) { $remove_accents = ".normalize('NFD').replace(/[\u0300-\u036f]/g, '')"; }
@@ -462,7 +462,7 @@ function render_js_username_generator($firstname_field_id,$lastname_field_id,$us
 
   var first_name = document.getElementById('$firstname_field_id').value;
   var last_name  = document.getElementById('$lastname_field_id').value;
-  var template = '$POSIX_USERNAME_FORMAT';
+  var template = '$USERNAME_FORMAT';
 
   var actual_username = template;
 

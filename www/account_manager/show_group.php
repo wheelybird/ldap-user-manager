@@ -27,7 +27,7 @@ else {
  $group_cn = urldecode($group_cn);
 }
 
-if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$POSIX_REGEX/",$group_cn)) {
+if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$USERNAME_REGEX/",$group_cn)) {
 ?>
  <div class="alert alert-danger">
   <p class="text-center">The group name is invalid.</p>
