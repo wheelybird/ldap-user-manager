@@ -40,6 +40,8 @@ exit(0);
 
 ######################################################################################
 
+$initialise_group = FALSE;
+
 if (isset($_POST['new_group'])) {
   $new_group = TRUE;
   $current_members = array();

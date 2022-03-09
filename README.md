@@ -88,7 +88,7 @@ Configuration is via environmental variables.  Please bear the following in mind
    
 * `SERVER_PATH` (default: */*): The path to the user manager on the webserver.  Useful if running this behind a reverse proxy.
 
-* `SERVER_PORT` (default: *80 or 80+443*): The port the webserver inside the container will listen on.  If undefined then the internal webserver will listen on ports 80 and 443 (if `NO_HTTPS` is true it's just 80) and HTTP traffic is redirected to HTTPS.  When set this will disable the redirection and the internal webserver will listen for HTTPS traffic on this port (or for HTTP traffic if `NO_HTTPS` is true).  This is for use when the container's Docker network mode is set to `host`.
+* `SERVER_PORT` (default: *80 or 80 & 443*): The port the webserver inside the container will listen on.  If undefined then the internal webserver will listen on ports 80 and 443 (if `NO_HTTPS` is true it's just 80) and HTTP traffic is redirected to HTTPS.  When set this will disable the redirection and the internal webserver will listen for HTTPS traffic on this port (or for HTTP traffic if `NO_HTTPS` is true).  This is for use when the container's Docker network mode is set to `host`.
 
 * `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
 

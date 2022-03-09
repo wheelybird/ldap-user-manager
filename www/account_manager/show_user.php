@@ -53,7 +53,7 @@ if ($ldap_search) {
    $$attribute = $user[0][$attribute][0];
 
    if (isset($_POST['update_account']) and isset($_POST[$attribute]) and $_POST[$attribute] != $$attribute) {
-     $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
+     $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
      $to_update[$attribute] = $$attribute;
    }
    elseif (isset($attr_r['default'])) {
@@ -522,7 +522,7 @@ if ($ldap_search) {
           <button class="btn btn-default btn-sm move-right">
            <span class="glyphicon glyphicon-chevron-right"></span>
           </button>
-          <form id="update_with_groups" action="<?php print "${THIS_MODULE_PATH}"; ?>/show_user.php" method="post">
+          <form id="update_with_groups" action="<?php print $CURRENT_PAGE" method="post">
            <input type="hidden" name="update_member_of">
            <input type="hidden" name="account_identifier" value="<?php print $account_identifier; ?>">
           </form>
