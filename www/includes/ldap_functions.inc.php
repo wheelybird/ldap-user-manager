@@ -320,7 +320,7 @@ function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",
 
    $add_these = array();
    foreach($fields as $this_attr) {
-    if ($this_attr !== $sort_key) { $add_these[$this_attr] = $record[$this_attr][0]; }
+    if ($this_attr !== $sort_key and isset($record[$this_attr])) { $add_these[$this_attr] = $record[$this_attr][0]; }
    }
 
    $records[$record[$sort_key][0]] = $add_these;
@@ -464,7 +464,7 @@ function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=N
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  $ldap_search_query = "(${LDAP['group_attribute']}=". ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array($LDAP['group_membership_attribute']));
@@ -511,7 +511,7 @@ function ldap_is_group_member($ldap_connection,$group_name,$username) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  $ldap_search_query = "(${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
@@ -543,7 +543,7 @@ function ldap_user_group_membership($ldap_connection,$username) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  if ($LDAP['group_membership_uses_uid'] == FALSE) {
   $username = "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}";
@@ -571,7 +571,7 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  if (isset($group_name)) {
 
@@ -863,7 +863,7 @@ function ldap_add_member_to_group($ldap_connection,$group_name,$username) {
 
   global $log_prefix, $LDAP, $LDAP_DEBUG;
 
-  if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+  $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
   $group_dn = "${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
 
@@ -898,7 +898,7 @@ function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
     return FALSE;
   }
   else {
-    if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+    $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
     $group_dn = "${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
 
@@ -965,71 +965,76 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
 
 function ldap_detect_rfc2307bis($ldap_connection) {
 
- global $log_prefix, $LDAP, $LDAP_DEBUG;
+  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- $bis_available = FALSE;
-
- if ($LDAP['forced_rfc2307bis'] == TRUE) {
-  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - skipping autodetection because FORCE_RFC2307BIS is TRUE",0); }
-  $bis_available = TRUE;
- }
- else {
-
-  $schema_base_query = @ ldap_read($ldap_connection,"","subschemaSubentry=*",array('subschemaSubentry'));
-
-  if (!$schema_base_query) {
-   error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
-   error_log("$log_prefix LDAP RFC2307BIS detection - we'll assume that the RFC2307BIS schema isn't available.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS.",0);
+  if (isset($LDAP['rfc2307bis_available'])) {
+    return $LDAP['rfc2307bis_available'];
   }
   else {
-   $schema_base_results = @ ldap_get_entries($ldap_connection, $schema_base_query);
 
-   if ($schema_base_results) {
+    $LDAP['rfc2307bis_available'] = FALSE;
 
-    $schema_base_dn = $schema_base_results[0]['subschemasubentry'][0];
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found that the 'subschemaSubentry' base DN is '$schema_base_dn'",0); }
-
-    $objclass_query = @ ldap_read($ldap_connection,$schema_base_dn,"(objectClasses=*)",array('objectClasses'));
-    if (!$objclass_query) {
-     error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
+    if ($LDAP['forced_rfc2307bis'] == TRUE) {
+      if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - skipping autodetection because FORCE_RFC2307BIS is TRUE",0); }
+      $LDAP['rfc2307bis_available'] = TRUE;
     }
     else {
-     $objclass_results = @ ldap_get_entries($ldap_connection, $objclass_query);
-     $this_count = $objclass_results[0]['objectclasses']['count'];
-     if ($this_count > 0) {
-      if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found $this_count objectClasses under $schema_base_dn" ,0); }
-      $posixgroup_search = preg_grep("/NAME 'posixGroup'.*AUXILIARY/",$objclass_results[0]['objectclasses']);
-      if (count($posixgroup_search) > 0) {
-       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found AUXILIARY in posixGroup definition which suggests we're using the RFC2307BIS schema" ,0); }
-       $bis_available = TRUE;
+
+      $schema_base_query = @ ldap_read($ldap_connection,"","subschemaSubentry=*",array('subschemaSubentry'));
+
+      if (!$schema_base_query) {
+        error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
+        error_log("$log_prefix LDAP RFC2307BIS detection - we'll assume that the RFC2307BIS schema isn't available.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS.",0);
       }
       else {
-       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - couldn't find AUXILIARY in the posixGroup definition which suggests we're not using the RFC2307BIS schema.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS. " ,0); }
+        $schema_base_results = @ ldap_get_entries($ldap_connection, $schema_base_query);
+
+        if ($schema_base_results) {
+
+          $schema_base_dn = $schema_base_results[0]['subschemasubentry'][0];
+          if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found that the 'subschemaSubentry' base DN is '$schema_base_dn'",0); }
+
+          $objclass_query = @ ldap_read($ldap_connection,$schema_base_dn,"(objectClasses=*)",array('objectClasses'));
+          if (!$objclass_query) {
+            error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
+          }
+          else {
+            $objclass_results = @ ldap_get_entries($ldap_connection, $objclass_query);
+            $this_count = $objclass_results[0]['objectclasses']['count'];
+            if ($this_count > 0) {
+              if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found $this_count objectClasses under $schema_base_dn" ,0); }
+              $posixgroup_search = preg_grep("/NAME 'posixGroup'.*AUXILIARY/",$objclass_results[0]['objectclasses']);
+              if (count($posixgroup_search) > 0) {
+                if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found AUXILIARY in posixGroup definition which suggests we're using the RFC2307BIS schema" ,0); }
+                $LDAP['rfc2307bis_available'] = TRUE;
+              }
+              else {
+                if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - couldn't find AUXILIARY in the posixGroup definition which suggests we're not using the RFC2307BIS schema.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS. " ,0); }
+              }
+            }
+            else {
+              if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - no objectClasses were returned when searching under $schema_base_dn" ,0); }
+            }
+          }
+        }
+        else {
+         if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - unable to detect the subschemaSubentry base DN" ,0); }
+        }
       }
-     }
-     else {
-      if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - no objectClasses were returned when searching under $schema_base_dn" ,0); }
-     }
     }
-   }
-   else {
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - unable to detect the subschemaSubentry base DN" ,0); }
-   }
+
+    if ($LDAP['rfc2307bis_available'] == TRUE) {
+      if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'uniquemember'; }
+      if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = FALSE; }
+      return TRUE;
+    }
+    else {
+      if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'memberuid'; }
+      if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = TRUE; }
+      return FALSE;
+    }
+
   }
- }
-
- $LDAP['rfc2307bis_check_run'] == TRUE;
- if ($bis_available == TRUE) {
-  if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'uniquemember'; }
-  if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = FALSE; }
-  return TRUE;
- }
- else {
-  if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'memberuid'; }
-  if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = TRUE; }
-  return FALSE;
- }
-
 
 }
 

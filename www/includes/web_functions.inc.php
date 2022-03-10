@@ -38,7 +38,7 @@ $THIS_MODULE_PATH="${SERVER_PATH}${THIS_MODULE}";
 $DEFAULT_COOKIE_OPTIONS = array( 'expires' => time()+(60 * $SESSION_TIMEOUT),
                                  'path' => $SERVER_PATH,
                                  'domain' => '',
-                                 'secure' => TRUE,
+                                 'secure' => $NO_HTTPS ? FALSE : TRUE,
                                  'samesite' => 'strict'
                                );
 
@@ -140,7 +140,7 @@ function validate_passkey_cookie() {
      $this_error="$log_prefix Session: orf_cookie was sent by the client and the session file was found at /tmp/$filename, but";
       if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
       if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
-      $this_error += " Cookie: ${_COOKIE['orf_cookie']} - Session file contents: $session_file";
+      $this_error.=" Cookie: ${_COOKIE['orf_cookie']} - Session file contents: $session_file";
       error_log($this_error,0);
     }
    }

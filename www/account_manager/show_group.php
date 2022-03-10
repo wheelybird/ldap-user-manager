@@ -111,18 +111,41 @@ if (isset($_POST["update_members"])) {
  $non_members = array_diff($all_people,$updated_membership);
  $group_members = $updated_membership;
 
- ?>
-  <script>
-    window.setTimeout(function() {
-                                  $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                 }, 4000);
-  </script>
-  <div class="alert alert-success" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <p class="text-center">The group has been <?php print $has_been; ?>.</p>
-  </div>
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
+ if ($rfc2307bis_available == TRUE and count($group_members) == 0) {
 
- <?php
+   $group_members = ldap_get_group_members($ldap_connection,$group_cn);
+   $non_members = array_diff($all_people,$group_members);
+
+   ?>
+    <script>
+      window.setTimeout(function() {
+                                    $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
+                                   }, 15000);
+    </script>
+    <div class="alert alert-danger" role="alert">
+     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
+     <p class="text-center">Groups can't be empty, so the final member hasn't been removed.  You could try deleting the group.</p>
+    </div>
+
+   <?php
+
+ }
+ else {
+
+   ?>
+    <script>
+      window.setTimeout(function() {
+                                    $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
+                                   }, 4000);
+    </script>
+    <div class="alert alert-success" role="alert">
+     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
+     <p class="text-center">The group has been <?php print $has_been; ?>.</p>
+    </div>
+
+   <?php
+  }
 
 }
 else {
@@ -231,7 +254,6 @@ ldap_close($ldap_connection);
     float: right;
   }
 </style>
-
 
 
 <div class="container">
