@@ -240,7 +240,7 @@ Other services or software might use the *Common Name* (`cn`) attribute, which i
 The account identifier is what uniquely identifies the account, so you can't create multiple accounts where the account identifier is the same.   
 You should ensure your LDAP clients use the same account identifier attribute when authenticating users.   
    
-If you're using LDAP for server accounts then you'll find there are  normally constraints on how many cahracters and the type of characters you're allowed to use.  The user manager will validate user and group names against `USERNAME_REGEX`.  If you don't need to be so strict then you can disable these checks by setting `ENFORCE_SAFE_SYSTEM_NAMES` to `FALSE`.
+If you're using LDAP for server accounts then you'll find there are  normally constraints on how many characters and the type of characters you're allowed to use.  The user manager will validate user and group names against `USERNAME_REGEX`.  If you don't need to be so strict then you can disable these checks by setting `ENFORCE_SAFE_SYSTEM_NAMES` to `FALSE`.
 
 ***
 
