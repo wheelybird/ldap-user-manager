@@ -66,6 +66,11 @@ Configuration is via environmental variables.  Please bear the following in mind
  * This tool needs to bind to LDAP as a user that has the permissions to modify everything under the base DN.
  * This interface is designed to work with a fresh LDAP server and should only be against existing, populated LDAP directories with caution and at your own risk.
 
+#### Containers: using files/secrets to set configuration variables
+
+When running the user manager as a container you can append `_FILE` to any of the configuration variables and set the value to a filepath.  Then when the container starts up it will set the appropriate configuration variable with the contents of the file.   
+For example, if you're using Docker Swarm and you've set the LDAP bind password as a Docker secret (`echo "myLDAPadminPassword" | docker secret create ldap_admin_bind_pwd -`) then you can set `LDAP_ADMIN_BIND_PWD_FILE=/run/secrets/ldap_admin_bind_pwd`.  This will result in `LDAP_ADMIN_BIND_PWD` being set with the contents of `/run/secrets/ldap_admin_bind_pwd`.
+
 ### Mandatory:
 
 
