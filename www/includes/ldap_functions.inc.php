@@ -588,6 +588,8 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
    $new_gid = $highest_gid + 1;
 
    if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { $objectclasses = array('top','groupOfUniqueNames','posixGroup'); }
+   if (isset($LDAP['group_additional_objectclasses']) and $LDAP['group_additional_objectclasses'] != "")
+     $objectclasses = array_merge($objectclasses, explode(",", $LDAP['group_additional_objectclasses']));
    if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
 
    $new_group_array=array( 'objectClass' => $objectclasses,
