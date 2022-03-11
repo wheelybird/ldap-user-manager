@@ -784,7 +784,7 @@ function ldap_new_account($ldap_connection,$account_r) {
        }
      }
 
-     if (empty($account_attributes['displayname']))   { $account_attributes['displayname']   = $account_attributes['givenname'] . " " . $account_attributes['sn']; }
+
      if (empty($account_attributes['loginshell']))    { $account_attributes['loginshell']    = $DEFAULT_USER_SHELL; }
      if (empty($account_attributes['homedirectory'])) { $account_attributes['homedirectory'] = "/home/${account_identifier}"; }
 
