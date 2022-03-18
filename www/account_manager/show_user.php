@@ -53,7 +53,7 @@ if ($ldap_search) {
    $$attribute = $user[0][$attribute][0];
 
    if (isset($_POST['update_account']) and isset($_POST[$attribute]) and $_POST[$attribute] != $$attribute) {
-     $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
+     $$attribute = sanitize_input_string($_POST[$attribute]);
      $to_update[$attribute] = $$attribute;
    }
    elseif (isset($attr_r['default'])) {

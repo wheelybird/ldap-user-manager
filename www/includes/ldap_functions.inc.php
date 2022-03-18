@@ -700,19 +700,19 @@ function ldap_complete_account_attribute_array() {
 
     $this_r = array();
     $kv = explode(":", $this_attr);
-    $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_STRING));
+    $attr_name = strtolower(sanitize_input_string($kv[0]));
 
     if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
 
      if (isset($kv[1]) and $kv[1] != "") {
-      $this_r['label'] = filter_var($kv[1], FILTER_SANITIZE_STRING);
+      $this_r['label'] = sanitize_input_string($kv[1]);
      }
      else {
       $this_r['label'] = $attr_name;
      }
 
      if (isset($kv[2]) and $kv[2] != "") {
-      $this_r['default'] = filter_var($kv[2], FILTER_SANITIZE_STRING);
+      $this_r['default'] = sanitize_input_string($kv[2]);
      }
 
      $additional_attributes_r[$attr_name] = $this_r;
