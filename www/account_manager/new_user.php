@@ -39,45 +39,72 @@ $invalid_email = FALSE;
 $disabled_email_tickbox = TRUE;
 $invalid_cn = FALSE;
 $invalid_account_identifier = FALSE;
+$account_attribute = $LDAP['account_attribute'];
 
 $new_account_r = array();
 
 foreach ($attribute_map as $attribute => $attr_r) {
- if (isset($_POST[$attribute])) {
-  $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
- }
- elseif (isset($attr_r['default'])) {
-  $$attribute = $attr_r['default'];
- }
- if (isset($$attribute)) { $new_account_r[$attribute] = $$attribute; }
+
+  if (isset($_POST[$attribute])) {
+
+    $this_attribute = array();
+
+    if (is_array($_POST[$attribute])) {
+      $this_attribute['count'] = count($_POST[$attribute]);
+      foreach($_POST[$attribute] as $key => $value) {
+        $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+      }
+    }
+    else {
+      $this_attribute['count'] = 1;
+      $this_attribute[0] = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    }
+
+    $$attribute = $this_attribute;
+
+  }
+
+  if (!isset($$attribute) and isset($attr_r['default'])) {
+    $$attribute['count'] = 1;
+    $$attribute[0] = $attr_r['default'];
+  }
+
+  if (isset($$attribute)) {
+    $new_account_r[$attribute] = $$attribute;
+    unset($new_account_r[$attribute]['count']);
+  }
+
 }
 
 ##
 
 if (isset($_GET['account_request'])) {
 
-  $givenname=filter_var($_GET['first_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+  $givenname[0]=filter_var($_GET['first_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   $new_account_r['givenname'] = $givenname;
+  $givenname['count'] = 1;
 
-  $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  $new_account_r['sn'] = $sn;
+  $sn[0]=filter_var($_GET['last_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+  $new_account_r['sn'][0] = $sn;
+  $sn['count'] = 1;
 
-  $uid = generate_username($givenname,$sn);
-  $new_account_r['uid'] = $uid;
+  $uid[0] = generate_username($givenname,$sn);
+  $new_account_r['uid'][0] = $uid;
+  $uid['count'] = 1;
 
   if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
-    $cn = "$givenname$sn";
+    $cn[0] = "$givenname$sn";
   }
   else {
-    $cn = "$givenname $sn";
+    $cn[0] = "$givenname $sn";
   }
-
   $new_account_r['cn'] = $cn;
+  $cn['count'] = 1;
 
-  $mail=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
-  if ($mail == "") {
+  $mail[0]=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
+  if ($mail[0] == "") {
     if (isset($EMAIL_DOMAIN)) {
-      $mail = $uid . "@" . $EMAIL_DOMAIN;
+      $mail[0] = $uid . "@" . $EMAIL_DOMAIN;
       $disabled_email_tickbox = FALSE;
     }
   }
@@ -85,27 +112,34 @@ if (isset($_GET['account_request'])) {
     $disabled_email_tickbox = FALSE;
   }
   $new_account_r['mail'] = $mail;
+  $mail['count'] = 1;
 
 }
 
 if (isset($_POST['create_account'])) {
 
  $password  = $_POST['password'];
- $new_account_r['password'] = $password;
- $account_identifier = $new_account_r[$LDAP["account_attribute"]];
+ $new_account_r['password'][0] = $password;
+ $account_identifier = $new_account_r[$account_attribute][0];
 
- if (!isset($cn) or $cn == "") { $invalid_cn = TRUE; }
+ $this_cn=$cn[0];
+ $this_mail=$mail[0];
+ $this_givenname=$givenname[0];
+ $this_sn=$sn[0];
+ $this_password=$password[0];
+
+ if (!isset($this_cn) or $this_cn == "") { $invalid_cn = TRUE; }
  if ((!isset($account_identifier) or $account_identifier == "") and $invalid_cn != TRUE) { $invalid_account_identifier = TRUE; }
  if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
- if (isset($mail) and !is_valid_email($mail)) { $invalid_email = TRUE; }
+ if (isset($this_mail) and !is_valid_email($this_mail)) { $invalid_email = TRUE; }
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
  if ($password != $_POST['password_match']) { $mismatched_passwords = TRUE; }
  if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$USERNAME_REGEX/",$account_identifier)) { $invalid_account_identifier = TRUE; }
  if (isset($_POST['send_email']) and isset($mail) and $EMAIL_SENDING_ENABLED == TRUE) { $send_user_email = TRUE; }
 
- if (     isset($givenname)
-      and isset($sn)
-      and isset($password)
+ if (     isset($this_givenname)
+      and isset($this_sn)
+      and isset($this_password)
       and !$mismatched_passwords
       and !$weak_password
       and !$invalid_password
@@ -124,13 +158,13 @@ if (isset($_POST['create_account'])) {
 
       include_once "mail_functions.inc.php";
 
-      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname, $sn);
-      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname, $sn);
+      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $this_givenname, $this_sn);
+      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $this_givenname, $this_sn);
 
-      $sent_email = send_email($mail,"$givenname $sn",$mail_subject,$mail_body);
+      $sent_email = send_email($this_mail,"$this_givenname $this_sn",$mail_subject,$mail_body);
       $creation_message = "The account was created";
       if ($sent_email) {
-        $creation_message .= " and an email sent to $mail.";
+        $creation_message .= " and an email sent to $this_mail.";
       }
       else {
         $creation_message .= " but unfortunately the email wasn't sent.<br>More information will be available in the logs.";
@@ -189,7 +223,7 @@ if (isset($_POST['create_account'])) {
 
 $errors="";
 if ($invalid_cn) { $errors.="<li>The Common Name is required</li>\n"; }
-if ($invalid_account_identifier) {  $errors.="<li>The account identifier (" . $attribute_map[$LDAP['account_attribute']]['label'] . ") is invalid.</li>\n"; }
+if ($invalid_account_identifier) {  $errors.="<li>The account identifier (" . $attribute_map[$account_attribute]['label'] . ") is invalid.</li>\n"; }
 if ($weak_password) { $errors.="<li>The password is too weak</li>\n"; }
 if ($invalid_password) { $errors.="<li>The password contained invalid characters</li>\n"; }
 if ($invalid_email) { $errors.="<li>The email address is invalid</li>\n"; }
@@ -273,6 +307,8 @@ $tabindex=1;
 
 </script>
 
+<?php render_dynamic_field_js(); ?>
+
 <div class="container">
  <div class="col-sm-8">
 
@@ -288,21 +324,14 @@ $tabindex=1;
 
 
 <?php
-
   foreach ($attribute_map as $attribute => $attr_r) {
-    $label   = $attr_r['label'];
-    $onkeyup = $attr_r['onkeyup'];
+    $label = $attr_r['label'];
+    if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
     if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
-  ?>
-     <div class="form-group" id="<?php print $attribute; ?>_div">
-      <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
-      <div class="col-sm-6">
-       <input tabindex="<?php print $tabindex; ?>" type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
-         if (isset($attr_r['onkeyup'])) { print "onkeyup=\"${attr_r['onkeyup']};\""; } ?>>
-      </div>
-     </div>
-  <?php
-   $tabindex++;
+    if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
+    if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
+    render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple,$tabindex);
+    $tabindex++;
   }
 ?>
 

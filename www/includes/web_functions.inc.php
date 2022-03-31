@@ -569,4 +569,91 @@ EoRenderEmailJS;
 
 }
 
+
+######################################################
+
+function render_dynamic_field_js() {
+
+?>
+<script>
+
+  function add_field_to(attribute_name,value=null) {
+
+    var parent      = document.getElementById(attribute_name + '_input_div');
+    var input_div   = document.createElement('div');
+
+    window[attribute_name + '_count'] = (window[attribute_name + '_count'] === undefined) ? 1 : window[attribute_name + '_count'] + 1;
+    var input_field_id = attribute_name + window[attribute_name + '_count'];
+    var input_div_id = 'div' + '_' + input_field_id;
+
+    input_div.className = 'input-group';
+    input_div.id = input_div_id;
+
+    parent.appendChild(input_div);
+
+    var input_field = document.createElement('input');
+        input_field.type = 'text';
+        input_field.className = 'form-control';
+        input_field.id = input_field_id;
+        input_field.name = attribute_name + '[]';
+        input_field.value = value;
+
+    var button_span = document.createElement('span');
+        button_span.className = 'input-group-btn';
+
+    var remove_button = document.createElement('button');
+        remove_button.type = 'button';
+        remove_button.className = 'btn btn-default';
+        remove_button.onclick = function() { var div_to_remove = document.getElementById(input_div_id); div_to_remove.innerHTML = ""; }
+        remove_button.innerHTML = '-';
+
+    input_div.appendChild(input_field);
+    input_div.appendChild(button_span);
+    button_span.appendChild(remove_button);
+
+  }
+
+</script>
+<?php
+
+}
+
+
+######################################################
+
+function render_attribute_fields($attribute,$label,$values_r,$onkeyup="",$multiple=FALSE,$tabindex=null) {
+
+?>
+
+     <div class="form-group" id="<?php print $attribute; ?>_div">
+
+       <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
+       <div class="col-sm-6" id="<?php print $attribute; ?>_input_div">
+       <?php if ($multiple != TRUE) { ?>
+         <input <?php if (isset($tabindex)) { ?>tabindex="<?php print $tabindex; ?>" <?php } ?>type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($values_r[0])) { print $values_r[0]; } ?>" <?php if ($onkeyup != "") { print "onkeyup=\"$onkeyup\""; } ?>>
+       <?php }
+             else {
+             ?><div class="input-group">
+                  <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>[]" value="<?php if (isset($values_r[0])) { print $values_r[0]; } ?>">
+                  <div class="input-group-btn"><button type="button" class="btn btn-default" onclick="add_field_to('<?php print $attribute; ?>')">+</i></button></div>
+              </div>
+            <?php
+              if (isset($values_r['count']) and $values_r['count'] > 0) {
+                $remaining_values = array_slice($values_r, 2);
+                print "<script>";
+                foreach($remaining_values as $this_value) { print "add_field_to('$attribute','$this_value');"; }
+                print "</script>";
+              }
+            }
+            ?>
+       </div>
+
+     </div>
+
+<?php
+}
+
+
+
+##EoFilelocal
 ?>

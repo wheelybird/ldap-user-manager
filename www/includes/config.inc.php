@@ -5,11 +5,11 @@
  #Fixed
 
  $LDAP['account_objectclasses'] = array( 'person', 'inetOrgPerson', 'posixAccount' );
- $LDAP['default_attribute_map'] = array( "givenname" => array("label" => "First name",      "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value)"),
-                                         "sn"        => array("label" => "Last name",       "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value)"),
-                                         "uid"       => array("label" => "System username", "onkeyup" => "check_entity_name_validity(document.getElementById('uid').value,'uid_div'); update_email(); check_email_validity(document.getElementById('mail').value)"),
-                                         "cn"        => array("label" => "Common Name",     "onkeyup" => "auto_cn_update = false;"),
-                                         "mail"      => array("label" => "Email",           "onkeyup" => "auto_email_update = false; check_email_validity(document.getElementById('mail').value)")
+ $LDAP['default_attribute_map'] = array( "givenname" => array("label" => "First name",      "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value);"),
+                                         "sn"        => array("label" => "Last name",       "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value);"),
+                                         "uid"       => array("label" => "System username", "onkeyup" => "check_entity_name_validity(document.getElementById('uid').value,'uid_div'); update_email(); check_email_validity(document.getElementById('mail').value);"),
+                                         "cn"        => array("label" => "Common name",     "onkeyup" => "auto_cn_update = false;"),
+                                         "mail"      => array("label" => "Email",           "onkeyup" => "auto_email_update = false; check_email_validity(document.getElementById('mail').value);")
                                        );
 
  #Mandatory
@@ -34,7 +34,8 @@
  if (getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES')) { $LDAP['account_additional_attributes'] = getenv('LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES'); }
 
  if (getenv('LDAP_GROUP_ADDITIONAL_OBJECTCLASSES')) { $LDAP['group_additional_objectclasses'] = getenv('LDAP_GROUP_ADDITIONAL_OBJECTCLASSES'); }
- if (getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTE')) { $LDAP['group_additional_attribute'] = getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTE'); }
+ if (getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTES')) { $LDAP['group_additional_attributes'] = getenv('LDAP_GROUP_ADDITIONAL_ATTRIBUTES'); }
+
  if (getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE')) { $LDAP['group_membership_attribute'] = getenv('LDAP_GROUP_MEMBERSHIP_ATTRIBUTE'); }
  if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) {
    if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == 'TRUE' )   { $LDAP['group_membership_uses_uid']  = TRUE;  }

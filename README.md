@@ -135,10 +135,6 @@ These settings should only be changed if you're trying to make the user manager 
    
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user's account to a group.  When the `groupOfMembers` objectClass is detected `FORCE_RFC2307BIS` is `TRUE` it defaults to `uniqueMember`, otherwise it'll default to `memberUID`. Explicitly setting this variable will override any default.
 
-* `LDAP_GROUP_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating an group.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
-
-* `LDAP_GROUP_ADDITIONAL_ATTRIBUTE` (no default): A comma-separated list of extra attributes to display when creating an group.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
-
 * `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
 
 * `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` (no default): A comma-separated list of extra attributes to display when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
@@ -317,12 +313,12 @@ If `EMAIL_DOMAIN` is set then the email address field will be automatically upda
 
 ## Extra objectClasses and attributes
 
-If you need to use this user manager with an existing LDAP directory and your account records need additional objectClasses and attributes then you can add them via `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` and `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES`.   
+If you need to use this user manager with an existing LDAP directory and your account records need additional objectClasses and attributes then you can add them via `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` and `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES`.
 
 `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` is a comma-separated list of objectClasses to add when creating the account record.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
 
-`LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` is a comma-separated list of attributes to be displayed as extra fields on the account management pages.    
-By default these fields will be empty, with the field named for the attribute, but you can set the field labels and optionally the default values by appending the attribute names with colon-separated values like so: `attribute_name:label:default_value`.   
+`LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` is a comma-separated list of attributes to be displayed as extra fields on the account management page.    
+By default these fields will be empty, with the field named for the attribute, but you can set the field labels (and optionally the default values) by appending the attribute names with colon-separated values like so: `attribute_name:label:default_value`.   
 Multiple attributes are separated by commas, so you can define the label and default values for several attributes as follows:  `attribute1:label1:default_value1,attribute2:label2:default_value2,attribute3:label3`.   
 
 As an example, to set a mailbox name and quota for the `couriermailaccount` schema you can pass these variables to the container:   
@@ -330,10 +326,21 @@ As an example, to set a mailbox name and quota for the `couriermailaccount` sche
 LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=couriermailaccount
 LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES="mailbox:Mailbox:domain.com,quota:Mail quota:20"
 ```
-   
-ObjectClasses often have attributes that must have a value, so you'll need to set a default for those attributes otherwise you'll get errors if you forget to fill in the fields.   
 
-This is advanced usage and the user manager doesn't attempt to validate any objectClasses, attributes, labels or default values you pass in.  It's up to you to ensure that your LDAP server has the appropriate schemas and that the labels and values are sane.
+_Note_: ObjectClasses often have attributes that _must_ have a value, so you should set a default value for these attributes, otherwise if you forget to add a value when filling in the form an error will be thrown on submission.
+
+    
+### Multi-value attributes
+
+If you have an attribute that could have several values, you can add a `+` to end of the attribute name.  This will modify the form so you can add or remove extra values for that attribute.  For example, if you want to have multiple email aliases when using the _PostfixBookMailAccount_ schema then you can pass these variables to the container:   
+```
+LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=PostfixBookMailAccount" \
+LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES=mailAlias+:Email aliases"
+```
+
+### Caveat
+
+These settings are advanced usage and the user manager doesn't attempt to validate any objectClasses, attributes, labels or default values you pass in.  It's up to you to ensure that your LDAP server has the appropriate schemas and that the labels and values are sane.
 
 ***
 

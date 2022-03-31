@@ -20,8 +20,6 @@ if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FA
 
 $LDAP['default_attribute_map']["uidnumber"]  = array("label" => "UID");
 $LDAP['default_attribute_map']["gidnumber"]  = array("label" => "GID");
-$LDAP['default_attribute_map']["loginshell"] = array("label" => "Login shell");
-$LDAP['default_attribute_map']["homedirectory"]  = array("label" => "Home directory");
 $LDAP['default_attribute_map']["mail"]  = array("label" => "Email", "onkeyup" => "check_if_we_should_enable_sending_email();");
 
 $attribute_map = ldap_complete_account_attribute_array();
@@ -44,25 +42,64 @@ $ldap_connection = open_ldap_connection();
 $ldap_search_query="(${LDAP['account_attribute']}=". ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ")";
 $ldap_search = ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_query);
 
+
+#########################
 if ($ldap_search) {
 
  $user = ldap_get_entries($ldap_connection, $ldap_search);
 
- foreach ($attribute_map as $attribute => $attr_r) {
+ if ($user["count"] > 0) {
 
-   $$attribute = $user[0][$attribute][0];
+  foreach ($attribute_map as $attribute => $attr_r) {
 
-   if (isset($_POST['update_account']) and isset($_POST[$attribute]) and $_POST[$attribute] != $$attribute) {
-     $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-     $to_update[$attribute] = $$attribute;
-   }
-   elseif (isset($attr_r['default'])) {
-     $$attribute = $attr_r['default'];
-   }
+    if (isset($user[0][$attribute]) and $user[0][$attribute]['count'] > 0) {
+      $$attribute = $user[0][$attribute];
+    }
+    else {
+      $$attribute = array();
+    }
+
+    if (isset($_POST['update_account']) and isset($_POST[$attribute])) {
+
+      $this_attribute = array();
+
+      if (is_array($_POST[$attribute])) {
+        $this_attribute['count'] = count($_POST[$attribute]);
+        foreach($_POST[$attribute] as $key => $value) {
+          $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        }
+      }
+      else {
+        $this_attribute['count'] = 1;
+        $this_attribute[0] = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+      }
+
+      if ($this_attribute != $$attribute) {
+        $$attribute = $this_attribute;
+        $to_update[$attribute] = $this_attribute;
+        unset($to_update[$attribute]['count']);
+      }
+
+    }
+
+    if (!isset($$attribute) and isset($attr_r['default'])) {
+      $$attribute['count'] = 1;
+      $$attribute[0] = $attr_r['default'];
+    }
+
+  }
+  $dn = $user[0]['dn'];
 
  }
- $dn = $user[0]['dn'];
-
+ else {
+   ?>
+    <div class="alert alert-danger">
+     <p class="text-center">This account doesn't exist.</p>
+    </div>
+   <?php
+   render_footer();
+   exit(0);
+ }
 
  ### Update values
 
@@ -81,16 +118,18 @@ if ($ldap_search) {
        and !$weak_password
        and !$invalid_password
                              ) {
-     $to_update['userpassword'] = ldap_hashed_password($password);
+     $to_update['userpassword'][0] = ldap_hashed_password($password);
     }
   }
 
   if (array_key_exists($LDAP['account_attribute'], $to_update)) {
-    $new_rdn = "${LDAP['account_attribute']}=${to_update[$LDAP['account_attribute']]}";
+    $account_attribute = $LDAP['account_attribute'];
+    $new_account_identifier = $to_update[$account_attribute][0];
+    $new_rdn = "${account_attribute}=${new_account_identifier}";
     $renamed_entry = ldap_rename($ldap_connection, $dn, $new_rdn, $LDAP['user_dn'], true);
     if ($renamed_entry) {
       $dn = "${new_rdn},${LDAP['user_dn']}";
-      $account_identifier = $to_update[$LDAP['account_attribute']];
+      $account_identifier = $new_account_identifier;
     }
     else {
       ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
@@ -99,6 +138,7 @@ if ($ldap_search) {
   }
 
   $updated_account = @ ldap_mod_replace($ldap_connection, $dn, $to_update);
+
   if (!$updated_account) {
     ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
     error_log("$log_prefix Failed to modify account details for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
@@ -366,6 +406,9 @@ if ($ldap_search) {
  }
 
 </script>
+
+<?php render_dynamic_field_js(); ?>
+
 <style type='text/css'>
   .dual-list .list-group {
       margin-top: 8px;
@@ -411,20 +454,13 @@ if ($ldap_search) {
 
 
 <?php
-
   foreach ($attribute_map as $attribute => $attr_r) {
     $label = $attr_r['label'];
     if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
     if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
-  ?>
-     <div class="form-group" id="<?php print $attribute; ?>_div">
-      <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
-      <div class="col-sm-6">
-       <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
-         if (isset($onkeyup)) { print "onkeyup=\"$onkeyup;\""; } ?>>
-      </div>
-     </div>
-  <?php
+    if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
+    if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
+    render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple);
   }
 ?>
 

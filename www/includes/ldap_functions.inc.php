@@ -703,6 +703,14 @@ function ldap_complete_account_attribute_array() {
     $this_r = array();
     $kv = explode(":", $this_attr);
     $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+    if (substr($attr_name, -1) == '+') {
+      $this_r['multiple'] = TRUE;
+      $attr_name = rtrim($attr_name, '+');
+    }
+    else {
+      $this_r['multiple'] = FALSE;
+    }
+
 
     if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
 
@@ -741,21 +749,22 @@ function ldap_new_account($ldap_connection,$account_r) {
 
   global $log_prefix, $LDAP, $LDAP_DEBUG, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP;
 
-  if (    isset($account_r['givenname'])
-      and isset($account_r['sn'])
-      and isset($account_r['cn'])
-      and isset($account_r['uid'])
+  if (    isset($account_r['givenname'][0])
+      and isset($account_r['sn'][0])
+      and isset($account_r['cn'][0])
+      and isset($account_r['uid'][0])
       and isset($account_r[$LDAP['account_attribute']])
-      and isset($account_r['password'])) {
+      and isset($account_r['password'][0])) {
 
-   $account_identifier = $account_r[$LDAP['account_attribute']];
-   $ldap_search_query = "(${LDAP['account_attribute']}=" . ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ",${LDAP['user_dn']})";
-   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['user_dn']}", $ldap_search_query);
+   $account_identifier = $account_r[$LDAP['account_attribute']][0];
+   $user_dn=$LDAP['user_dn'];
+   $ldap_search_query = "(${LDAP['account_attribute']}=" . ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ",$user_dn)";
+   $ldap_search = @ ldap_search($ldap_connection, $user_dn, $ldap_search_query);
    $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
    if ($result['count'] == 0) {
 
-     $hashed_pass = ldap_hashed_password($account_r['password']);
+     $hashed_pass = ldap_hashed_password($account_r['password'][0]);
      unset($account_r['password']);
 
      $objectclasses = $LDAP['account_objectclasses'];
