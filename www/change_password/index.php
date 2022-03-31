@@ -21,8 +21,15 @@ if (isset($_POST['change_password'])) {
 
   render_header("$ORGANISATION_NAME account manager - password changed");
   ?>
-  <div class="alert alert-success">
-  <p class="text-center">Your password has been changed.</p>
+  <div class="container">
+    <div class="col-sm-6 col-sm-offset-3">
+      <div class="panel panel-success">
+        <div class="panel-heading">Success</div>
+        <div class="panel-body">
+          Your password has been updated.
+        </div>
+      </div>
+    </div>
   </div>
   <?php
   render_footer();
@@ -58,7 +65,7 @@ if (isset($mismatched)) {  ?>
 <script type="text/javascript">$(document).ready(function(){	$("#StrengthProgressBar").zxcvbnProgressBar({ passwordInput: "#password" });});</script>
 
 <div class="container">
- <div class="col-sm-6">
+ <div class="col-sm-6 col-sm-offset-3">
 
   <div class="panel panel-default">
    <div class="panel-heading text-center">Change your password</div>

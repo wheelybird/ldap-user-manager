@@ -76,14 +76,24 @@ render_js_username_check();
    <input type="text" class="form-control invisible" name="group_name" id="group_name" placeholder="Group name" onkeyup="check_entity_name_validity(document.getElementById('group_name').value,'new_group_div');"><button id="add_group" class="form-control btn btn-primary btn-sm invisible" type="submit">Add</button>
   </form>
  </div>
-
+ <input class="form-control" id="search_input" type="text" placeholder="Search..">
  <table class="table table-striped">
   <thead>
    <tr>
      <th>Group name</th>
    </tr>
   </thead>
- <tbody>
+ <tbody id="grouplist">
+   <script>
+    $(document).ready(function(){
+      $("#search_input").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#grouplist tr").filter(function() {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+      });
+    });
+  </script>
 <?php
 foreach ($groups as $group){
  print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_group.php?group_name=" . urlencode($group) . "'>$group</a></td>\n </tr>\n";

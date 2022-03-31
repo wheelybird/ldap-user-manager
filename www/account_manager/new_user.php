@@ -82,24 +82,24 @@ if (isset($_GET['account_request'])) {
 
   $givenname[0]=filter_var($_GET['first_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   $new_account_r['givenname'] = $givenname;
-  $givenname['count'] = 1;
+  unset($new_account_r['givenname']['count']);
 
   $sn[0]=filter_var($_GET['last_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  $new_account_r['sn'][0] = $sn;
-  $sn['count'] = 1;
+  $new_account_r['sn'] = $sn;
+  unset($new_account_r['sn']['count']);
 
-  $uid[0] = generate_username($givenname,$sn);
-  $new_account_r['uid'][0] = $uid;
-  $uid['count'] = 1;
+  $uid[0] = generate_username($givenname[0],$sn[0]);
+  $new_account_r['uid'] = $uid;
+  unset($new_account_r['uid']['count']);
 
   if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
-    $cn[0] = "$givenname$sn";
+    $cn[0] = $givenname[0] . $sn[0];
   }
   else {
-    $cn[0] = "$givenname $sn";
+    $cn[0] = $givenname[0] . " " . $sn[0];
   }
   $new_account_r['cn'] = $cn;
-  $cn['count'] = 1;
+  unset($new_account_r['cn']['count']);
 
   $mail[0]=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
   if ($mail[0] == "") {
@@ -112,7 +112,7 @@ if (isset($_GET['account_request'])) {
     $disabled_email_tickbox = FALSE;
   }
   $new_account_r['mail'] = $mail;
-  $mail['count'] = 1;
+  unset($new_account_r['mail']['count']);
 
 }
 
@@ -121,7 +121,6 @@ if (isset($_POST['create_account'])) {
  $password  = $_POST['password'];
  $new_account_r['password'][0] = $password;
  $account_identifier = $new_account_r[$account_attribute][0];
-
  $this_cn=$cn[0];
  $this_mail=$mail[0];
  $this_givenname=$givenname[0];
@@ -310,7 +309,7 @@ $tabindex=1;
 <?php render_dynamic_field_js(); ?>
 
 <div class="container">
- <div class="col-sm-8">
+ <div class="col-sm-8 col-md-offset-2">
 
   <div class="panel panel-default">
    <div class="panel-heading text-center"><?php print $page_title; ?></div>

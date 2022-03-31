@@ -18,8 +18,10 @@ $to_update = array();
 
 if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FALSE; }
 
-$LDAP['default_attribute_map']["uidnumber"]  = array("label" => "UID");
-$LDAP['default_attribute_map']["gidnumber"]  = array("label" => "GID");
+if ($SIMPLE_INTERFACE == FALSE) {
+  $LDAP['default_attribute_map']["uidnumber"]  = array("label" => "UID");
+  $LDAP['default_attribute_map']["gidnumber"]  = array("label" => "GID");
+}
 $LDAP['default_attribute_map']["mail"]  = array("label" => "Email", "onkeyup" => "check_if_we_should_enable_sending_email();");
 
 $attribute_map = ldap_complete_account_attribute_array();

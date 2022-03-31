@@ -53,7 +53,8 @@ $people = ldap_get_user_list($ldap_connection);
 <div class="container">
  <form action="<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post">
   <button type="button" class="btn btn-light"><?php print count($people);?> account<?php if (count($people) != 1) { print "s"; }?></button>  &nbsp; <button id="add_group" class="btn btn-default" type="submit">New user</button>
- </form>
+ </form> 
+ <input class="form-control" id="search_input" type="text" placeholder="Search..">
  <table class="table table-striped">
   <thead>
    <tr>
@@ -64,7 +65,17 @@ $people = ldap_get_user_list($ldap_connection);
      <th>Member of</th>
    </tr>
   </thead>
- <tbody>
+ <tbody id="userlist">
+   <script>
+    $(document).ready(function(){
+      $("#search_input").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#userlist tr").filter(function() {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+      });
+    });
+  </script>
 <?php
 foreach ($people as $account_identifier => $attribs){
 
