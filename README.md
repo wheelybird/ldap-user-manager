@@ -123,7 +123,7 @@ For example, if you're using Docker Swarm and you've set the LDAP bind password 
    
 * `LDAP_IGNORE_CERT_ERRORS` (default: *FALSE*): If *TRUE* then problems with the certificate presented by the LDAP server will be ignored (for example FQDN mismatches).  Use this if your LDAP server is using a self-signed certificate and you don't have a CA certificate for it or you're connecting to a pool of different servers via round-robin DNS.
    
-* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CACERT="$(</path/to/ca.crt)"` (ensure you're using quotes or you'll get an "invalid reference format: repository name must be lowercase" error.
+* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CACERT="$(</path/to/ca.crt)"` (ensure you're using quotes or you'll get an "invalid reference format: repository name must be lowercase" error).  Alternatively you can bind-mount a certificate into the container and use `LDAP_TLS_CACERT_FILE` to specify the path to the file.
 
 #### Advanced LDAP settings
 
@@ -184,7 +184,7 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `EMAIL_FROM_NAME` (default: *`SITE_NAME`*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
 
-* `MAIL_SUBJECT` (default: *Your $ORGANISATION_NAME account has been created.*): The mail subject for new account emails.
+* `MAIL_SUBJECT` (default: *Your `ORGANISATION_NAME` account has been created.*): The mail subject for new account emails.
 
 * `NEW_ACCOUNT_EMAIL_SUBJECT`, `NEW_ACCOUNT_EMAIL_BODY`, `RESET_PASSWORD_EMAIL_SUBJECT` & `RESET_PASSWORD_EMAIL_BODY`: Change the email contents for emails sent to users when you create an account or reset a password.  See [Sending emails](#sending_emails) for full details.
 
