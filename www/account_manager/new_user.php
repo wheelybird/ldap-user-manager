@@ -44,7 +44,7 @@ $new_account_r = array();
 
 foreach ($attribute_map as $attribute => $attr_r) {
  if (isset($_POST[$attribute])) {
-  $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
+  $$attribute = sanitize_input_string($_POST[$attribute]);
  }
  elseif (isset($attr_r['default'])) {
   $$attribute = $attr_r['default'];
@@ -56,10 +56,10 @@ foreach ($attribute_map as $attribute => $attr_r) {
 
 if (isset($_GET['account_request'])) {
 
-  $givenname=filter_var($_GET['first_name'], FILTER_SANITIZE_STRING);
+  $givenname=sanitize_input_string($_GET['first_name']);
   $new_account_r['givenname'] = $givenname;
 
-  $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
+  $sn=sanitize_input_string($_GET['last_name']);
   $new_account_r['sn'] = $sn;
 
   $uid = generate_username($givenname,$sn);
@@ -74,7 +74,7 @@ if (isset($_GET['account_request'])) {
 
   $new_account_r['cn'] = $cn;
 
-  $mail=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
+  $mail=sanitize_input_string($_GET['email']);
   if ($mail == "") {
     if (isset($EMAIL_DOMAIN)) {
       $mail = $uid . "@" . $EMAIL_DOMAIN;

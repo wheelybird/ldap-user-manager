@@ -28,22 +28,22 @@ if($_POST) {
     array_push($error_messages, "You didn't enter your first name.");
   }
   else {
-    $firstname=filter_var($_POST['firstname'], FILTER_SANITIZE_STRING);
+    $firstname=sanitize_input_string($_POST['firstname']);
   }
 
   if (! isset($_POST['lastname']) or $_POST['lastname'] == "") {
     array_push($error_messages, "You didn't enter your first name.");
   }
   else {
-    $lastname=filter_var($_POST['lastname'], FILTER_SANITIZE_STRING);
+    $lastname=sanitize_input_string($_POST['lastname']);
   }
 
   if (isset($_POST['email']) and $_POST['email'] != "") {
-    $email=filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    $email=sanitize_input_string($_POST['email']);
   }
 
   if (isset($_POST['notes']) and $_POST['notes'] != "") {
-    $notes=filter_var($_POST['notes'], FILTER_SANITIZE_STRING);
+    $notes=sanitize_input_string($_POST['notes']);
   }
 
 
