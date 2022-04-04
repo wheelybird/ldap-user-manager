@@ -14,39 +14,21 @@ $ldap_connection = open_ldap_connection();
 
 if (isset($_POST['delete_user'])) {
 
- ?>
- <script>
-    window.setTimeout(function() {
-                                  $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                 }, 4000);
- </script>
- <?php
-
  $this_user = $_POST['delete_user'];
  $this_user = urldecode($this_user);
 
  $del_user = ldap_delete_account($ldap_connection,$this_user);
 
  if ($del_user) {
- ?>
- <div class="alert alert-success" role="alert">
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-  <p class="text-center">User <strong><?php print $this_user; ?> was deleted.</p>
- </div>
- <?php
+   render_alert_banner("User <strong>$this_user</strong> was deleted.");
  }
  else {
- ?>
- <div class="alert alert-danger" role="alert">
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-  <p class="text-center">User <strong><?php print $this_user; ?></strong> wasn't deleted.</p>
- </div>
- <?php
+   render_alert_banner("User <strong>$this_user</strong> wasn't deleted.  See the logs for more information.","danger",15000);
  }
 
 
 }
-#'
+
 $people = ldap_get_user_list($ldap_connection);
 
 ?>

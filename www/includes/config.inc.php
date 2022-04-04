@@ -12,6 +12,11 @@
                                          "mail"      => array("label" => "Email",           "onkeyup" => "auto_email_update = false; check_email_validity(document.getElementById('mail').value);")
                                         );
 
+ $LDAP['group_objectclasses'] = array( 'person', 'inetOrgPerson', 'posixAccount' );
+ $LDAP['default_group_attribute_map'] = array(  "gidnumber" => array("label" => "Group ID number")
+                                             );
+
+
  #Mandatory
 
  $LDAP['uri'] = getenv('LDAP_URI');

@@ -6,7 +6,11 @@ include_once "web_functions.inc.php";
 include_once "ldap_functions.inc.php";
 include_once "module_functions.inc.php";
 
-$attribute_map = ldap_complete_account_attribute_array();
+$attribute_map = $LDAP['default_attribute_map'];
+if (isset($LDAP['account_additional_attributes'])) { $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['account_additional_attributes']); }
+if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
+  $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => "Account UID")));
+}
 
 if ( isset($_POST['setup_admin_account']) ) {
  $admin_setup = TRUE;
@@ -321,18 +325,17 @@ $tabindex=1;
      <input type="hidden" name="create_account">
      <input type="hidden" id="pass_score" value="0" name="pass_score">
 
-
-<?php
-  foreach ($attribute_map as $attribute => $attr_r) {
-    $label = $attr_r['label'];
-    if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
-    if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
-    if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
-    if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
-    render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple,$tabindex);
-    $tabindex++;
-  }
-?>
+     <?php
+       foreach ($attribute_map as $attribute => $attr_r) {
+         $label = $attr_r['label'];
+         if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
+         if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
+         if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
+         if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
+         render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple,$tabindex);
+         $tabindex++;
+       }
+     ?>
 
      <div class="form-group" id="password_div">
       <label for="password" class="col-sm-3 control-label">Password</label>

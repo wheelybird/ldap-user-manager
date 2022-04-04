@@ -24,7 +24,11 @@ if ($SIMPLE_INTERFACE == FALSE) {
 }
 $LDAP['default_attribute_map']["mail"]  = array("label" => "Email", "onkeyup" => "check_if_we_should_enable_sending_email();");
 
-$attribute_map = ldap_complete_account_attribute_array();
+$attribute_map = $LDAP['default_attribute_map'];
+if (isset($LDAP['account_additional_attributes'])) { $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['account_additional_attributes']); }
+if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
+  $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => "Account UID")));
+}
 
 if (!isset($_POST['account_identifier']) and !isset($_GET['account_identifier'])) {
 ?>
@@ -164,30 +168,10 @@ if ($ldap_search) {
     }
 
   if ($updated_account) {
-   ?>
-   <script>
-     window.setTimeout(function() {
-                                   $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                  }, 4000);
-   </script>
-   <div class="alert alert-success" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <p class="text-center">The account has been updated.<?php print $sent_email_message; ?></p>
-   </div>
-  <?php
+    render_alert_banner("The account has been updated.  $sent_email_message");
   }
   else {
-   ?>
-   <script>
-     window.setTimeout(function() {
-                                   $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                  }, 4000);
-   </script>
-   <div class="alert alert-danger" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <p class="text-center">There was a problem updating the account.  Check the logs for more information.</p>
-   </div>
-  <?php
+    render_alert_banner("There was a problem updating the account.  Check the logs for more information.","danger",15000);
   }
  }
 
@@ -248,19 +232,7 @@ if ($ldap_search) {
 
   $not_member_of = array_diff($all_groups,$updated_group_membership);
   $member_of = $updated_group_membership;
-
-  ?>
-   <script>
-     window.setTimeout(function() {
-                                   $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                  }, 4000);
-   </script>
-   <div class="alert alert-success" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <p class="text-center">The group membership has been updated.</p>
-   </div>
-
-  <?php
+  render_alert_banner("The group membership has been updated.");
 
  }
  else {
@@ -454,48 +426,47 @@ if ($ldap_search) {
       <input type="hidden" id="pass_score" value="0" name="pass_score">
       <input type="hidden" name="account_identifier" value="<?php print $account_identifier; ?>">
 
+      <?php
+        foreach ($attribute_map as $attribute => $attr_r) {
+          $label = $attr_r['label'];
+          if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
+          if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
+          if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
+          if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
+          render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple);
+        }
+      ?>
 
-<?php
-  foreach ($attribute_map as $attribute => $attr_r) {
-    $label = $attr_r['label'];
-    if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
-    if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
-    if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
-    if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
-    render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple);
-  }
-?>
-
-     <div class="form-group" id="password_div">
-      <label for="password" class="col-sm-3 control-label">Password</label>
-      <div class="col-sm-6">
-       <input type="password" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm'); check_if_we_should_enable_sending_email();">
-      </div>
-      <div class="col-sm-1">
-       <input type="button" class="btn btn-sm" id="password_generator" onclick="random_password(); check_if_we_should_enable_sending_email();" value="Generate password">
-      </div>
-     </div>
-
-     <div class="form-group" id="confirm_div">
-      <label for="confirm" class="col-sm-3 control-label">Confirm</label>
-      <div class="col-sm-6">
-       <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
-      </div>
-     </div>
-
-<?php  if ($can_send_email == TRUE) { ?>
-      <div class="form-group" id="send_email_div">
-       <label for="send_email" class="col-sm-3 control-label"> </label>
+      <div class="form-group" id="password_div">
+       <label for="password" class="col-sm-3 control-label">Password</label>
        <div class="col-sm-6">
-        <input type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  Email the updated credentials to the user?
+        <input type="password" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm'); check_if_we_should_enable_sending_email();">
        </div>
+       <div class="col-sm-1">
+        <input type="button" class="btn btn-sm" id="password_generator" onclick="random_password(); check_if_we_should_enable_sending_email();" value="Generate password">
+       </div>
+      </div>
+
+      <div class="form-group" id="confirm_div">
+       <label for="confirm" class="col-sm-3 control-label">Confirm</label>
+       <div class="col-sm-6">
+        <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
+       </div>
+      </div>
+
+<?php if ($can_send_email == TRUE) { ?>
+      <div class="form-group" id="send_email_div">
+        <label for="send_email" class="col-sm-3 control-label"> </label>
+        <div class="col-sm-6">
+          <input type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  Email the updated credentials to the user?
+        </div>
       </div>
 <?php } ?>
 
 
-     <div class="form-group">
-       <p align='center'><button type="submit" class="btn btn-default">Update account details</button></p>
-     </div>
+      <div class="form-group">
+        <p align='center'><button type="submit" class="btn btn-default">Update account details</button></p>
+      </div>
 
     </form>
 

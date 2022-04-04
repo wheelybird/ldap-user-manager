@@ -654,6 +654,19 @@ function render_attribute_fields($attribute,$label,$values_r,$onkeyup="",$multip
 }
 
 
+######################################################
 
-##EoFilelocal
+function render_alert_banner($message,$alert_class="success",$timeout=4000) {
+
+?>
+    <script>window.setTimeout(function() {$(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); }); }, $<?php print $timeout; ?>);</script>
+    <div class="alert alert-<?php print $alert_class; ?>" role="alert">
+     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
+     <p class="text-center"><?php print $message; ?></p>
+    </div>
+<?php
+}
+
+
+##EoFile
 ?>

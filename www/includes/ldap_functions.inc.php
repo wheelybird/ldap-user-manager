@@ -438,19 +438,17 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
 ##################################
 
 
-function ldap_get_dn_of_group($ldap_connection,$group_name) {
+function ldap_get_group_entry($ldap_connection,$group_name) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  if (isset($group_name)) {
 
   $ldap_search_query = "(${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
-  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query , array("dn"));
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
-  if (isset($result[0]['dn'])) {
-    return $result[0]['dn'];
-  }
+  return $result;
 
  }
 
@@ -567,7 +565,7 @@ function ldap_user_group_membership($ldap_connection,$username) {
 
 ##################################
 
-function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
+function ldap_new_group($ldap_connection,$group_name,$initial_member="",$extra_attributes=array()) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
@@ -575,67 +573,107 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
 
  if (isset($group_name)) {
 
-  $new_group = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
-  $initial_member = ldap_escape($initial_member, "", LDAP_ESCAPE_FILTER);
+   $new_group = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
+   $initial_member = ldap_escape($initial_member, "", LDAP_ESCAPE_FILTER);
+   $update_gid_store=FALSE;
 
-  $ldap_search_query = "(${LDAP['group_attribute']}=$new_group,${LDAP['group_dn']})";
-  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
-  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
+   $ldap_search_query = "(${LDAP['group_attribute']}=$new_group,${LDAP['group_dn']})";
+   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
+   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
-  if ($result['count'] == 0) {
+   if ($result['count'] == 0) {
 
-   $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
-   $new_gid = $highest_gid + 1;
+     if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { $objectclasses = array('top','groupOfUniqueNames','posixGroup'); }
+     if (isset($LDAP['group_additional_objectclasses']) and $LDAP['group_additional_objectclasses'] != "") {
+       $objectclasses = array_merge($objectclasses, explode(",", $LDAP['group_additional_objectclasses']));
+     }
+     if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
 
-   if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { $objectclasses = array('top','groupOfUniqueNames','posixGroup'); }
-   if (isset($LDAP['group_additional_objectclasses']) and $LDAP['group_additional_objectclasses'] != "")
-     $objectclasses = array_merge($objectclasses, explode(",", $LDAP['group_additional_objectclasses']));
-   if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
+     $new_group_array=array( 'objectClass' => $objectclasses,
+                             'cn' => $new_group,
+                             $LDAP['group_membership_attribute'] => $initial_member
+                           );
 
-   $new_group_array=array( 'objectClass' => $objectclasses,
-                           'cn' => $new_group,
-                           'gidNumber' => $new_gid,
-                           $LDAP['group_membership_attribute'] => $initial_member
-                         );
+     $new_group_array = array_merge($new_group_array,$extra_attributes);
 
-   $group_dn="cn=$new_group,${LDAP['group_dn']}";
+     if (!isset($new_group_array["gidnumber"][0]) or !is_numeric($new_group_array["gidnumber"][0])) {
+       $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
+       $new_gid = $highest_gid + 1;
+       $new_group_array["gidnumber"] = $new_gid;
+       $update_gid_store=TRUE;
+     }
 
-   $add_group = @ ldap_add($ldap_connection, $group_dn, $new_group_array);
+     $group_dn="cn=$new_group,${LDAP['group_dn']}";
 
-   if (! $add_group ) {
-    $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG add_group array: ". print_r($new_group_array,true),0); }
-    error_log($this_error,0);
-   }
-   else {
-    error_log("$log_prefix Added new group $group_name",0);
+     $add_group = @ ldap_add($ldap_connection, $group_dn, $new_group_array);
 
-    $this_gid = fetch_id_stored_in_ldap($ldap_connection,"gid");
-    if ($this_gid != FALSE) {
-     $update_gid = @ ldap_mod_replace($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", array( 'serialNumber' => $new_gid ));
-     if ($update_gid) {
-      error_log("$log_prefix Updated cn=lastGID with $new_gid",0);
+     if (! $add_group ) {
+       $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
+       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG add_group array: ". print_r($new_group_array,true),0); }
+       error_log($this_error,0);
      }
      else {
-      error_log("$log_prefix Unable to update cn=lastGID to $new_gid - this could cause groups to share the same GID.",0);
-     }
-    }
-    return TRUE;
-   }
+       error_log("$log_prefix Added new group $group_name",0);
 
-  }
-  else {
-   error_log("$log_prefix Create group; group $group_name already exists.",0);
-  }
+       if ($update_gid_store == TRUE) {
+         $this_gid = fetch_id_stored_in_ldap($ldap_connection,"gid");
+         if ($this_gid != FALSE) {
+           $update_gid = @ ldap_mod_replace($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", array( 'serialNumber' => $new_gid ));
+           if ($update_gid) {
+             error_log("$log_prefix Updated cn=lastGID with $new_gid",0);
+           }
+           else {
+             error_log("$log_prefix Unable to update cn=lastGID to $new_gid - this could cause groups to share the same GID.",0);
+           }
+         }
+         return TRUE;
+       }
+     }
+
+   }
+   else {
+     error_log("$log_prefix Create group; group $group_name already exists.",0);
+   }
  }
  else {
-  error_log("$log_prefix Create group; group name wasn't set.",0);
+   error_log("$log_prefix Create group; group name wasn't set.",0);
  }
 
  return FALSE;
 
 }
 
+
+##################################
+
+function ldap_update_group_attributes($ldap_connection,$group_name,$extra_attributes) {
+
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
+
+ if (isset($group_name) and (count($extra_attributes) > 0)) {
+
+  $group_name = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
+  $group_dn = "${LDAP['group_attribute']}=$group_name,${LDAP['group_dn']}";
+
+  $update_group = @ ldap_mod_replace($ldap_connection, $group_dn, $extra_attributes);
+
+  if (!$update_group ) {
+    $this_error="$log_prefix LDAP: unable to update group attributes for group (${group_dn}): " . ldap_error($ldap_connection);
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG update group attributes array: ". print_r($extra_attributes,true),0); }
+    error_log($this_error,0);
+    return FALSE;
+  }
+  else {
+    error_log("$log_prefix Updated group attributes for $group_name",0);
+    return TRUE;
+  }
+ }
+ else {
+  error_log("$log_prefix Update group attributes; group name wasn't set.",0);
+  return FALSE;
+ }
+
+}
 
 ##################################
 
@@ -687,58 +725,54 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
 ##################################
 
-function ldap_complete_account_attribute_array() {
+function ldap_complete_attribute_array($default_attributes,$additional_attributes) {
 
- global $LDAP;
+  global $LDAP;
 
- $attribute_r = $LDAP['default_attribute_map'];
- $additional_attributes_r = array();
+  if (is_array($additional_attributes) and count($additional_attributes > 0)) {
 
- if (isset($LDAP['account_additional_attributes'])) {
+    $user_attribute_r = explode(",", $additional_attributes);
+    $to_merge = array();
 
-  $user_attribute_r = explode(",", $LDAP['account_additional_attributes']);
+    foreach ($user_attribute_r as $this_attr) {
 
-  foreach ($user_attribute_r as $this_attr) {
+      $this_r = array();
+      $kv = explode(":", $this_attr);
+      $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+      if (substr($attr_name, -1) == '+') {
+        $this_r['multiple'] = TRUE;
+        $attr_name = rtrim($attr_name, '+');
+      }
+      else {
+        $this_r['multiple'] = FALSE;
+      }
 
-    $this_r = array();
-    $kv = explode(":", $this_attr);
-    $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
-    if (substr($attr_name, -1) == '+') {
-      $this_r['multiple'] = TRUE;
-      $attr_name = rtrim($attr_name, '+');
+      if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
+
+        if (isset($kv[1]) and $kv[1] != "") {
+          $this_r['label'] = filter_var($kv[1], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        }
+        else {
+          $this_r['label'] = $attr_name;
+        }
+
+        if (isset($kv[2]) and $kv[2] != "") {
+          $this_r['default'] = filter_var($kv[2], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        }
+
+        $to_merge[$attr_name] = $this_r;
+
+      }
     }
-    else {
-      $this_r['multiple'] = FALSE;
-    }
 
+    $attribute_r = array_merge($default_attributes, $to_merge);
 
-    if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
+    return($attribute_r);
 
-     if (isset($kv[1]) and $kv[1] != "") {
-      $this_r['label'] = filter_var($kv[1], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-     }
-     else {
-      $this_r['label'] = $attr_name;
-     }
-
-     if (isset($kv[2]) and $kv[2] != "") {
-      $this_r['default'] = filter_var($kv[2], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-     }
-
-     $additional_attributes_r[$attr_name] = $this_r;
-
-   }
   }
-
-  $attribute_r = array_merge($attribute_r, $additional_attributes_r);
-
- }
-
- if (! array_key_exists($LDAP['account_attribute'], $attribute_r)) {
-  $attribute_r = array_merge($attribute_r, array($LDAP['account_attribute'] => array("label" => "Account UID")));
- }
-
- return($attribute_r);
+  else {
+    return($default_attributes);
+  }
 
 }
 
