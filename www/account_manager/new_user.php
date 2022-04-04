@@ -44,7 +44,7 @@ $new_account_r = array();
 
 foreach ($attribute_map as $attribute => $attr_r) {
  if (isset($_POST[$attribute])) {
-  $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
+  $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
  }
  elseif (isset($attr_r['default'])) {
   $$attribute = $attr_r['default'];
@@ -56,13 +56,13 @@ foreach ($attribute_map as $attribute => $attr_r) {
 
 if (isset($_GET['account_request'])) {
 
-  $givenname=filter_var($_GET['first_name'], FILTER_SANITIZE_STRING);
+  $givenname=filter_var($_GET['first_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   $new_account_r['givenname'] = $givenname;
 
-  $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_STRING);
+  $sn=filter_var($_GET['last_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   $new_account_r['sn'] = $sn;
 
-  $uid = generate_username($givenname,$sn);
+  $uid = filter_var($_GET['username'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   $new_account_r['uid'] = $uid;
 
   if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
