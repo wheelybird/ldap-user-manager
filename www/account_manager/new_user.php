@@ -92,19 +92,6 @@ if (isset($_GET['account_request'])) {
   $new_account_r['sn'] = $sn;
   unset($new_account_r['sn']['count']);
 
-  $uid[0] = generate_username($givenname[0],$sn[0]);
-  $new_account_r['uid'] = $uid;
-  unset($new_account_r['uid']['count']);
-
-  if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
-    $cn[0] = $givenname[0] . $sn[0];
-  }
-  else {
-    $cn[0] = $givenname[0] . " " . $sn[0];
-  }
-  $new_account_r['cn'] = $cn;
-  unset($new_account_r['cn']['count']);
-
   $mail[0]=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
   if ($mail[0] == "") {
     if (isset($EMAIL_DOMAIN)) {
@@ -121,6 +108,23 @@ if (isset($_GET['account_request'])) {
 }
 
 if (isset($_POST['create_account'])) {
+
+  if (!isset($uid[0])) {
+    $uid[0] = generate_username($givenname[0],$sn[0]);
+    $new_account_r['uid'] = $uid;
+    unset($new_account_r['uid']['count']);
+  }
+
+  if (!isset($cn[0])) {
+    if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
+      $cn[0] = $givenname[0] . $sn[0];
+    }
+    else {
+      $cn[0] = $givenname[0] . " " . $sn[0];
+    }
+    $new_account_r['cn'] = $cn;
+    unset($new_account_r['cn']['count']);
+  }
 
  $password  = $_POST['password'];
  $new_account_r['password'][0] = $password;

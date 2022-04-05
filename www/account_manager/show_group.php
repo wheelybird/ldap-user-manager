@@ -44,6 +44,7 @@ $attribute_map = $LDAP['default_group_attribute_map'];
 if (isset($LDAP['group_additional_attributes'])) {
   $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['group_additional_attributes']);
 }
+
 $to_update = array();
 $this_group = array();
 
@@ -145,7 +146,15 @@ if (isset($_POST["update_members"])) {
     $group_add = ldap_new_group($ldap_connection,$group_cn,$initial_member,$to_update);
   }
   elseif(count($to_update) > 0) {
+
+    if (isset($this_group[0]['objectclass'])) {
+      $existing_objectclasses = $this_group[0]['objectclass'];
+      unset($existing_objectclasses['count']);
+      if ($existing_objectclasses != $LDAP['group_objectclasses']) { $to_update['objectclass'] = $LDAP['group_objectclasses']; }
+    }
+
     $updated_attr = ldap_update_group_attributes($ldap_connection,$group_cn,$to_update);
+
     if ($updated_attr) {
       render_alert_banner("The group attributes have been updated.");
     }

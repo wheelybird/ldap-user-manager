@@ -583,13 +583,9 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="",$extra_a
 
    if ($result['count'] == 0) {
 
-     if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { $objectclasses = array('top','groupOfUniqueNames','posixGroup'); }
-     if (isset($LDAP['group_additional_objectclasses']) and $LDAP['group_additional_objectclasses'] != "") {
-       $objectclasses = array_merge($objectclasses, explode(",", $LDAP['group_additional_objectclasses']));
-     }
      if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
 
-     $new_group_array=array( 'objectClass' => $objectclasses,
+     $new_group_array=array( 'objectClass' => $LDAP['group_objectclasses'],
                              'cn' => $new_group,
                              $LDAP['group_membership_attribute'] => $initial_member
                            );
@@ -727,9 +723,7 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
 function ldap_complete_attribute_array($default_attributes,$additional_attributes) {
 
-  global $LDAP;
-
-  if (is_array($additional_attributes) and count($additional_attributes > 0)) {
+  if (isset($additional_attributes)) {
 
     $user_attribute_r = explode(",", $additional_attributes);
     $to_merge = array();
@@ -739,12 +733,21 @@ function ldap_complete_attribute_array($default_attributes,$additional_attribute
       $this_r = array();
       $kv = explode(":", $this_attr);
       $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+
       if (substr($attr_name, -1) == '+') {
         $this_r['multiple'] = TRUE;
         $attr_name = rtrim($attr_name, '+');
       }
       else {
         $this_r['multiple'] = FALSE;
+      }
+
+      if (substr($attr_name, -1) == '^') {
+        $this_r['binary'] = TRUE;
+        $attr_name = rtrim($attr_name, '^');
+      }
+      else {
+        $this_r['binary'] = FALSE;
       }
 
       if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
@@ -802,9 +805,6 @@ function ldap_new_account($ldap_connection,$account_r) {
      unset($account_r['password']);
 
      $objectclasses = $LDAP['account_objectclasses'];
-     if (isset($LDAP['account_additional_objectclasses']) and $LDAP['account_additional_objectclasses'] != "") {
-       $objectclasses = array_merge($objectclasses, explode(",", $LDAP['account_additional_objectclasses']));
-     }
 
      $account_attributes = array('objectclass' => $objectclasses,
                                  'userpassword' => $hashed_pass,
@@ -1071,6 +1071,7 @@ function ldap_detect_rfc2307bis($ldap_connection) {
     if ($LDAP['rfc2307bis_available'] == TRUE) {
       if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'uniquemember'; }
       if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = FALSE; }
+      if (!in_array('groupOfUniqueNames',$LDAP['group_objectclasses'])) { array_push($LDAP['group_objectclasses'], 'groupOfUniqueNames'); }
       return TRUE;
     }
     else {

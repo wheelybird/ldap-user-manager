@@ -111,6 +111,23 @@ if ($ldap_search) {
 
  if (isset($_POST['update_account'])) {
 
+  if (!isset($uid[0])) {
+    $uid[0] = generate_username($givenname[0],$sn[0]);
+    $to_update['uid'] = $uid;
+    unset($to_update['uid']['count']);
+  }
+
+  if (!isset($cn[0])) {
+    if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
+      $cn[0] = $givenname[0] . $sn[0];
+    }
+    else {
+      $cn[0] = $givenname[0] . " " . $sn[0];
+    }
+    $to_update['cn'] = $cn;
+    unset($to_update['cn']['count']);
+  }
+
   if (isset($_POST['password']) and $_POST['password'] != "") {
 
     $password = $_POST['password'];
@@ -142,6 +159,10 @@ if ($ldap_search) {
       error_log("$log_prefix Failed to rename the DN for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
     }
   }
+
+  $existing_objectclasses = $user[0]['objectclass'];
+  unset($existing_objectclasses['count']);
+  if ($existing_objectclasses != $LDAP['account_objectclasses']) { $to_update['objectclass'] = $LDAP['account_objectclasses']; }
 
   $updated_account = @ ldap_mod_replace($ldap_connection, $dn, $to_update);
 
