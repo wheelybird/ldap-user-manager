@@ -733,21 +733,16 @@ function ldap_complete_attribute_array($default_attributes,$additional_attribute
       $this_r = array();
       $kv = explode(":", $this_attr);
       $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+      $this_r['inputtype'] = "singleinput";
 
       if (substr($attr_name, -1) == '+') {
-        $this_r['multiple'] = TRUE;
+        $this_r['inputtype'] = "multipleinput";
         $attr_name = rtrim($attr_name, '+');
-      }
-      else {
-        $this_r['multiple'] = FALSE;
       }
 
       if (substr($attr_name, -1) == '^') {
-        $this_r['binary'] = TRUE;
+        $this_r['inputtype'] = "binary";
         $attr_name = rtrim($attr_name, '^');
-      }
-      else {
-        $this_r['binary'] = FALSE;
       }
 
       if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {

@@ -42,8 +42,6 @@ $DEFAULT_COOKIE_OPTIONS = array( 'expires' => time()+(60 * $SESSION_TIMEOUT),
                                  'samesite' => 'strict'
                                );
 
-validate_passkey_cookie();
-
 if ($REMOTE_HTTP_HEADERS_LOGIN) {
   login_via_headers();
 } else {
@@ -111,52 +109,53 @@ function login_via_headers() {
 
 function validate_passkey_cookie() {
 
- global $SESSION_TIMEOUT, $IS_ADMIN, $USER_ID, $VALIDATED, $log_prefix, $SESSION_TIMED_OUT, $SESSION_DEBUG;
+  global $SESSION_TIMEOUT, $IS_ADMIN, $USER_ID, $VALIDATED, $log_prefix, $SESSION_TIMED_OUT, $SESSION_DEBUG;
 
- $this_time=time();
+  $this_time=time();
+  $VALIDATED = FALSE;
+  unset($USER_ID);
+  $IS_ADMIN = FALSE;
 
- if (isset($_COOKIE['orf_cookie'])) {
+  if (isset($_COOKIE['orf_cookie'])) {
 
-  list($user_id,$c_passkey) = explode(":",$_COOKIE['orf_cookie']);
-  $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
-  $session_file = @ file_get_contents("/tmp/$filename");
-  if (!$session_file) {
-   $VALIDATED = FALSE;
-   unset($USER_ID);
-   $IS_ADMIN = FALSE;
-   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: orf_cookie was sent by the client but the session file wasn't found at /tmp/$filename",0); }
+    list($user_id,$c_passkey) = explode(":",$_COOKIE['orf_cookie']);
+    $filename = preg_replace('/[^a-zA-Z0-9]/','_', $user_id);
+    $session_file = @ file_get_contents("/tmp/$filename");
+    if (!$session_file) {
+      if ($SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: orf_cookie was sent by the client but the session file wasn't found at /tmp/$filename",0); }
+    }
+    else {
+      list($f_passkey,$f_is_admin,$f_time) = explode(":",$session_file);
+      if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $SESSION_TIMEOUT)) {
+        if ($f_is_admin == 1) { $IS_ADMIN = TRUE; }
+        $VALIDATED = TRUE;
+        $USER_ID=$user_id;
+        if ($SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: Cookie and session file values match for user ${user_id} - VALIDATED (ADMIN = ${IS_ADMIN})",0); }
+        set_passkey_cookie($USER_ID,$IS_ADMIN);
+      }
+      else {
+        if ($SESSION_DEBUG == TRUE) {
+          $this_error="$log_prefix Session: orf_cookie was sent by the client and the session file was found at /tmp/$filename, but";
+          if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
+          if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
+          $this_error.=" Cookie: ${_COOKIE['orf_cookie']} - Session file contents: $session_file";
+          error_log($this_error,0);
+        }
+      }
+    }
+
   }
   else {
-   list($f_passkey,$f_is_admin,$f_time) = explode(":",$session_file);
-   if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $SESSION_TIMEOUT)) {
-    if ($f_is_admin == 1) { $IS_ADMIN = TRUE; }
-    $VALIDATED = TRUE;
-    $USER_ID=$user_id;
-    if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: Cookie and session file values match for user ${user_id} - VALIDATED (ADMIN = ${IS_ADMIN})",0); }
-    set_passkey_cookie($USER_ID,$IS_ADMIN);
-   }
-   else {
-    if ( $SESSION_DEBUG == TRUE ) {
-     $this_error="$log_prefix Session: orf_cookie was sent by the client and the session file was found at /tmp/$filename, but";
-      if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
-      if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
-      $this_error.=" Cookie: ${_COOKIE['orf_cookie']} - Session file contents: $session_file";
-      error_log($this_error,0);
+    if ($SESSION_DEBUG == TRUE) { error_log("$log_prefix Session: orf_cookie wasn't sent by the client.",0); }
+    if (isset($_COOKIE['sessto_cookie'])) {
+      $this_session_timeout = $_COOKIE['sessto_cookie'];
+      if ($this_time >= $this_session_timeout) {
+        $SESSION_TIMED_OUT = TRUE;
+        if ($SESSION_DEBUG == TRUE) { error_log("$log_prefix Session: The session had timed-out (over $SESSION_TIMEOUT mins idle).",0); }
+      }
     }
-   }
   }
 
- }
- else {
-  if ( $SESSION_DEBUG == TRUE) { error_log("$log_prefix Session: orf_cookie wasn't sent by the client.",0); }
-  if (isset($_COOKIE['sessto_cookie'])) {
-   $this_session_timeout = $_COOKIE['sessto_cookie'];
-   if ($this_time >= $this_session_timeout) {
-    $SESSION_TIMED_OUT = TRUE;
-    if ( $SESSION_DEBUG == TRUE) { error_log("$log_prefix Session: The session had timed-out (over $SESSION_TIMEOUT mins idle).",0); }
-   }
-  }
- }
 }
 
 
@@ -621,36 +620,78 @@ function render_dynamic_field_js() {
 
 ######################################################
 
-function render_attribute_fields($attribute,$label,$values_r,$onkeyup="",$multiple=FALSE,$tabindex=null) {
+function render_attribute_fields($attribute,$label,$values_r,$resource_identifier,$onkeyup="",$inputtype="",$tabindex=null) {
 
-?>
+  global $THIS_MODULE_PATH;
+
+  ?>
 
      <div class="form-group" id="<?php print $attribute; ?>_div">
 
        <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
        <div class="col-sm-6" id="<?php print $attribute; ?>_input_div">
-       <?php if ($multiple != TRUE) { ?>
-         <input <?php if (isset($tabindex)) { ?>tabindex="<?php print $tabindex; ?>" <?php } ?>type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($values_r[0])) { print $values_r[0]; } ?>" <?php if ($onkeyup != "") { print "onkeyup=\"$onkeyup\""; } ?>>
-       <?php }
-             else {
+       <?php if($inputtype == "multipleinput") {
              ?><div class="input-group">
                   <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>[]" value="<?php if (isset($values_r[0])) { print $values_r[0]; } ?>">
                   <div class="input-group-btn"><button type="button" class="btn btn-default" onclick="add_field_to('<?php print $attribute; ?>')">+</i></button></div>
               </div>
             <?php
-              if (isset($values_r['count']) and $values_r['count'] > 0) {
-                $remaining_values = array_slice($values_r, 2);
-                print "<script>";
-                foreach($remaining_values as $this_value) { print "add_field_to('$attribute','$this_value');"; }
-                print "</script>";
-              }
+               if (isset($values_r['count']) and $values_r['count'] > 0) {
+                 $remaining_values = array_slice($values_r, 2);
+                 print "<script>";
+                 foreach($remaining_values as $this_value) { print "add_field_to('$attribute','$this_value');"; }
+                 print "</script>";
+               }
+             }
+             elseif ($inputtype == "binary") {
+               $button_text="Browse";
+               $file_button_action="disabled";
+               $description="Select a file to upload";
+               $mimetype="";
+
+               if (isset($values_r[0])) {
+                 $this_file_info = new finfo(FILEINFO_MIME_TYPE);
+                 $mimetype = $this_file_info->buffer($values_r[0]);
+                 if (strlen($mimetype) > 23) { $mimetype = substr($mimetype,0,19) . "..."; }
+                 $description="Download $mimetype file (" . human_readable_filesize(strlen($values_r[0])) . ")";
+                 $button_text="Replace file";
+                 if ($resource_identifier != "") {
+                   $this_url="//${_SERVER['HTTP_HOST']}${THIS_MODULE_PATH}/download.php?resource_identifier=${resource_identifier}&attribute=${attribute}";
+                   $file_button_action="onclick=\"window.open('$this_url','_blank');\"";
+                 }
+               }
+               if ($mimetype == "image/jpeg") {
+                 $this_image = base64_encode($values_r[0]);
+                 print "<img class='img-thumbnail' src='data:image/jpeg;base64,$this_image'>";
+                 $description="";
+               }
+               else {
+               ?>
+                 <button type="button" <?php print $file_button_action; ?> class="btn btn-default" id="<?php print $attribute; ?>-file-info"><?php print $description; ?></button>
+               <?php } ?>
+               <label class="btn btn-default">
+                 <?php print $button_text; ?><input <?php if (isset($tabindex)) { ?>tabindex="<?php print $tabindex; ?>" <?php } ?>type="file" style="display:none" onchange="$('#<?php print $attribute; ?>-file-info').text(this.files[0].name)" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>">
+               </label>
+            <?php
+            }
+            else { ?>
+              <input <?php if (isset($tabindex)) { ?>tabindex="<?php print $tabindex; ?>" <?php } ?>type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($values_r[0])) { print $values_r[0]; } ?>" <?php if ($onkeyup != "") { print "onkeyup=\"$onkeyup\""; } ?>>
+            <?php
             }
             ?>
        </div>
 
      </div>
 
-<?php
+  <?php
+}
+
+
+######################################################
+
+function human_readable_filesize($bytes) {
+  for($i = 0; ($bytes / 1024) > 0.9; $i++, $bytes /= 1024) {}
+  return round($bytes, [0,0,1,2,2,3,3,4,4][$i]).['B','kB','MB','GB','TB','PB','EB','ZB','YB'][$i];
 }
 
 

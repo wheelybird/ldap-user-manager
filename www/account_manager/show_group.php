@@ -40,6 +40,8 @@ if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$USERNAME_REGEX/",$grou
 ######################################################################################
 
 $initialise_group = FALSE;
+$create_group_message = "Add members to create the new group";
+
 $attribute_map = $LDAP['default_group_attribute_map'];
 if (isset($LDAP['group_additional_attributes'])) {
   $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['group_additional_attributes']);
@@ -51,7 +53,7 @@ $this_group = array();
 if (isset($_POST['new_group'])) {
   $new_group = TRUE;
   $current_members = array();
-  $full_dn = "Add members to create the new group";
+  $full_dn = $create_group_message;
   $has_been = "";
 }
 elseif (isset($_POST['initialise_group'])) {
@@ -76,6 +78,17 @@ foreach ($attribute_map as $attribute => $attr_r) {
   }
   else {
     $$attribute = array();
+  }
+
+  if (isset($_FILES[$attribute]['size']) and $_FILES[$attribute]['size'] > 0) {
+
+    $this_attribute = array();
+    $this_attribute['count'] = 1;
+    $this_attribute[0] = file_get_contents($_FILES[$attribute]['tmp_name']);
+    $$attribute = $this_attribute;
+    $to_update[$attribute] = $this_attribute;
+    unset($to_update[$attribute]['count']);
+
   }
 
   if (isset($_POST[$attribute])) {
@@ -305,7 +318,7 @@ ldap_close($ldap_connection);
         <div class="panel-heading clearfix">
           <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $group_cn; ?><?php if ($group_cn == $LDAP["admins_group"]) { print " <sup>(admin group)</sup>" ; } ?></h3>
           <button class="btn btn-warning pull-right" onclick="show_delete_group_button();" <?php if ($group_cn == $LDAP["admins_group"]) { print "disabled"; } ?>>Delete group</button>
-          <form action="<?php print "${THIS_MODULE_PATH}"; ?>/groups.php" method="post"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
+          <form action="<?php print "${THIS_MODULE_PATH}"; ?>/groups.php" method="post" enctype="multipart/form-data"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
         </div>
 
         <ul class="list-group">
@@ -404,9 +417,9 @@ if (count($attribute_map) > 0) { ?>
               foreach ($attribute_map as $attribute => $attr_r) {
                 $label = $attr_r['label'];
                 if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
-                if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
                 print "<div class='row'>";
-                render_attribute_fields($attribute,$label,$these_values,"",$multiple,$tabindex);
+                $dl_identifider = ($full_dn != $create_group_message) ? $full_dn : "";
+                render_attribute_fields($attribute,$label,$these_values,$dl_identifider,"",$attr_r['inputtype'],$tabindex);
                 print "</div>";
                 $tabindex++;
               }

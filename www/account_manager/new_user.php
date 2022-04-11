@@ -13,26 +13,27 @@ if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
 }
 
 if ( isset($_POST['setup_admin_account']) ) {
- $admin_setup = TRUE;
 
- validate_setup_cookie();
- set_page_access("setup");
+  $admin_setup = TRUE;
 
- $completed_action="${SERVER_PATH}log_in";
- $page_title="New administrator account";
+  validate_setup_cookie();
+  set_page_access("setup");
 
- render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
+  $completed_action="${SERVER_PATH}log_in";
+  $page_title="New administrator account";
+
+  render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
 
 }
 else {
- set_page_access("admin");
+  set_page_access("admin");
 
- $completed_action="${THIS_MODULE_PATH}/";
- $page_title="New account";
- $admin_setup = FALSE;
+  $completed_action="${THIS_MODULE_PATH}/";
+  $page_title="New account";
+  $admin_setup = FALSE;
 
- render_header("$ORGANISATION_NAME account manager");
- render_submenu();
+  render_header("$ORGANISATION_NAME account manager");
+  render_submenu();
 }
 
 $invalid_password = FALSE;
@@ -48,6 +49,17 @@ $account_attribute = $LDAP['account_attribute'];
 $new_account_r = array();
 
 foreach ($attribute_map as $attribute => $attr_r) {
+
+  if (isset($_FILES[$attribute]['size']) and $_FILES[$attribute]['size'] > 0) {
+
+    $this_attribute = array();
+    $this_attribute['count'] = 1;
+    $this_attribute[0] = file_get_contents($_FILES[$attribute]['tmp_name']);
+    $$attribute = $this_attribute;
+    $new_account_r[$attribute] = $this_attribute;
+    unset($new_account_r[$attribute]['count']);
+
+  }
 
   if (isset($_POST[$attribute])) {
 
@@ -323,7 +335,7 @@ $tabindex=1;
    <div class="panel-heading text-center"><?php print $page_title; ?></div>
    <div class="panel-body text-center">
 
-    <form class="form-horizontal" action="" method="post">
+    <form class="form-horizontal" action="" enctype="multipart/form-data" method="post">
 
      <?php if ($admin_setup == TRUE) { ?><input type="hidden" name="setup_admin_account" value="true"><?php } ?>
      <input type="hidden" name="create_account">
@@ -335,8 +347,8 @@ $tabindex=1;
          if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
          if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
          if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
-         if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
-         render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple,$tabindex);
+         if (isset($attr_r['inputtype'])) { $inputtype = $attr_r['inputtype']; } else { $inputtype = ""; }
+         render_attribute_fields($attribute,$label,$these_values,"",$onkeyup,$inputtype,$tabindex);
          $tabindex++;
        }
      ?>

@@ -344,11 +344,13 @@ LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES=mailAlias+:Email aliases"
 
 ### Binary attributes
 
-If you have an attribute that stores the contents of a binary file (for example, a JPEG) then you can add a `^` to the end of the attribute name.  This will modify the form so that this attribute has an upload button.  If a file has already been uploaded then a link to view or download the file will be shown.  For example, to allow you to set a user's photo:
+If you have an attribute that stores the contents of a binary file (for example, a JPEG) then you can add a `^` to the end of the attribute name.  This will modify the form so that this attribute has an upload button.  If a JPEG has already been uploaded then it will display the image.  Otherwise the mime-type is displayed and there's a link for downloading the file.  For example, to allow you to set a user's photo:
 
 ```
 LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES=jpegPhoto^:Photograph"
 ```
+The maximum filesize you can upload is 2MB.
+
 
 ### Caveat
 

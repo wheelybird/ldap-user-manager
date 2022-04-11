@@ -50,6 +50,7 @@ $ldap_search = ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_que
 
 
 #########################
+
 if ($ldap_search) {
 
  $user = ldap_get_entries($ldap_connection, $ldap_search);
@@ -63,6 +64,17 @@ if ($ldap_search) {
     }
     else {
       $$attribute = array();
+    }
+
+    if (isset($_FILES[$attribute]['size']) and $_FILES[$attribute]['size'] > 0) {
+
+      $this_attribute = array();
+      $this_attribute['count'] = 1;
+      $this_attribute[0] = file_get_contents($_FILES[$attribute]['tmp_name']);
+      $$attribute = $this_attribute;
+      $to_update[$attribute] = $this_attribute;
+      unset($to_update[$attribute]['count']);
+
     }
 
     if (isset($_POST['update_account']) and isset($_POST[$attribute])) {
@@ -441,7 +453,7 @@ if ($ldap_search) {
       <li class="list-group-item"><?php print $dn; ?></li>
     </li>
     <div class="panel-body">
-     <form class="form-horizontal" action="" method="post">
+     <form class="form-horizontal" action="" enctype="multipart/form-data" method="post">
 
       <input type="hidden" name="update_account">
       <input type="hidden" id="pass_score" value="0" name="pass_score">
@@ -451,10 +463,10 @@ if ($ldap_search) {
         foreach ($attribute_map as $attribute => $attr_r) {
           $label = $attr_r['label'];
           if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
+          if (isset($attr_r['inputtype'])) { $inputtype = $attr_r['inputtype']; } else { $inputtype = ""; }
           if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
           if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
-          if (isset($attr_r['multiple'])) { $multiple = $attr_r['multiple']; } else { $multiple = FALSE; }
-          render_attribute_fields($attribute,$label,$these_values,$onkeyup,$multiple);
+          render_attribute_fields($attribute,$label,$these_values,$dn,$onkeyup,$inputtype);
         }
       ?>
 
