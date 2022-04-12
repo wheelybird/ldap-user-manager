@@ -113,7 +113,6 @@ function validate_passkey_cookie() {
 
   $this_time=time();
   $VALIDATED = FALSE;
-  unset($USER_ID);
   $IS_ADMIN = FALSE;
 
   if (isset($_COOKIE['orf_cookie'])) {
@@ -571,6 +570,29 @@ EoRenderEmailJS;
 
 ######################################################
 
+function render_js_homedir_generator($username_field_id,$homedir_field_id) {
+
+  print <<<EoRenderHomedirJS
+<script>
+
+ var auto_homedir_update = true;
+
+ function update_homedir() {
+
+  if ( auto_homedir_update == true ) {
+    var username = document.getElementById('$username_field_id').value;
+    document.getElementById('$homedir_field_id').value = "/home/" + username;
+  }
+
+ }
+</script>
+
+EoRenderHomedirJS;
+
+}
+
+######################################################
+
 function render_dynamic_field_js() {
 
 ?>
@@ -637,7 +659,8 @@ function render_attribute_fields($attribute,$label,$values_r,$resource_identifie
               </div>
             <?php
                if (isset($values_r['count']) and $values_r['count'] > 0) {
-                 $remaining_values = array_slice($values_r, 2);
+                 unset($values_r['count']);
+                 $remaining_values = array_slice($values_r, 1);
                  print "<script>";
                  foreach($remaining_values as $this_value) { print "add_field_to('$attribute','$this_value');"; }
                  print "</script>";

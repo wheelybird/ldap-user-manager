@@ -2,31 +2,53 @@
 
  $log_prefix="";
 
+ # User account defaults
+
+ $DEFAULT_USER_GROUP = (getenv('DEFAULT_USER_GROUP') ? getenv('DEFAULT_USER_GROUP') : 'everybody');
+ $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_USER_SHELL') : '/bin/bash');
+ $ENFORCE_SAFE_SYSTEM_NAMES = ((strcasecmp(getenv('ENFORCE_SAFE_SYSTEM_NAMES'),'FALSE') == 0) ? FALSE : TRUE);
+ $USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
+ $USERNAME_REGEX  = (getenv('USERNAME_REGEX')  ? getenv('USERNAME_REGEX') : '^[a-z][a-zA-Z0-9\._-]{3,32}$');   #We use the username regex for groups too.
+
+ if (getenv('PASSWORD_HASH')) { $PASSWORD_HASH = strtoupper(getenv('PASSWORD_HASH')); }
+ $ACCEPT_WEAK_PASSWORDS = ((strcasecmp(getenv('ACCEPT_WEAK_PASSWORDS'),'TRUE') == 0) ? TRUE : FALSE);
+
+ $min_uid = 2000;
+ $min_gid = 2000;
+
+
  #Default attributes and objectclasses
 
  $LDAP['account_attribute'] = (getenv('LDAP_ACCOUNT_ATTRIBUTE') ? getenv('LDAP_ACCOUNT_ATTRIBUTE') : 'uid');
  $LDAP['account_objectclasses'] = array( 'person', 'inetOrgPerson', 'posixAccount' );
- $LDAP['default_attribute_map'] = array( "givenname" => array("label" => "First name",      "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value);"),
-                                         "sn"        => array("label" => "Last name",       "onkeyup" => "update_username(); update_email(); update_cn(); check_email_validity(document.getElementById('mail').value);"),
-                                         "uid"       => array("label" => "System username", "onkeyup" => "check_entity_name_validity(document.getElementById('uid').value,'uid_div'); update_email(); check_email_validity(document.getElementById('mail').value);"),
+ $LDAP['default_attribute_map'] = array( "givenname" => array("label" => "First name",      "onkeyup" => "update_username(); update_email(); update_cn(); update_homedir(); check_email_validity(document.getElementById('mail').value);"),
+                                         "sn"        => array("label" => "Last name",       "onkeyup" => "update_username(); update_email(); update_cn(); update_homedir(); check_email_validity(document.getElementById('mail').value);"),
+                                         "uid"       => array("label" => "System username", "onkeyup" => "check_entity_name_validity(document.getElementById('uid').value,'uid_div'); update_email(); update_homedir(); check_email_validity(document.getElementById('mail').value);"),
                                          "cn"        => array("label" => "Common name",     "onkeyup" => "auto_cn_update = false;"),
                                          "mail"      => array("label" => "Email",           "onkeyup" => "auto_email_update = false; check_email_validity(document.getElementById('mail').value);")
                                         );
 
  $LDAP['group_attribute'] = (getenv('LDAP_GROUP_ATTRIBUTE') ? getenv('LDAP_GROUP_ATTRIBUTE') : 'cn');
  $LDAP['group_objectclasses'] = array( 'top', 'posixGroup' ); #groupOfUniqueNames is added automatically if rfc2307bis is available.
- $LDAP['default_group_attribute_map'] = array(  "gidnumber" => array("label" => "Group ID number")
-                                             );
 
- $SIMPLE_INTERFACE = ((strcasecmp(getenv('SIMPLE_INTERFACE'),'TRUE') == 0) ? TRUE : FALSE);
+ $LDAP['default_group_attribute_map'] = array( "description" => array("label" => "Description"));
 
- if ($SIMPLE_INTERFACE == TRUE) {
+ $SHOW_POSIX_ATTRIBUTES = ((strcasecmp(getenv('SHOW_POSIX_ATTRIBUTES'),'TRUE') == 0) ? TRUE : FALSE);
+
+ if ($SHOW_POSIX_ATTRIBUTES != TRUE) {
    if ($LDAP['account_attribute'] == "uid") {
      unset($LDAP['default_attribute_map']['cn']);
    }
    else {
      unset($LDAP['default_attribute_map']['uid']);
    }
+ }
+ else {
+   $LDAP['default_attribute_map']["uidnumber"]  = array("label" => "UID");
+   $LDAP['default_attribute_map']["gidnumber"]  = array("label" => "GID");
+   $LDAP['default_attribute_map']["homedirectory"]  = array("label" => "Home directory", "onkeyup" => "auto_homedir_update = false;");
+   $LDAP['default_attribute_map']["loginshell"]  = array("label" => "Shell", "default" => $DEFAULT_USER_SHELL);
+   $LDAP['default_group_attribute_map']["gidnumber"] = array("label" => "Group ID number");
  }
 
 
@@ -84,21 +106,6 @@
  $NO_HTTPS = ((strcasecmp(getenv('NO_HTTPS'),'TRUE') == 0) ? TRUE : FALSE);
 
  $REMOTE_HTTP_HEADERS_LOGIN = ((strcasecmp(getenv('REMOTE_HTTP_HEADERS_LOGIN'),'TRUE') == 0) ? TRUE : FALSE);
-
-
- # User account defaults
-
- $DEFAULT_USER_GROUP = (getenv('DEFAULT_USER_GROUP') ? getenv('DEFAULT_USER_GROUP') : 'everybody');
- $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_USER_SHELL') : '/bin/bash');
- $ENFORCE_SAFE_SYSTEM_NAMES = ((strcasecmp(getenv('ENFORCE_SAFE_SYSTEM_NAMES'),'FALSE') == 0) ? FALSE : TRUE);
- $USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : '{first_name}-{last_name}');
- $USERNAME_REGEX  = (getenv('USERNAME_REGEX')  ? getenv('USERNAME_REGEX') : '^[a-z][a-zA-Z0-9\._-]{3,32}$');   #We use the username regex for groups too.
-
- if (getenv('PASSWORD_HASH')) { $PASSWORD_HASH = strtoupper(getenv('PASSWORD_HASH')); }
- $ACCEPT_WEAK_PASSWORDS = ((strcasecmp(getenv('ACCEPT_WEAK_PASSWORDS'),'TRUE') == 0) ? TRUE : FALSE);
-
- $min_uid = 2000;
- $min_gid = 2000;
 
  # Sending email
 

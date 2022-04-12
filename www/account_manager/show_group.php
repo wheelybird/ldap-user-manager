@@ -40,7 +40,13 @@ if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$USERNAME_REGEX/",$grou
 ######################################################################################
 
 $initialise_group = FALSE;
+$new_group = FALSE;
+$group_exists = FALSE;
+
 $create_group_message = "Add members to create the new group";
+$current_members = array();
+$full_dn = $create_group_message;
+$has_been = "";
 
 $attribute_map = $LDAP['default_group_attribute_map'];
 if (isset($LDAP['group_additional_attributes'])) {
@@ -52,23 +58,22 @@ $this_group = array();
 
 if (isset($_POST['new_group'])) {
   $new_group = TRUE;
-  $current_members = array();
-  $full_dn = $create_group_message;
-  $has_been = "";
 }
 elseif (isset($_POST['initialise_group'])) {
-  $new_group = FALSE;
   $initialise_group = TRUE;
-  $current_members = array();
   $full_dn = "${LDAP['group_attribute']}=$group_cn,${LDAP['group_dn']}";
   $has_been = "created";
 }
 else {
-  $new_group = FALSE;
-  $current_members = ldap_get_group_members($ldap_connection,$group_cn);
   $this_group = ldap_get_group_entry($ldap_connection,$group_cn);
-  $full_dn = $this_group[0]['dn'];
-  $has_been = "updated";
+  if ($this_group) {
+    $current_members = ldap_get_group_members($ldap_connection,$group_cn);
+    $full_dn = $this_group[0]['dn'];
+    $has_been = "updated";
+  }
+  else {
+    $new_group = TRUE;
+  }
 }
 
 foreach ($attribute_map as $attribute => $attr_r) {
@@ -96,12 +101,12 @@ foreach ($attribute_map as $attribute => $attr_r) {
     $this_attribute = array();
 
     if (is_array($_POST[$attribute])) {
-      $this_attribute['count'] = count($_POST[$attribute]);
       foreach($_POST[$attribute] as $key => $value) {
-        $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if ($value != "") { $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS); }
       }
+      $this_attribute['count'] = count($this_attribute);
     }
-    else {
+    elseif ($_POST[$attribute] != "") {
       $this_attribute['count'] = 1;
       $this_attribute[0] = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     }
@@ -155,52 +160,77 @@ if (isset($_POST["update_members"])) {
   $members_to_add = array_diff($updated_membership,$current_members);
 
   if ($initialise_group == TRUE) {
+
     $initial_member = array_shift($members_to_add);
     $group_add = ldap_new_group($ldap_connection,$group_cn,$initial_member,$to_update);
-  }
-  elseif(count($to_update) > 0) {
-
-    if (isset($this_group[0]['objectclass'])) {
-      $existing_objectclasses = $this_group[0]['objectclass'];
-      unset($existing_objectclasses['count']);
-      if ($existing_objectclasses != $LDAP['group_objectclasses']) { $to_update['objectclass'] = $LDAP['group_objectclasses']; }
-    }
-
-    $updated_attr = ldap_update_group_attributes($ldap_connection,$group_cn,$to_update);
-
-    if ($updated_attr) {
-      render_alert_banner("The group attributes have been updated.");
+    if (!$group_add) {
+      render_alert_banner("There was a problem creating the group.  See the logs for more information.","danger",10000);
+      $group_exists = FALSE;
+      $new_group = TRUE;
     }
     else {
-      render_alert_banner("There was a problem updating the group attributes.  See the logs for more information.","danger",15000);
+      $group_exists = TRUE;
+      $new_group = FALSE;
     }
+
   }
 
-  foreach ($members_to_add as $this_member) {
-    ldap_add_member_to_group($ldap_connection,$group_cn,$this_member);
-  }
+  if ($group_exists == TRUE) {
 
-  foreach ($members_to_del as $this_member) {
-    ldap_delete_member_from_group($ldap_connection,$group_cn,$this_member);
-  }
+    if ($initialise_group != TRUE and count($to_update) > 0) {
 
-  $non_members = array_diff($all_people,$updated_membership);
-  $group_members = $updated_membership;
+      if (isset($this_group[0]['objectclass'])) {
+        $existing_objectclasses = $this_group[0]['objectclass'];
+        unset($existing_objectclasses['count']);
+        if ($existing_objectclasses != $LDAP['group_objectclasses']) { $to_update['objectclass'] = $LDAP['group_objectclasses']; }
+      }
 
-  $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
-  if ($rfc2307bis_available == TRUE and count($group_members) == 0) {
+      $updated_attr = ldap_update_group_attributes($ldap_connection,$group_cn,$to_update);
 
-    $group_members = ldap_get_group_members($ldap_connection,$group_cn);
-    $non_members = array_diff($all_people,$group_members);
-    render_alert_banner("Groups can't be empty, so the final member hasn't been removed.  You could try deleting the group","danger",15000);
+      if ($updated_attr) {
+        render_alert_banner("The group attributes have been updated.");
+      }
+      else {
+        render_alert_banner("There was a problem updating the group attributes.  See the logs for more information.","danger",15000);
+      }
+
+    }
+
+    foreach ($members_to_add as $this_member) {
+      ldap_add_member_to_group($ldap_connection,$group_cn,$this_member);
+    }
+
+    foreach ($members_to_del as $this_member) {
+      ldap_delete_member_from_group($ldap_connection,$group_cn,$this_member);
+    }
+
+    $non_members = array_diff($all_people,$updated_membership);
+    $group_members = $updated_membership;
+
+    $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
+    if ($rfc2307bis_available == TRUE and count($group_members) == 0) {
+
+      $group_members = ldap_get_group_members($ldap_connection,$group_cn);
+      $non_members = array_diff($all_people,$group_members);
+      render_alert_banner("Groups can't be empty, so the final member hasn't been removed.  You could try deleting the group","danger",15000);
+    }
+    else {
+      render_alert_banner("The group has been ${has_been}.");
+    }
+
   }
   else {
-    render_alert_banner("The group has been ${has_been}.");
+
+    $group_members = array();
+    $non_members = $all_people;
+
   }
 
 }
 else {
+
   $group_members = $current_members;
+
 }
 
 ldap_close($ldap_connection);
@@ -401,10 +431,6 @@ ldap_close($ldap_connection);
       </div>
 <?php
 
-if ($SIMPLE_INTERFACE == TRUE) {
-  unset($attribute_map['gidnumber']);
-}
-
 if (count($attribute_map) > 0) { ?>
       <div class="panel panel-default">
         <div class="panel-heading clearfix">
@@ -419,7 +445,8 @@ if (count($attribute_map) > 0) { ?>
                 if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
                 print "<div class='row'>";
                 $dl_identifider = ($full_dn != $create_group_message) ? $full_dn : "";
-                render_attribute_fields($attribute,$label,$these_values,$dl_identifider,"",$attr_r['inputtype'],$tabindex);
+                if (isset($attr_r['inputtype'])) { $inputtype = $attr_r['inputtype']; } else { $inputtype=""; }
+                render_attribute_fields($attribute,$label,$these_values,$dl_identifider,"",$inputtype,$tabindex);
                 print "</div>";
                 $tabindex++;
               }

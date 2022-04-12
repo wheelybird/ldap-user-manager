@@ -8,6 +8,9 @@ include_once "module_functions.inc.php";
 
 $attribute_map = $LDAP['default_attribute_map'];
 if (isset($LDAP['account_additional_attributes'])) { $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['account_additional_attributes']); }
+unset($attribute_map['uidnumber']);
+unset($attribute_map['gidnumber']);
+
 if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
   $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => "Account UID")));
 }
@@ -65,18 +68,20 @@ foreach ($attribute_map as $attribute => $attr_r) {
 
     $this_attribute = array();
 
-    if (is_array($_POST[$attribute])) {
-      $this_attribute['count'] = count($_POST[$attribute]);
+    if (is_array($_POST[$attribute]) and count($_POST[$attribute]) > 0) {
       foreach($_POST[$attribute] as $key => $value) {
-        $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        if ($value != "") { $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS); }
+      }
+      if (count($this_attribute) > 0) {
+        $this_attribute['count'] = count($this_attribute);
+        $$attribute = $this_attribute;
       }
     }
-    else {
+    elseif ($_POST[$attribute] != "") {
       $this_attribute['count'] = 1;
       $this_attribute[0] = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+      $$attribute = $this_attribute;
     }
-
-    $$attribute = $this_attribute;
 
   }
 
@@ -119,7 +124,8 @@ if (isset($_GET['account_request'])) {
 
 }
 
-if (isset($_POST['create_account'])) {
+
+if (isset($_GET['account_request']) or isset($_POST['create_account'])) {
 
   if (!isset($uid[0])) {
     $uid[0] = generate_username($givenname[0],$sn[0]);
@@ -137,6 +143,11 @@ if (isset($_POST['create_account'])) {
     $new_account_r['cn'] = $cn;
     unset($new_account_r['cn']['count']);
   }
+
+}
+
+
+if (isset($_POST['create_account'])) {
 
  $password  = $_POST['password'];
  $new_account_r['password'][0] = $password;
@@ -265,6 +276,7 @@ render_js_username_check();
 render_js_username_generator('givenname','sn','uid','uid_div');
 render_js_cn_generator('givenname','sn','cn','cn_div');
 render_js_email_generator('uid','mail');
+render_js_homedir_generator('uid','homedirectory');
 
 $tabindex=1;
 

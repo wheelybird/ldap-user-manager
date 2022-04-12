@@ -112,7 +112,7 @@ For example, if you're using Docker Swarm and you've set the LDAP bind password 
    
 * `SITE_NAME` (default: *`ORGANISATION_NAME` user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".
    
-* `SIMPLE_INTERFACE` (default: *FALSE*):  If set to `TRUE` this will hide most **posixAccount** and **posixGroup** attributes from the account and group forms.  This is useful if you won't use the LDAP accounts for server accounts.   The Posix values are still set in the background using the default values. Enabling this won't prevent any `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` or `LDAP_GROUP_ADDITIONAL_ATTRIBUTES` from being displayed.
+* `SHOW_POSIX_ATTRIBUTES` (default: *FALSE*):  If set to `TRUE` this show extra attributes for **posixAccount** and **posixGroup** in the account and group forms.  Leave this set to `FALSE` if you don't use LDAP accounts to log into servers etc., as it makes the interface much simpler.   The Posix values are still set in the background using the default values.  This setting doesn't hide any Posix attributes set via `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` or `LDAP_GROUP_ADDITIONAL_ATTRIBUTES`.
 
 #### LDAP settings
 

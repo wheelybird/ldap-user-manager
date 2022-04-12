@@ -18,10 +18,6 @@ $to_update = array();
 
 if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FALSE; }
 
-if ($SIMPLE_INTERFACE == FALSE) {
-  $LDAP['default_attribute_map']["uidnumber"]  = array("label" => "UID");
-  $LDAP['default_attribute_map']["gidnumber"]  = array("label" => "GID");
-}
 $LDAP['default_attribute_map']["mail"]  = array("label" => "Email", "onkeyup" => "check_if_we_should_enable_sending_email();");
 
 $attribute_map = $LDAP['default_attribute_map'];
@@ -82,12 +78,12 @@ if ($ldap_search) {
       $this_attribute = array();
 
       if (is_array($_POST[$attribute])) {
-        $this_attribute['count'] = count($_POST[$attribute]);
         foreach($_POST[$attribute] as $key => $value) {
-          $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+          if ($value != "") { $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS); }
         }
+        $this_attribute['count'] = count($this_attribute);
       }
-      else {
+      elseif ($_POST[$attribute] != "") {
         $this_attribute['count'] = 1;
         $this_attribute[0] = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
       }

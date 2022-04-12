@@ -58,7 +58,7 @@ else
   ########################
   #If there aren't any SSL certs then create a CA and then CA-signed certificate
 
-  if [ ! -f "${ssl_dir}/{$SERVER_CERT_FILENAME:-server.crt}" ] && [ ! -f "${ssl_dir}/{$SERVER_KEY_FILENAME:-server.key}" ]; then
+  if [ ! -f "${ssl_dir}/${SERVER_CERT_FILENAME:-server.crt}" ] && [ ! -f "${ssl_dir}/${SERVER_KEY_FILENAME:-server.key}" ]; then
 
     mkdir -p $ssl_dir
     confout="${ssl_dir}/conf"
@@ -124,7 +124,7 @@ EoCertConf
   ########################
   #Create Apache config
 
-  if [ -f "${ssl_dir}/{$CA_CERT_FILENAME}" ]; then ssl_chain="SSLCertificateChainFile ${ssl_dir}/{$CA_CERT_FILENAME}"; fi
+  if [ -f "${ssl_dir}/${CA_CERT_FILENAME}" ]; then ssl_chain="SSLCertificateChainFile ${ssl_dir}/${CA_CERT_FILENAME}"; fi
 
   echo  > /etc/apache2/sites-enabled/lum.conf
   echo  > /etc/apache2/ports.conf
@@ -163,8 +163,8 @@ EoHTTPrd
  </Directory>
 
  SSLEngine On
- SSLCertificateFile ${ssl_dir}/{$SERVER_CERT_FILENAME:-server.crt}
- SSLCertificateKeyFile ${ssl_dir}/{$SERVER_KEY_FILENAME:-server.key}
+ SSLCertificateFile ${ssl_dir}/${SERVER_CERT_FILENAME:-server.crt}
+ SSLCertificateKeyFile ${ssl_dir}/${SERVER_KEY_FILENAME:-server.key}
  $ssl_chain
 
 </VirtualHost>

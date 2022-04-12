@@ -448,7 +448,12 @@ function ldap_get_group_entry($ldap_connection,$group_name) {
   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
-  return $result;
+  if ($result['count'] > 0) {
+    return $result;
+  }
+  else {
+    return FALSE;
+  }
 
  }
 
@@ -468,7 +473,7 @@ function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=N
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array($LDAP['group_membership_attribute']));
 
  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
- $result_count = $result[0]['count'];
+ if ($result) { $result_count = $result['count']; } else { $result_count = 0; }
 
  $records = array();
 
@@ -605,7 +610,7 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="",$extra_a
 
      if (! $add_group ) {
        $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
-       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG add_group array: ". print_r($new_group_array,true),0); }
+       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG add_group array: ". strip_tags(print_r($new_group_array,true)),0); }
        error_log($this_error,0);
      }
      else {
@@ -622,8 +627,8 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="",$extra_a
              error_log("$log_prefix Unable to update cn=lastGID to $new_gid - this could cause groups to share the same GID.",0);
            }
          }
-         return TRUE;
        }
+       return TRUE;
      }
 
    }
@@ -824,9 +829,8 @@ function ldap_new_account($ldap_connection,$account_r) {
        }
      }
 
-
      if (empty($account_attributes['loginshell']))    { $account_attributes['loginshell']    = $DEFAULT_USER_SHELL; }
-     if (empty($account_attributes['homedirectory'])) { $account_attributes['homedirectory'] = "/home/${account_identifier}"; }
+     if (empty($account_attributes['homedirectory'])) { $account_attributes['homedirectory'] = "/home/" . $account_r['uid'][0]; }
 
      $add_account = @ ldap_add($ldap_connection,
                                "${LDAP['account_attribute']}=$account_identifier,${LDAP['user_dn']}",
