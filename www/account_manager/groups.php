@@ -14,36 +14,17 @@ $ldap_connection = open_ldap_connection();
 
 if (isset($_POST['delete_group'])) {
 
- ?>
- <script>
-    window.setTimeout(function() {
-                                  $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                 }, 4000);
- </script>
- <?php
-
  $this_group = $_POST['delete_group'];
  $this_group = urldecode($this_group);
 
  $del_group = ldap_delete_group($ldap_connection,$this_group);
 
  if ($del_group) {
-  ?>
-  <div class="alert alert-success" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <p class="text-center">Group <strong><?php print $this_group; ?> was deleted.</p>
-  </div>
-  <?php
+   render_alert_banner("Group <strong>$this_group</strong> was deleted.");
  }
  else {
-  ?>
-  <div class="alert alert-danger" role="alert">
-   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-   <p class="text-center">Group <strong><?php print $this_group; ?></strong> wasn't deleted.</p>
-  </div>
-  <?php
+   render_alert_banner("Group <strong>$this_group</strong> wasn't deleted.  See the logs for more information.","danger",15000);
  }
-
 
 }
 
@@ -72,18 +53,28 @@ render_js_username_check();
  <div class="form-inline" id="new_group_div">
   <form action="<?php print "${THIS_MODULE_PATH}"; ?>/show_group.php" method="post">
    <input type="hidden" name="new_group">
-   <span class="badge badge-secondary" style="font-size:1.9rem;"><?php print count($groups);?> group<?php if (count($groups) != 1) { print "s"; }?></span>  &nbsp;  <button id="show_new_group" class="form-control btn btn-default" type="button" onclick="show_new_group_form();">New group</button>
+   <button type="button" class="btn btn-light"><?php print count($groups);?> group<?php if (count($groups) != 1) { print "s"; }?></button>  &nbsp;  <button id="show_new_group" class="form-control btn btn-default" type="button" onclick="show_new_group_form();">New group</button>
    <input type="text" class="form-control invisible" name="group_name" id="group_name" placeholder="Group name" onkeyup="check_entity_name_validity(document.getElementById('group_name').value,'new_group_div');"><button id="add_group" class="form-control btn btn-primary btn-sm invisible" type="submit">Add</button>
   </form>
  </div>
-
+ <input class="form-control" id="search_input" type="text" placeholder="Search..">
  <table class="table table-striped">
   <thead>
    <tr>
      <th>Group name</th>
    </tr>
   </thead>
- <tbody>
+ <tbody id="grouplist">
+   <script>
+    $(document).ready(function(){
+      $("#search_input").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#grouplist tr").filter(function() {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+      });
+    });
+  </script>
 <?php
 foreach ($groups as $group){
  print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_group.php?group_name=" . urlencode($group) . "'>$group</a></td>\n </tr>\n";

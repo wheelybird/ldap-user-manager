@@ -24,7 +24,7 @@ function open_ldap_connection($ldap_bind=TRUE) {
 
   if ($tls_result != TRUE) {
 
-   error_log("$log_prefix Failed to start STARTTLS connection to ${LDAP['uri']}: " . ldap_error($ldap_connection),0);
+   if (!preg_match('/^ldap:\/\/127\.0\.0\.([0-9]+)(:[0-9]+)$/', $LDAP['uri'])) { error_log("$log_prefix Failed to start STARTTLS connection to ${LDAP['uri']}: " . ldap_error($ldap_connection),0); }
 
    if ($LDAP["require_starttls"] == TRUE) {
     print "<div style='position: fixed;bottom: 0;width: 100%;' class='alert alert-danger'>Fatal:  Couldn't create a secure connection to ${LDAP['uri']} and LDAP_REQUIRE_STARTTLS is TRUE.</div>";
@@ -320,7 +320,7 @@ function ldap_get_user_list($ldap_connection,$start=0,$entries=NULL,$sort="asc",
 
    $add_these = array();
    foreach($fields as $this_attr) {
-    if ($this_attr !== $sort_key) { $add_these[$this_attr] = $record[$this_attr][0]; }
+    if ($this_attr !== $sort_key and isset($record[$this_attr])) { $add_these[$this_attr] = $record[$this_attr][0]; }
    }
 
    $records[$record[$sort_key][0]] = $add_these;
@@ -438,18 +438,21 @@ function ldap_get_group_list($ldap_connection,$start=0,$entries=NULL,$sort="asc"
 ##################################
 
 
-function ldap_get_dn_of_group($ldap_connection,$group_name) {
+function ldap_get_group_entry($ldap_connection,$group_name) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
  if (isset($group_name)) {
 
   $ldap_search_query = "(${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
-  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query , array("dn"));
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
-  if (isset($result[0]['dn'])) {
-    return $result[0]['dn'];
+  if ($result['count'] > 0) {
+    return $result;
+  }
+  else {
+    return FALSE;
   }
 
  }
@@ -464,13 +467,13 @@ function ldap_get_group_members($ldap_connection,$group_name,$start=0,$entries=N
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  $ldap_search_query = "(${LDAP['group_attribute']}=". ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query, array($LDAP['group_membership_attribute']));
 
  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
- $result_count = $result[0]['count'];
+ if ($result) { $result_count = $result['count']; } else { $result_count = 0; }
 
  $records = array();
 
@@ -511,7 +514,7 @@ function ldap_is_group_member($ldap_connection,$group_name,$username) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  $ldap_search_query = "(${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ")";
  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
@@ -531,7 +534,7 @@ function ldap_is_group_member($ldap_connection,$group_name,$username) {
    }
  }
  else {
-   return FALSE;
+  return FALSE;
  }
 
 }
@@ -543,7 +546,7 @@ function ldap_user_group_membership($ldap_connection,$username) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  if ($LDAP['group_membership_uses_uid'] == FALSE) {
   $username = "${LDAP['account_attribute']}=$username,${LDAP['user_dn']}";
@@ -567,73 +570,111 @@ function ldap_user_group_membership($ldap_connection,$username) {
 
 ##################################
 
-function ldap_new_group($ldap_connection,$group_name,$initial_member="") {
+function ldap_new_group($ldap_connection,$group_name,$initial_member="",$extra_attributes=array()) {
 
  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+ $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
  if (isset($group_name)) {
 
-  $new_group = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
-  $initial_member = ldap_escape($initial_member, "", LDAP_ESCAPE_FILTER);
+   $new_group = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
+   $initial_member = ldap_escape($initial_member, "", LDAP_ESCAPE_FILTER);
+   $update_gid_store=FALSE;
 
-  $ldap_search_query = "(${LDAP['group_attribute']}=$new_group,${LDAP['group_dn']})";
-  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
-  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
+   $ldap_search_query = "(${LDAP['group_attribute']}=$new_group,${LDAP['group_dn']})";
+   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query);
+   $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
-  if ($result['count'] == 0) {
+   if ($result['count'] == 0) {
 
-   $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
-   $new_gid = $highest_gid + 1;
+     if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
 
-   if ($rfc2307bis_available == FALSE) { $objectclasses = array('top','posixGroup'); } else { $objectclasses = array('top','groupOfUniqueNames','posixGroup'); }
-   if ($LDAP['group_membership_uses_uid'] == FALSE and $initial_member != "") { $initial_member = "${LDAP['account_attribute']}=$initial_member,${LDAP['user_dn']}"; }
+     $new_group_array=array( 'objectClass' => $LDAP['group_objectclasses'],
+                             'cn' => $new_group,
+                             $LDAP['group_membership_attribute'] => $initial_member
+                           );
 
-   $new_group_array=array( 'objectClass' => $objectclasses,
-                           'cn' => $new_group,
-                           'gidNumber' => $new_gid,
-                           $LDAP['group_membership_attribute'] => $initial_member
-                         );
+     $new_group_array = array_merge($new_group_array,$extra_attributes);
 
-   $group_dn="cn=$new_group,${LDAP['group_dn']}";
+     if (!isset($new_group_array["gidnumber"][0]) or !is_numeric($new_group_array["gidnumber"][0])) {
+       $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
+       $new_gid = $highest_gid + 1;
+       $new_group_array["gidnumber"] = $new_gid;
+       $update_gid_store=TRUE;
+     }
 
-   $add_group = @ ldap_add($ldap_connection, $group_dn, $new_group_array);
+     $group_dn="cn=$new_group,${LDAP['group_dn']}";
 
-   if (! $add_group ) {
-    $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG add_group array: ". print_r($new_group_array,true),0); }
-    error_log($this_error,0);
-   }
-   else {
-    error_log("$log_prefix Added new group $group_name",0);
+     $add_group = @ ldap_add($ldap_connection, $group_dn, $new_group_array);
 
-    $this_gid = fetch_id_stored_in_ldap($ldap_connection,"gid");
-    if ($this_gid != FALSE) {
-     $update_gid = @ ldap_mod_replace($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", array( 'serialNumber' => $new_gid ));
-     if ($update_gid) {
-      error_log("$log_prefix Updated cn=lastGID with $new_gid",0);
+     if (! $add_group ) {
+       $this_error="$log_prefix LDAP: unable to add new group (${group_dn}): " . ldap_error($ldap_connection);
+       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG add_group array: ". strip_tags(print_r($new_group_array,true)),0); }
+       error_log($this_error,0);
      }
      else {
-      error_log("$log_prefix Unable to update cn=lastGID to $new_gid - this could cause groups to share the same GID.",0);
-     }
-    }
-    return TRUE;
-   }
+       error_log("$log_prefix Added new group $group_name",0);
 
-  }
-  else {
-   error_log("$log_prefix Create group; group $group_name already exists.",0);
-  }
+       if ($update_gid_store == TRUE) {
+         $this_gid = fetch_id_stored_in_ldap($ldap_connection,"gid");
+         if ($this_gid != FALSE) {
+           $update_gid = @ ldap_mod_replace($ldap_connection, "cn=lastGID,${LDAP['base_dn']}", array( 'serialNumber' => $new_gid ));
+           if ($update_gid) {
+             error_log("$log_prefix Updated cn=lastGID with $new_gid",0);
+           }
+           else {
+             error_log("$log_prefix Unable to update cn=lastGID to $new_gid - this could cause groups to share the same GID.",0);
+           }
+         }
+       }
+       return TRUE;
+     }
+
+   }
+   else {
+     error_log("$log_prefix Create group; group $group_name already exists.",0);
+   }
  }
  else {
-  error_log("$log_prefix Create group; group name wasn't set.",0);
+   error_log("$log_prefix Create group; group name wasn't set.",0);
  }
 
  return FALSE;
 
 }
 
+
+##################################
+
+function ldap_update_group_attributes($ldap_connection,$group_name,$extra_attributes) {
+
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
+
+ if (isset($group_name) and (count($extra_attributes) > 0)) {
+
+  $group_name = ldap_escape($group_name, "", LDAP_ESCAPE_FILTER);
+  $group_dn = "${LDAP['group_attribute']}=$group_name,${LDAP['group_dn']}";
+
+  $update_group = @ ldap_mod_replace($ldap_connection, $group_dn, $extra_attributes);
+
+  if (!$update_group ) {
+    $this_error="$log_prefix LDAP: unable to update group attributes for group (${group_dn}): " . ldap_error($ldap_connection);
+    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix DEBUG update group attributes array: ". print_r($extra_attributes,true),0); }
+    error_log($this_error,0);
+    return FALSE;
+  }
+  else {
+    error_log("$log_prefix Updated group attributes for $group_name",0);
+    return TRUE;
+  }
+ }
+ else {
+  error_log("$log_prefix Update group attributes; group name wasn't set.",0);
+  return FALSE;
+ }
+
+}
 
 ##################################
 
@@ -685,50 +726,56 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
 ##################################
 
-function ldap_complete_account_attribute_array() {
+function ldap_complete_attribute_array($default_attributes,$additional_attributes) {
 
- global $LDAP;
+  if (isset($additional_attributes)) {
 
- $attribute_r = $LDAP['default_attribute_map'];
- $additional_attributes_r = array();
+    $user_attribute_r = explode(",", $additional_attributes);
+    $to_merge = array();
 
- if (isset($LDAP['account_additional_attributes'])) {
+    foreach ($user_attribute_r as $this_attr) {
 
-  $user_attribute_r = explode(",", $LDAP['account_additional_attributes']);
+      $this_r = array();
+      $kv = explode(":", $this_attr);
+      $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+      $this_r['inputtype'] = "singleinput";
 
-  foreach ($user_attribute_r as $this_attr) {
+      if (substr($attr_name, -1) == '+') {
+        $this_r['inputtype'] = "multipleinput";
+        $attr_name = rtrim($attr_name, '+');
+      }
 
-    $this_r = array();
-    $kv = explode(":", $this_attr);
-    $attr_name = strtolower(filter_var($kv[0], FILTER_SANITIZE_STRING));
+      if (substr($attr_name, -1) == '^') {
+        $this_r['inputtype'] = "binary";
+        $attr_name = rtrim($attr_name, '^');
+      }
 
-    if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
+      if (preg_match('/^[a-zA-Z0-9\-]+$/', $attr_name) == 1) {
 
-     if (isset($kv[1]) and $kv[1] != "") {
-      $this_r['label'] = filter_var($kv[1], FILTER_SANITIZE_STRING);
-     }
-     else {
-      $this_r['label'] = $attr_name;
-     }
+        if (isset($kv[1]) and $kv[1] != "") {
+          $this_r['label'] = filter_var($kv[1], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        }
+        else {
+          $this_r['label'] = $attr_name;
+        }
 
-     if (isset($kv[2]) and $kv[2] != "") {
-      $this_r['default'] = filter_var($kv[2], FILTER_SANITIZE_STRING);
-     }
+        if (isset($kv[2]) and $kv[2] != "") {
+          $this_r['default'] = filter_var($kv[2], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        }
 
-     $additional_attributes_r[$attr_name] = $this_r;
+        $to_merge[$attr_name] = $this_r;
 
-   }
+      }
+    }
+
+    $attribute_r = array_merge($default_attributes, $to_merge);
+
+    return($attribute_r);
+
   }
-
-  $attribute_r = array_merge($attribute_r, $additional_attributes_r);
-
- }
-
- if (! array_key_exists($LDAP['account_attribute'], $attribute_r)) {
-  $attribute_r = array_merge($attribute_r, array($LDAP['account_attribute'] => array("label" => "Account UID")));
- }
-
- return($attribute_r);
+  else {
+    return($default_attributes);
+  }
 
 }
 
@@ -739,27 +786,25 @@ function ldap_new_account($ldap_connection,$account_r) {
 
   global $log_prefix, $LDAP, $LDAP_DEBUG, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP;
 
-  if (    isset($account_r['givenname'])
-      and isset($account_r['sn'])
-      and isset($account_r['cn'])
-      and isset($account_r['uid'])
+  if (    isset($account_r['givenname'][0])
+      and isset($account_r['sn'][0])
+      and isset($account_r['cn'][0])
+      and isset($account_r['uid'][0])
       and isset($account_r[$LDAP['account_attribute']])
-      and isset($account_r['password'])) {
+      and isset($account_r['password'][0])) {
 
-   $account_identifier = $account_r[$LDAP['account_attribute']];
-   $ldap_search_query = "(${LDAP['account_attribute']}=" . ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ",${LDAP['user_dn']})";
-   $ldap_search = @ ldap_search($ldap_connection, "${LDAP['user_dn']}", $ldap_search_query);
+   $account_identifier = $account_r[$LDAP['account_attribute']][0];
+   $user_dn=$LDAP['user_dn'];
+   $ldap_search_query = "(${LDAP['account_attribute']}=" . ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ",$user_dn)";
+   $ldap_search = @ ldap_search($ldap_connection, $user_dn, $ldap_search_query);
    $result = @ ldap_get_entries($ldap_connection, $ldap_search);
 
    if ($result['count'] == 0) {
 
-     $hashed_pass = ldap_hashed_password($account_r['password']);
+     $hashed_pass = ldap_hashed_password($account_r['password'][0]);
      unset($account_r['password']);
 
      $objectclasses = $LDAP['account_objectclasses'];
-     if (isset($LDAP['account_additional_objectclasses']) and $LDAP['account_additional_objectclasses'] != "") {
-       $objectclasses = array_merge($objectclasses, explode(",", $LDAP['account_additional_objectclasses']));
-     }
 
      $account_attributes = array('objectclass' => $objectclasses,
                                  'userpassword' => $hashed_pass,
@@ -784,9 +829,8 @@ function ldap_new_account($ldap_connection,$account_r) {
        }
      }
 
-     if (empty($account_attributes['displayname']))   { $account_attributes['displayname']   = $account_attributes['givenname'] . " " . $account_attributes['sn']; }
      if (empty($account_attributes['loginshell']))    { $account_attributes['loginshell']    = $DEFAULT_USER_SHELL; }
-     if (empty($account_attributes['homedirectory'])) { $account_attributes['homedirectory'] = "/home/${account_identifier}"; }
+     if (empty($account_attributes['homedirectory'])) { $account_attributes['homedirectory'] = "/home/" . $account_r['uid'][0]; }
 
      $add_account = @ ldap_add($ldap_connection,
                                "${LDAP['account_attribute']}=$account_identifier,${LDAP['user_dn']}",
@@ -811,13 +855,13 @@ function ldap_new_account($ldap_connection,$account_r) {
        }
        return TRUE;
      }
-
      else {
        ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
        error_log("$log_prefix Create account; couldn't create the account for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
      }
 
    }
+
    else {
      error_log("$log_prefix Create account; Account for ${account_identifier} already exists",0);
    }
@@ -863,7 +907,7 @@ function ldap_add_member_to_group($ldap_connection,$group_name,$username) {
 
   global $log_prefix, $LDAP, $LDAP_DEBUG;
 
-  if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+  $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
   $group_dn = "${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
 
@@ -898,7 +942,7 @@ function ldap_delete_member_from_group($ldap_connection,$group_name,$username) {
     return FALSE;
   }
   else {
-    if ($LDAP['rfc2307bis_check_run'] != TRUE) { $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection); }
+    $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
 
     $group_dn = "${LDAP['group_attribute']}=" . ldap_escape($group_name, "", LDAP_ESCAPE_FILTER) . ",${LDAP['group_dn']}";
 
@@ -965,71 +1009,77 @@ function ldap_change_password($ldap_connection,$username,$new_password) {
 
 function ldap_detect_rfc2307bis($ldap_connection) {
 
- global $log_prefix, $LDAP, $LDAP_DEBUG;
+  global $log_prefix, $LDAP, $LDAP_DEBUG;
 
- $bis_available = FALSE;
-
- if ($LDAP['forced_rfc2307bis'] == TRUE) {
-  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - skipping autodetection because FORCE_RFC2307BIS is TRUE",0); }
-  $bis_available = TRUE;
- }
- else {
-
-  $schema_base_query = @ ldap_read($ldap_connection,"","subschemaSubentry=*",array('subschemaSubentry'));
-
-  if (!$schema_base_query) {
-   error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
-   error_log("$log_prefix LDAP RFC2307BIS detection - we'll assume that the RFC2307BIS schema isn't available.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS.",0);
+  if (isset($LDAP['rfc2307bis_available'])) {
+    return $LDAP['rfc2307bis_available'];
   }
   else {
-   $schema_base_results = @ ldap_get_entries($ldap_connection, $schema_base_query);
 
-   if ($schema_base_results) {
+    $LDAP['rfc2307bis_available'] = FALSE;
 
-    $schema_base_dn = $schema_base_results[0]['subschemasubentry'][0];
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found that the 'subschemaSubentry' base DN is '$schema_base_dn'",0); }
-
-    $objclass_query = @ ldap_read($ldap_connection,$schema_base_dn,"(objectClasses=*)",array('objectClasses'));
-    if (!$objclass_query) {
-     error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
+    if ($LDAP['forced_rfc2307bis'] == TRUE) {
+      if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - skipping autodetection because FORCE_RFC2307BIS is TRUE",0); }
+      $LDAP['rfc2307bis_available'] = TRUE;
     }
     else {
-     $objclass_results = @ ldap_get_entries($ldap_connection, $objclass_query);
-     $this_count = $objclass_results[0]['objectclasses']['count'];
-     if ($this_count > 0) {
-      if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found $this_count objectClasses under $schema_base_dn" ,0); }
-      $posixgroup_search = preg_grep("/NAME 'posixGroup'.*AUXILIARY/",$objclass_results[0]['objectclasses']);
-      if (count($posixgroup_search) > 0) {
-       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found AUXILIARY in posixGroup definition which suggests we're using the RFC2307BIS schema" ,0); }
-       $bis_available = TRUE;
+
+      $schema_base_query = @ ldap_read($ldap_connection,"","subschemaSubentry=*",array('subschemaSubentry'));
+
+      if (!$schema_base_query) {
+        error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
+        error_log("$log_prefix LDAP RFC2307BIS detection - we'll assume that the RFC2307BIS schema isn't available.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS.",0);
       }
       else {
-       if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - couldn't find AUXILIARY in the posixGroup definition which suggests we're not using the RFC2307BIS schema.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS. " ,0); }
+        $schema_base_results = @ ldap_get_entries($ldap_connection, $schema_base_query);
+
+        if ($schema_base_results) {
+
+          $schema_base_dn = $schema_base_results[0]['subschemasubentry'][0];
+          if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found that the 'subschemaSubentry' base DN is '$schema_base_dn'",0); }
+
+          $objclass_query = @ ldap_read($ldap_connection,$schema_base_dn,"(objectClasses=*)",array('objectClasses'));
+          if (!$objclass_query) {
+            error_log("$log_prefix LDAP RFC2307BIS detection - unable to query LDAP for objectClasses under ${schema_base_dn}:" . ldap_error($ldap_connection),0);
+          }
+          else {
+            $objclass_results = @ ldap_get_entries($ldap_connection, $objclass_query);
+            $this_count = $objclass_results[0]['objectclasses']['count'];
+            if ($this_count > 0) {
+              if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found $this_count objectClasses under $schema_base_dn" ,0); }
+              $posixgroup_search = preg_grep("/NAME 'posixGroup'.*AUXILIARY/",$objclass_results[0]['objectclasses']);
+              if (count($posixgroup_search) > 0) {
+                if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - found AUXILIARY in posixGroup definition which suggests we're using the RFC2307BIS schema" ,0); }
+                $LDAP['rfc2307bis_available'] = TRUE;
+              }
+              else {
+                if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - couldn't find AUXILIARY in the posixGroup definition which suggests we're not using the RFC2307BIS schema.  Set FORCE_RFC2307BIS to TRUE if you DO use RFC2307BIS. " ,0); }
+              }
+            }
+            else {
+              if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - no objectClasses were returned when searching under $schema_base_dn" ,0); }
+            }
+          }
+        }
+        else {
+         if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - unable to detect the subschemaSubentry base DN" ,0); }
+        }
       }
-     }
-     else {
-      if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - no objectClasses were returned when searching under $schema_base_dn" ,0); }
-     }
     }
-   }
-   else {
-    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix LDAP RFC2307BIS detection - unable to detect the subschemaSubentry base DN" ,0); }
-   }
+
+    if ($LDAP['rfc2307bis_available'] == TRUE) {
+      if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'uniquemember'; }
+      if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = FALSE; }
+      if (!in_array('groupOfUniqueNames',$LDAP['group_objectclasses'])) { array_push($LDAP['group_objectclasses'], 'groupOfUniqueNames'); }
+      return TRUE;
+    }
+    else {
+      if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'memberuid'; }
+      if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = TRUE; }
+      return FALSE;
+    }
+
   }
- }
-
- $LDAP['rfc2307bis_check_run'] == TRUE;
- if ($bis_available == TRUE) {
-  if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'uniquemember'; }
-  if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = FALSE; }
-  return TRUE;
- }
- else {
-  if (!isset($LDAP['group_membership_attribute'])) { $LDAP['group_membership_attribute'] = 'memberuid'; }
-  if (!isset($LDAP['group_membership_uses_uid'])) { $LDAP['group_membership_uses_uid'] = TRUE; }
-  return FALSE;
- }
-
 
 }
 

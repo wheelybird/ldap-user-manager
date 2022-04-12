@@ -28,14 +28,14 @@ if($_POST) {
     array_push($error_messages, "You didn't enter your first name.");
   }
   else {
-    $firstname=filter_var($_POST['firstname'], FILTER_SANITIZE_STRING);
+    $firstname=filter_var($_POST['firstname'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   }
 
   if (! isset($_POST['lastname']) or $_POST['lastname'] == "") {
     array_push($error_messages, "You didn't enter your first name.");
   }
   else {
-    $lastname=filter_var($_POST['lastname'], FILTER_SANITIZE_STRING);
+    $lastname=filter_var($_POST['lastname'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   }
 
   if (isset($_POST['email']) and $_POST['email'] != "") {
@@ -43,7 +43,7 @@ if($_POST) {
   }
 
   if (isset($_POST['notes']) and $_POST['notes'] != "") {
-    $notes=filter_var($_POST['notes'], FILTER_SANITIZE_STRING);
+    $notes=filter_var($_POST['notes'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   }
 
 
@@ -83,22 +83,31 @@ EoT;
 
      include_once "mail_functions.inc.php";
      $sent_email = send_email($ACCOUNT_REQUESTS_EMAIL,"$ORGANISATION_NAME account requests",$mail_subject,$mail_body);
-     if ($sent_email) {
-       $sent_email_message = "  Thank you. The request was sent and the administrator will process it as soon as possible.";
-     }
-     else {
-       $sent_email_message = "  Unfortunately the request wasn't sent because of a technical problem.";
-     }
-     ?>
-      <div class="container">
-       <div class="col-sm-8">
-        <div class="panel panel-default">
-         <div class="panel-body"><?php print $sent_email_message; ?></div>
-        </div>
+     if ($sent_email) { ?>
+       <div class="container">
+         <div class="col-sm-6 col-sm-offset-3">
+           <div class="panel panel-success">
+             <div class="panel-heading">Thank you</div>
+             <div class="panel-body">
+               The request was sent and the administrator will process it as soon as possible.
+             </div>
+           </div>
+         </div>
        </div>
-      </div>
+     <?php }
+     else { ?>
+       <div class="container">
+         <div class="col-sm-6 col-sm-offset-3">
+           <div class="panel panel-danger">
+             <div class="panel-heading">Error</div>
+             <div class="panel-body">
+               Unfortunately the account request wasn't sent because of a technical issue.
+             </div>
+           </div>
+         </div>
+       </div>
     <?php
-
+    }
    render_footer();
    exit(0);
 
@@ -106,7 +115,7 @@ EoT;
 }
 ?>
 <div class="container">
- <div class="col-sm-8">
+ <div class="col-sm-8 col-sm-offset-2">
 
   <div class="panel panel-default">
     <div class="panel-body">

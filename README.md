@@ -53,7 +53,7 @@ docker run \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
            -e "LDAP_IGNORE_CERT_ERRORS=true" \
            -e "EMAIL_DOMAIN=ldapusermanager.org" \
-           wheelybird/ldap-user-manager:v1.7
+           wheelybird/ldap-user-manager:v1.8
 ```
 Change the variable values to suit your environment.  Now go to https://lum.example.com/setup.
 
@@ -64,7 +64,12 @@ Change the variable values to suit your environment.  Now go to https://lum.exam
 Configuration is via environmental variables.  Please bear the following in mind:
 
  * This tool needs to bind to LDAP as a user that has the permissions to modify everything under the base DN.
- * This interface is designed to work with a fresh LDAP server and should only be used against existing populated LDAP directories with caution and at your own risk.
+ * This interface is designed to work with a fresh LDAP server and should only be against existing, populated LDAP directories with caution and at your own risk.
+
+#### Containers: using files/secrets to set configuration variables
+
+When running the user manager as a container you can append `_FILE` to any of the configuration variables and set the value to a filepath.  Then when the container starts up it will set the appropriate configuration variable with the contents of the file.   
+For example, if you're using Docker Swarm and you've set the LDAP bind password as a Docker secret (`echo "myLDAPadminPassword" | docker secret create ldap_admin_bind_pwd -`) then you can set `LDAP_ADMIN_BIND_PWD_FILE=/run/secrets/ldap_admin_bind_pwd`.  This will result in `LDAP_ADMIN_BIND_PWD` being set with the contents of `/run/secrets/ldap_admin_bind_pwd`.
 
 ### Mandatory:
 
@@ -87,20 +92,27 @@ Configuration is via environmental variables.  Please bear the following in mind
 * `SERVER_HOSTNAME` (default: *ldapusername.org*):  The hostname that this interface will be served from.
    
 * `SERVER_PATH` (default: */*): The path to the user manager on the webserver.  Useful if running this behind a reverse proxy.
-
-* `SERVER_PORT` (default: *80 or 80+443*): The port the webserver inside the container will listen on.  If undefined then the internal webserver will listen on ports 80 and 443 (if `NO_HTTPS` is true it's just 80) and HTTP traffic is redirected to HTTPS.  When set this will disable the redirection and the internal webserver will listen for HTTPS traffic on this port (or for HTTP traffic if `NO_HTTPS` is true).  This is for use when the container's Docker network mode is set to `host`.
-
+   
+* `SERVER_PORT` (default: *80 or 80 & 443*): The port the webserver inside the container will listen on.  If undefined then the internal webserver will listen on ports 80 and 443 (if `NO_HTTPS` is true it's just 80) and HTTP traffic is redirected to HTTPS.  When set this will disable the redirection and the internal webserver will listen for HTTPS traffic on this port (or for HTTP traffic if `NO_HTTPS` is true).  This is for use when the container's Docker network mode is set to `host`.
+   
 * `NO_HTTPS` (default: *FALSE*): If you set this to *TRUE* then the server will run in HTTP mode, without any encryption.  This is insecure and should only be used for testing.  See [HTTPS certificates](#https-certificates)
+   
+* `SERVER_KEY_FILENAME`: (default *server.key*): The filename of the HTTPS server key file. See [HTTPS certificates](#https-certificates)
+   
+* `SERVER_CERT_FILENAME`: (default *server.crt*): The filename of the HTTPS certficate file. See [HTTPS certificates](#https-certificates)
+   
+* `CA_CERT_FILENAME`: (default *ca.crt*): The filename of the HTTPS server key file. See [HTTPS certificates](#https-certificates)
    
 * `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
 
-#### Organisation settings
+#### Interface customisation
 
 * `ORGANISATION_NAME`: (default: *LDAP*): Your organisation's name.
    
-* `SITE_NAME` (default: *{ORGANISATION_NAME} user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".
-
+* `SITE_NAME` (default: *`ORGANISATION_NAME` user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".
+   
+* `SHOW_POSIX_ATTRIBUTES` (default: *FALSE*):  If set to `TRUE` this show extra attributes for **posixAccount** and **posixGroup** in the account and group forms.  Leave this set to `FALSE` if you don't use LDAP accounts to log into servers etc., as it makes the interface much simpler.   The Posix values are still set in the background using the default values.  This setting doesn't hide any Posix attributes set via `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` or `LDAP_GROUP_ADDITIONAL_ATTRIBUTES`.
 
 #### LDAP settings
 
@@ -112,19 +124,25 @@ Configuration is via environmental variables.  Please bear the following in mind
    
 * `LDAP_IGNORE_CERT_ERRORS` (default: *FALSE*): If *TRUE* then problems with the certificate presented by the LDAP server will be ignored (for example FQDN mismatches).  Use this if your LDAP server is using a self-signed certificate and you don't have a CA certificate for it or you're connecting to a pool of different servers via round-robin DNS.
    
-* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CACERT="$(</path/to/ca.crt)"` (ensure you're using quotes or you'll get an "invalid reference format: repository name must be lowercase" error.
+* `LDAP_TLS_CACERT` (no default): If you need to use a specific CA certificate for TLS connections to the LDAP server (when `LDAP_REQUIRE_STARTTLS` is set) then assign the contents of the CA certificate to this variable.  e.g. `-e LDAP_TLS_CACERT="$(</path/to/ca.crt)"` (ensure you're using quotes or you'll get an "invalid reference format: repository name must be lowercase" error).  Alternatively you can bind-mount a certificate into the container and use `LDAP_TLS_CACERT_FILE` to specify the path to the file.
 
 #### Advanced LDAP settings
 
 These settings should only be changed if you're trying to make the user manager work with an LDAP directory that's already populated and the defaults don't work.
    
-* `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The account attribute used as the account identifier.  See [Account names](#account-names) for more information.
+* `LDAP_ACCOUNT_ATTRIBUTE` (default: *uid*):  The attribute used as the account identifier.  See [Account names](#account-names) for more information.
+   
+* `LDAP_GROUP_ATTRIBUTE` (default: *cn*):  The attribute used as the group identifier.
    
 * `LDAP_GROUP_MEMBERSHIP_ATTRIBUTE` (default: *memberUID* or *uniqueMember*):  The attribute used when adding a user's account to a group.  When the `groupOfMembers` objectClass is detected `FORCE_RFC2307BIS` is `TRUE` it defaults to `uniqueMember`, otherwise it'll default to `memberUID`. Explicitly setting this variable will override any default.
    
 * `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
-
+   
 * `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` (no default): A comma-separated list of extra attributes to display when creating an account.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
+   
+* `GROUP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` (no default): A comma-separated list of additional objectClasses to use when creating a group.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
+
+* `GROUP_ACCOUNT_ADDITIONAL_ATTRIBUTES` (no default): A comma-separated list of extra attributes to display when creating a group.  See [Extra objectClasses and attributes](#extra-objectclasses-and-attributes) for more information.
    
 * `LDAP_GROUP_MEMBERSHIP_USES_UID` (default: *TRUE* or *FALSE*): If *TRUE* then the entry for a member of a group will be just the username, otherwise it's the member's full DN.  When the `groupOfMembers` objectClass is detected or `FORCE_RFC2307BIS` is `TRUE` it  defaults to `FALSE`, otherwise it'll default to `TRUE`. Explicitly setting this variable will override the default.
    
@@ -144,11 +162,12 @@ These settings should only be changed if you're trying to make the user manager 
 * `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate the usernames stored in the `uid` attribute.  See [Username format](#username-format).
    
 * `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure account names and group names are safe to use on servers.  See [Username format](#username-format).
-
+   
 * `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are (in order of precedence) `SHA512CRYPT`, `SHA256CRYPT`, `MD5CRYPT`, `SSHA`, `SHA`, `SMD5`, `MD5`, `CRYPT` & `CLEAR`.  If your chosen method isn't available on your system then the strongest available method will be automatically selected - `SSHA` is the strongest method guaranteed to be available.  Cleartext passwords should NEVER be used in any situation outside of a test.
    
 * `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
    
+* `REMOTE_HTTP_HEADERS_LOGIN`(default: *FALSE*) Enables session managment from an external service like Authelia. _This setting will compromise your security if you're not using an Auth-Proxy in front of this application_.
 
 #### Email sending settings
 
@@ -169,9 +188,9 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 * `EMAIL_FROM_ADDRESS` (default: *admin@`EMAIL_DOMAIN`*): The FROM email address used when sending out emails.  The default domain is taken from `EMAIL_DOMAIN` under **User account settings**.
    
 * `EMAIL_FROM_NAME` (default: *`SITE_NAME`*): The FROM name used when sending out emails.  The default name is taken from `SITE_NAME` under **Organisation settings**.
-
-* `MAIL_SUBJECT` (default: *Your $ORGANISATION_NAME account has been created.*): The mail subject for new account emails.
-
+   
+* `MAIL_SUBJECT` (default: *Your `ORGANISATION_NAME` account has been created.*): The mail subject for new account emails.
+   
 * `NEW_ACCOUNT_EMAIL_SUBJECT`, `NEW_ACCOUNT_EMAIL_BODY`, `RESET_PASSWORD_EMAIL_SUBJECT` & `RESET_PASSWORD_EMAIL_BODY`: Change the email contents for emails sent to users when you create an account or reset a password.  See [Sending emails](#sending_emails) for full details.
 
 
@@ -179,8 +198,8 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 
 #### Account request settings
 
-* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.  
-
+* `ACCOUNT_REQUESTS_ENABLED` (default: *FALSE*): Set to TRUE in order to enable a form that people can fill in to request an account.  This will send an email to `ACCOUNT_REQUESTS_EMAIL` with their details and a link to the account creation page where the details will be filled in automatically.  You'll need to set up email sending (see **Email sending**, above) for this to work.  If this is enabled but email sending isn't then requests will be disabled and an error message sent to the logs.
+   
 * `ACCOUNT_REQUESTS_EMAIL` (default: *{EMAIL_FROM_ADDRESS}*): This is the email address that any requests for a new account are sent to.
 
 
@@ -193,7 +212,6 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
 * `SESSION_DEBUG` (default: *FALSE*): Set to TRUE to increase the logging level for sessions and user authorisation.  This will output cookie passkeys to the error log - don't enable this in a production environment.
    
 * `SMTP_LOG_LEVEL` (default: *0*): Set to between 1-4 to get SMTP logging information (0 disables SMTP debugging logs though it will still display errors). See https://github.com/PHPMailer/PHPMailer/wiki/SMTP-Debugging for details of the levels.
-   
 
 ***
 
@@ -226,23 +244,29 @@ Other services or software might use the *Common Name* (`cn`) attribute, which i
 The account identifier is what uniquely identifies the account, so you can't create multiple accounts where the account identifier is the same.   
 You should ensure your LDAP clients use the same account identifier attribute when authenticating users.   
    
-If you're using LDAP for server accounts then you'll find there are  normally constraints on how many cahracters and the type of characters you're allowed to use.  The user manager will validate user and group names against `USERNAME_REGEX`.  If you don't need to be so strict then you can disable these checks by setting `ENFORCE_SAFE_SYSTEM_NAMES` to `FALSE`.
+If you're using LDAP for server accounts then you'll find there are  normally constraints on how many characters and the type of characters you're allowed to use.  The user manager will validate user and group names against `USERNAME_REGEX`.  If you don't need to be so strict then you can disable these checks by setting `ENFORCE_SAFE_SYSTEM_NAMES` to `FALSE`.
 
 ***
 
 ## HTTPS certificates
-When `NO_HTTPS` is set to **FALSE** (the default), the user manager expects to find SSL files at `/opt/ssl/server.key` and `/opt/ssl/server.crt`.  These certificates should match `SERVER_HOSTNAME`.  If these files aren't found then the startup script will create self-signed certificates based on `SERVER_HOSTNAME`.  To use your own key and certificate then you need to bind-mount a directory containing them to `/opt/ssl`.  You can also add a certificate chain file (the Apache `SSLCertificateChainFile` option) if needed - name it `chain.pem` and place it in the same directory as `server.key` and `server.crt` .
+The user manager runs in HTTPS mode by default and so uses HTTPS certificates.  You can pass in your own certificates by bind-mounting a local path to `/opt/ssl` in the container and then  specifying the names of the files via `SERVER_KEY_FILENAME`, `SERVER_CERT_FILENAME` and optionally `CA_CERT_FILENAME` (this will set Apache's `SSLCertificateChainFile` directive).   
+If the certificate and key files don't exist then a self-signed certificate will be created when the container starts.
    
-For example, if your key and certificate files are in `/home/myaccount/ssl` you can bind-mount that folder by adding this line to the docker run example above, just after the last line starting with `-e`:
+When using your own certificates, the certificate's common name (or one of the alternative names) need to match the value you set for `SERVER_HOSTNAME`.
+   
+For example, if your key and certificate files are in `/home/myaccount/ssl` you can bind-mount that folder by adding these lines to the `docker run` example above (place them above the final line):
 ```
+-e "SERVER_KEY_FILENAME=lum.example.com.key" \
+-e "SERVER_CERT_FILENAME=lum.example.com.crt" \
+-e "CA_CERT_FILENAME=ca_bundle.pem" \
 -v /home/myaccount/ssl:/opt/ssl \
-
 ```
+   
+If you don't want to use HTTPS certificates then set `NO_HTTPS` to **TRUE** to run in HTTP mode.  It's advised that you only do this when testing.
 
 ***
 
 ## Sending emails
-
 
 When you create an account you'll have an option to send an email to the person you created the account for.  The email will give them their new username, password and a link to the self-service password change utility.   
 
@@ -292,22 +316,49 @@ If `EMAIL_DOMAIN` is set then the email address field will be automatically upda
 
 ## Extra objectClasses and attributes
 
-If you need to use this user manager with an existing LDAP directory and your account records need additional objectClasses and attributes then you can add them via `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` and `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES`.   
+By default accounts are created with `person`, `inetOrgPerson` and `posixAccount` object classes.  Groups are created with `posixGroup` - if [the RFC2307BIS schema](#using-the-rfc2307bis-schema) is available then `groupOfUniqueNames` is automatically added too.   
 
-`LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` is a comma-separated list of objectClasses to add when creating the account record.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
+If you need to add additional objectClasses and attributes to accounts or groups then you can add them via `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES`, `LDAP_GROUP_ADDITIONAL_OBJECTCLASSES`, `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` and `LDAP_GROUP_ADDITIONAL_ATTRIBUTES`.
 
-To add extra fields for new attributes you need to pass a comma-separated string of the attributes and optionally the label for the attribute (which will be shown on the user form) and a default value to `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` separated by colons (`:`).   
-The format for configuring an attribute is: `attribute1:label1:default_value1,attribute2:label2:default_value2`.   If you don't supply a label then the form field will be labelled with the attribute name.  
-An example (for the couriermailaccount objectClass) would be: `mailbox:Mailbox:domain.com,quota:Mail quota:20`   
-   
-ObjectClasses often have attributes that must have a value, so you should definitely set a default for those attributes.   
+`LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES` and `LDAP_GROUP_ADDITIONAL_OBJECTCLASSES take a comma-separated list of objectClasses to add.  For example, `LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=ldappublickey,couriermailaccount`.   
 
-This is advanced stuff and the user manager doesn't attempt to validate any objectClasses or any attributes, labels or default values you pass in.  It's up to you to ensure that your LDAP server has the appropriate schemas and that the labels and values are sane.
+`LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` and `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` take a comma-separated list of attributes to be displayed as extra fields for the account or group.    
+By default these fields will be empty with the field named for the attribute, but you can set the field labels (and optionally the default values) by appending the attribute names with colon-separated values like so: `attribute_name:label:default_value`.   
+Multiple attributes are separated by commas, so you can define the label and default values for several attributes as follows:  `attribute1:label1:default_value1,attribute2:label2:default_value2,attribute3:label3`.   
+
+As an example, to set a mailbox name and quota for the `couriermailaccount` schema you can pass these variables to the container:   
+```
+LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=couriermailaccount
+LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES="mailbox:Mailbox:domain.com,quota:Mail quota:20"
+```
+
+_Note_: ObjectClasses often have attributes that _must_ have a value, so you should set a default value for these attributes, otherwise if you forget to add a value when filling in the form an error will be thrown on submission.
+
+### Multi-value attributes
+
+If you have an attribute that could have several values, you can add a `+` to end of the attribute name.  This will modify the form so you can add or remove extra values for that attribute.  For example, if you want to have multiple email aliases when using the _PostfixBookMailAccount_ schema then you can pass these variables to the container:   
+```
+LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES=PostfixBookMailAccount" \
+LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES=mailAlias+:Email aliases"
+```
+
+### Binary attributes
+
+If you have an attribute that stores the contents of a binary file (for example, a JPEG) then you can add a `^` to the end of the attribute name.  This will modify the form so that this attribute has an upload button.  If a JPEG has already been uploaded then it will display the image.  Otherwise the mime-type is displayed and there's a link for downloading the file.  For example, to allow you to set a user's photo:
+
+```
+LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES=jpegPhoto^:Photograph"
+```
+The maximum filesize you can upload is 2MB.
+
+
+### Caveat
+
+These settings are advanced usage and the user manager doesn't attempt to validate any objectClasses, attributes, labels or default values you pass in.  It's up to you to ensure that your LDAP server has the appropriate schemas and that the labels and values are sane.
 
 ***
 
 ## Using the RFC2307BIS schema
-
 
 Using the **RFC2307BIS** will allow you to use `memberOf` in LDAP searches which gives you an easy way to check if a user is a member of a group. For example: `(&(objectClass=posixAccount)(memberof=cn=somegroup,ou=groups,dc=ldapusermanager,dc=org))`.   
    

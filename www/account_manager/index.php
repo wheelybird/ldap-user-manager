@@ -14,46 +14,29 @@ $ldap_connection = open_ldap_connection();
 
 if (isset($_POST['delete_user'])) {
 
- ?>
- <script>
-    window.setTimeout(function() {
-                                  $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                 }, 4000);
- </script>
- <?php
-
  $this_user = $_POST['delete_user'];
  $this_user = urldecode($this_user);
 
  $del_user = ldap_delete_account($ldap_connection,$this_user);
 
  if ($del_user) {
- ?>
- <div class="alert alert-success" role="alert">
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-  <p class="text-center">User <strong><?php print $this_user; ?> was deleted.</p>
- </div>
- <?php
+   render_alert_banner("User <strong>$this_user</strong> was deleted.");
  }
  else {
- ?>
- <div class="alert alert-danger" role="alert">
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-  <p class="text-center">User <strong><?php print $this_user; ?></strong> wasn't deleted.</p>
- </div>
- <?php
+   render_alert_banner("User <strong>$this_user</strong> wasn't deleted.  See the logs for more information.","danger",15000);
  }
 
 
 }
-#'
+
 $people = ldap_get_user_list($ldap_connection);
 
 ?>
 <div class="container">
  <form action="<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post">
-  <span class="badge badge-secondary" style="font-size:1.9rem;"><?php print count($people);?> account<?php if (count($people) != 1) { print "s"; }?></span>  &nbsp; <button id="add_group" class="btn btn-default" type="submit">New user</button>
- </form>
+  <button type="button" class="btn btn-light"><?php print count($people);?> account<?php if (count($people) != 1) { print "s"; }?></button>  &nbsp; <button id="add_group" class="btn btn-default" type="submit">New user</button>
+ </form> 
+ <input class="form-control" id="search_input" type="text" placeholder="Search..">
  <table class="table table-striped">
   <thead>
    <tr>
@@ -64,7 +47,17 @@ $people = ldap_get_user_list($ldap_connection);
      <th>Member of</th>
    </tr>
   </thead>
- <tbody>
+ <tbody id="userlist">
+   <script>
+    $(document).ready(function(){
+      $("#search_input").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#userlist tr").filter(function() {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+      });
+    });
+  </script>
 <?php
 foreach ($people as $account_identifier => $attribs){
 

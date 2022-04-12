@@ -18,13 +18,13 @@ $to_update = array();
 
 if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FALSE; }
 
-$LDAP['default_attribute_map']["uidnumber"]  = array("label" => "UID");
-$LDAP['default_attribute_map']["gidnumber"]  = array("label" => "GID");
-$LDAP['default_attribute_map']["loginshell"] = array("label" => "Login shell");
-$LDAP['default_attribute_map']["homedirectory"]  = array("label" => "Home directory");
 $LDAP['default_attribute_map']["mail"]  = array("label" => "Email", "onkeyup" => "check_if_we_should_enable_sending_email();");
 
-$attribute_map = ldap_complete_account_attribute_array();
+$attribute_map = $LDAP['default_attribute_map'];
+if (isset($LDAP['account_additional_attributes'])) { $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['account_additional_attributes']); }
+if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
+  $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => "Account UID")));
+}
 
 if (!isset($_POST['account_identifier']) and !isset($_GET['account_identifier'])) {
 ?>
@@ -44,29 +44,97 @@ $ldap_connection = open_ldap_connection();
 $ldap_search_query="(${LDAP['account_attribute']}=". ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ")";
 $ldap_search = ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_query);
 
+
+#########################
+
 if ($ldap_search) {
 
  $user = ldap_get_entries($ldap_connection, $ldap_search);
 
- foreach ($attribute_map as $attribute => $attr_r) {
+ if ($user["count"] > 0) {
 
-   $$attribute = $user[0][$attribute][0];
+  foreach ($attribute_map as $attribute => $attr_r) {
 
-   if (isset($_POST['update_account']) and isset($_POST[$attribute]) and $_POST[$attribute] != $$attribute) {
-     $$attribute = filter_var($_POST[$attribute], FILTER_SANITIZE_STRING);
-     $to_update[$attribute] = $$attribute;
-   }
-   elseif (isset($attr_r['default'])) {
-     $$attribute = $attr_r['default'];
-   }
+    if (isset($user[0][$attribute]) and $user[0][$attribute]['count'] > 0) {
+      $$attribute = $user[0][$attribute];
+    }
+    else {
+      $$attribute = array();
+    }
+
+    if (isset($_FILES[$attribute]['size']) and $_FILES[$attribute]['size'] > 0) {
+
+      $this_attribute = array();
+      $this_attribute['count'] = 1;
+      $this_attribute[0] = file_get_contents($_FILES[$attribute]['tmp_name']);
+      $$attribute = $this_attribute;
+      $to_update[$attribute] = $this_attribute;
+      unset($to_update[$attribute]['count']);
+
+    }
+
+    if (isset($_POST['update_account']) and isset($_POST[$attribute])) {
+
+      $this_attribute = array();
+
+      if (is_array($_POST[$attribute])) {
+        foreach($_POST[$attribute] as $key => $value) {
+          if ($value != "") { $this_attribute[$key] = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS); }
+        }
+        $this_attribute['count'] = count($this_attribute);
+      }
+      elseif ($_POST[$attribute] != "") {
+        $this_attribute['count'] = 1;
+        $this_attribute[0] = filter_var($_POST[$attribute], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+      }
+
+      if ($this_attribute != $$attribute) {
+        $$attribute = $this_attribute;
+        $to_update[$attribute] = $this_attribute;
+        unset($to_update[$attribute]['count']);
+      }
+
+    }
+
+    if (!isset($$attribute) and isset($attr_r['default'])) {
+      $$attribute['count'] = 1;
+      $$attribute[0] = $attr_r['default'];
+    }
+
+  }
+  $dn = $user[0]['dn'];
 
  }
- $dn = $user[0]['dn'];
-
+ else {
+   ?>
+    <div class="alert alert-danger">
+     <p class="text-center">This account doesn't exist.</p>
+    </div>
+   <?php
+   render_footer();
+   exit(0);
+ }
 
  ### Update values
 
  if (isset($_POST['update_account'])) {
+
+  if (!isset($uid[0])) {
+    $uid[0] = generate_username($givenname[0],$sn[0]);
+    $to_update['uid'] = $uid;
+    unset($to_update['uid']['count']);
+  }
+
+  if (!isset($cn[0])) {
+    if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE) {
+      $cn[0] = $givenname[0] . $sn[0];
+    }
+    else {
+      $cn[0] = $givenname[0] . " " . $sn[0];
+    }
+    $to_update['cn'] = $cn;
+    unset($to_update['cn']['count']);
+  }
 
   if (isset($_POST['password']) and $_POST['password'] != "") {
 
@@ -81,16 +149,18 @@ if ($ldap_search) {
        and !$weak_password
        and !$invalid_password
                              ) {
-     $to_update['userpassword'] = ldap_hashed_password($password);
+     $to_update['userpassword'][0] = ldap_hashed_password($password);
     }
   }
 
   if (array_key_exists($LDAP['account_attribute'], $to_update)) {
-    $new_rdn = "${LDAP['account_attribute']}=${to_update[$LDAP['account_attribute']]}";
+    $account_attribute = $LDAP['account_attribute'];
+    $new_account_identifier = $to_update[$account_attribute][0];
+    $new_rdn = "${account_attribute}=${new_account_identifier}";
     $renamed_entry = ldap_rename($ldap_connection, $dn, $new_rdn, $LDAP['user_dn'], true);
     if ($renamed_entry) {
       $dn = "${new_rdn},${LDAP['user_dn']}";
-      $account_identifier = $to_update[$LDAP['account_attribute']];
+      $account_identifier = $new_account_identifier;
     }
     else {
       ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
@@ -98,7 +168,12 @@ if ($ldap_search) {
     }
   }
 
+  $existing_objectclasses = $user[0]['objectclass'];
+  unset($existing_objectclasses['count']);
+  if ($existing_objectclasses != $LDAP['account_objectclasses']) { $to_update['objectclass'] = $LDAP['account_objectclasses']; }
+
   $updated_account = @ ldap_mod_replace($ldap_connection, $dn, $to_update);
+
   if (!$updated_account) {
     ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
     error_log("$log_prefix Failed to modify account details for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
@@ -122,30 +197,10 @@ if ($ldap_search) {
     }
 
   if ($updated_account) {
-   ?>
-   <script>
-     window.setTimeout(function() {
-                                   $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                  }, 4000);
-   </script>
-   <div class="alert alert-success" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <p class="text-center">The account has been updated.<?php print $sent_email_message; ?></p>
-   </div>
-  <?php
+    render_alert_banner("The account has been updated.  $sent_email_message");
   }
   else {
-   ?>
-   <script>
-     window.setTimeout(function() {
-                                   $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                  }, 4000);
-   </script>
-   <div class="alert alert-danger" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <p class="text-center">There was a problem updating the account.  Check the logs for more information.</p>
-   </div>
-  <?php
+    render_alert_banner("There was a problem updating the account.  Check the logs for more information.","danger",15000);
   }
  }
 
@@ -206,19 +261,7 @@ if ($ldap_search) {
 
   $not_member_of = array_diff($all_groups,$updated_group_membership);
   $member_of = $updated_group_membership;
-
-  ?>
-   <script>
-     window.setTimeout(function() {
-                                   $(".alert").fadeTo(500, 0).slideUp(500, function(){ $(this).remove(); });
-                                  }, 4000);
-   </script>
-   <div class="alert alert-success" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="TRUE">&times;</span></button>
-    <p class="text-center">The group membership has been updated.</p>
-   </div>
-
-  <?php
+  render_alert_banner("The group membership has been updated.");
 
  }
  else {
@@ -366,6 +409,9 @@ if ($ldap_search) {
  }
 
 </script>
+
+<?php render_dynamic_field_js(); ?>
+
 <style type='text/css'>
   .dual-list .list-group {
       margin-top: 8px;
@@ -403,61 +449,53 @@ if ($ldap_search) {
       <li class="list-group-item"><?php print $dn; ?></li>
     </li>
     <div class="panel-body">
-     <form class="form-horizontal" action="" method="post">
+     <form class="form-horizontal" action="" enctype="multipart/form-data" method="post">
 
       <input type="hidden" name="update_account">
       <input type="hidden" id="pass_score" value="0" name="pass_score">
       <input type="hidden" name="account_identifier" value="<?php print $account_identifier; ?>">
 
+      <?php
+        foreach ($attribute_map as $attribute => $attr_r) {
+          $label = $attr_r['label'];
+          if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
+          if (isset($attr_r['inputtype'])) { $inputtype = $attr_r['inputtype']; } else { $inputtype = ""; }
+          if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
+          if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
+          render_attribute_fields($attribute,$label,$these_values,$dn,$onkeyup,$inputtype);
+        }
+      ?>
 
-<?php
-
-  foreach ($attribute_map as $attribute => $attr_r) {
-    $label = $attr_r['label'];
-    if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
-    if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
-  ?>
-     <div class="form-group" id="<?php print $attribute; ?>_div">
-      <label for="<?php print $attribute; ?>" class="col-sm-3 control-label"><?php print $label; ?></label>
-      <div class="col-sm-6">
-       <input type="text" class="form-control" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="<?php if (isset($$attribute)) { print $$attribute; } ?>" <?php
-         if (isset($onkeyup)) { print "onkeyup=\"$onkeyup;\""; } ?>>
-      </div>
-     </div>
-  <?php
-  }
-?>
-
-     <div class="form-group" id="password_div">
-      <label for="password" class="col-sm-3 control-label">Password</label>
-      <div class="col-sm-6">
-       <input type="password" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm'); check_if_we_should_enable_sending_email();">
-      </div>
-      <div class="col-sm-1">
-       <input type="button" class="btn btn-sm" id="password_generator" onclick="random_password(); check_if_we_should_enable_sending_email();" value="Generate password">
-      </div>
-     </div>
-
-     <div class="form-group" id="confirm_div">
-      <label for="confirm" class="col-sm-3 control-label">Confirm</label>
-      <div class="col-sm-6">
-       <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
-      </div>
-     </div>
-
-<?php  if ($can_send_email == TRUE) { ?>
-      <div class="form-group" id="send_email_div">
-       <label for="send_email" class="col-sm-3 control-label"> </label>
+      <div class="form-group" id="password_div">
+       <label for="password" class="col-sm-3 control-label">Password</label>
        <div class="col-sm-6">
-        <input type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  Email the updated credentials to the user?
+        <input type="password" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm'); check_if_we_should_enable_sending_email();">
        </div>
+       <div class="col-sm-1">
+        <input type="button" class="btn btn-sm" id="password_generator" onclick="random_password(); check_if_we_should_enable_sending_email();" value="Generate password">
+       </div>
+      </div>
+
+      <div class="form-group" id="confirm_div">
+       <label for="confirm" class="col-sm-3 control-label">Confirm</label>
+       <div class="col-sm-6">
+        <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
+       </div>
+      </div>
+
+<?php if ($can_send_email == TRUE) { ?>
+      <div class="form-group" id="send_email_div">
+        <label for="send_email" class="col-sm-3 control-label"> </label>
+        <div class="col-sm-6">
+          <input type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  Email the updated credentials to the user?
+        </div>
       </div>
 <?php } ?>
 
 
-     <div class="form-group">
-       <p align='center'><button type="submit" class="btn btn-default">Update account details</button></p>
-     </div>
+      <div class="form-group">
+        <p align='center'><button type="submit" class="btn btn-default">Update account details</button></p>
+      </div>
 
     </form>
 
@@ -522,7 +560,7 @@ if ($ldap_search) {
           <button class="btn btn-default btn-sm move-right">
            <span class="glyphicon glyphicon-chevron-right"></span>
           </button>
-          <form id="update_with_groups" action="<?php print "${THIS_MODULE_PATH}"; ?>/show_user.php" method="post">
+          <form id="update_with_groups" action="<?php print $CURRENT_PAGE ?>" method="post">
            <input type="hidden" name="update_member_of">
            <input type="hidden" name="account_identifier" value="<?php print $account_identifier; ?>">
           </form>
