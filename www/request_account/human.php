@@ -66,7 +66,7 @@ for($i = 0; $i < $num_chars; $i++) {
   $txt_col = $textcols[rand(0,1)];
   $txt_font =  $fonts[array_rand($fonts)];
   $txt = $human_proof[$i];
-  imagettftext($image, $size, $angle, $txt_x, $txt_y, $txt_col, $txt_font, $txt);
+  imagettftext($image, $size, $angle, (int)$txt_x, (int)$txt_y, $txt_col, $txt_font, $txt);
 # print "imagettftext( $size, $angle, $txt_x, $txt_y, $txt_col, $txt_font, $txt);<p>";
 }
 
