@@ -70,6 +70,7 @@ else {
     $current_members = ldap_get_group_members($ldap_connection,$group_cn);
     $full_dn = $this_group[0]['dn'];
     $has_been = "updated";
+    $group_exists = TRUE;
   }
   else {
     $new_group = TRUE;
