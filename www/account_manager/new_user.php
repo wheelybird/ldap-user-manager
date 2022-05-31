@@ -102,11 +102,11 @@ foreach ($attribute_map as $attribute => $attr_r) {
 if (isset($_GET['account_request'])) {
 
   $givenname[0]=filter_var($_GET['first_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  $new_account_r['givenname'] = $givenname;
+  $new_account_r['givenname'] = $givenname[0];
   unset($new_account_r['givenname']['count']);
 
   $sn[0]=filter_var($_GET['last_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  $new_account_r['sn'] = $sn;
+  $new_account_r['sn'] = $sn[0];
   unset($new_account_r['sn']['count']);
 
   $mail[0]=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
