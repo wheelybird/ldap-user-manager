@@ -184,12 +184,12 @@ if ($ldap_search) {
 
       include_once "mail_functions.inc.php";
 
-      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname, $sn);
-      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname, $sn);
+      $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname[0], $sn[0]);
+      $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname[0], $sn[0]);
 
-      $sent_email = send_email($mail,"$givenname $sn",$mail_subject,$mail_body);
+      $sent_email = send_email($mail[0],"${givenname[0]} ${sn[0]}",$mail_subject,$mail_body);
       if ($sent_email) {
-        $sent_email_message .= "  An email sent to $mail.";
+        $sent_email_message .= "  An email sent to ${mail[0]}.";
       }
       else {
         $sent_email_message .= "  Unfortunately the email wasn't sent; check the logs for more information.";
