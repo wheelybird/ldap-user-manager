@@ -189,7 +189,7 @@ if ($ldap_search) {
 
       $sent_email = send_email($mail[0],"${givenname[0]} ${sn[0]}",$mail_subject,$mail_body);
       if ($sent_email) {
-        $sent_email_message .= "  An email sent to $mail.";
+        $sent_email_message .= "  An email sent to ${mail[0]}.";
       }
       else {
         $sent_email_message .= "  Unfortunately the email wasn't sent; check the logs for more information.";

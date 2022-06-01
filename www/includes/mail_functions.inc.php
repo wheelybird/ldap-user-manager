@@ -64,6 +64,7 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
   if ($SMTP['tls'] == TRUE) { $mail->SMTPSecure = 'tls'; }
   if ($SMTP['ssl'] == TRUE) { $mail->SMTPSecure = 'ssl'; }
 
+  $mail->SMTPAutoTLS = false;
   $mail->setFrom($EMAIL['from_address'], $EMAIL['from_name']);
   $mail->addAddress($recipient_email, $recipient_name);
   $mail->Subject = $subject;
