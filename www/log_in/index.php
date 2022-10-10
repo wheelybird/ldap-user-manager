@@ -75,7 +75,7 @@ else {
    <?php } ?>
 
    <form class="form-horizontal" action='' method='post'>
-    <?php if (isset($redirect_to) and ($redirect_to != "")) { ?><input type="hidden" name="redirect_to" value="<?php print $redirect_to; ?>"><?php } ?>
+    <?php if (isset($redirect_to) and ($redirect_to != "")) { ?><input type="hidden" name="redirect_to" value="<?php print htmlspecialchars($redirect_to); ?>"><?php } ?>
 
     <div class="form-group">
      <label for="username" class="col-sm-4 control-label">Username</label>

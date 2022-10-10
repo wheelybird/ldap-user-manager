@@ -174,7 +174,7 @@ function generate_salt($length) {
 
  $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./';
 
- mt_srand((double)microtime() * 1000000);
+ mt_srand(intval(microtime()) * 1000000);
 
  $salt = '';
  while (strlen($salt) < $length) {
@@ -726,6 +726,29 @@ function ldap_get_gid_of_group($ldap_connection,$group_name) {
 
 ##################################
 
+function ldap_get_group_name_from_gid($ldap_connection,$gid) {
+
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
+
+ if (isset($gid)) {
+
+  $ldap_search_query = "(gidnumber=" . ldap_escape($gid, "", LDAP_ESCAPE_FILTER) . ")";
+  $ldap_search = @ ldap_search($ldap_connection, "${LDAP['group_dn']}", $ldap_search_query , array("cn"));
+  $result = @ ldap_get_entries($ldap_connection, $ldap_search);
+
+  if (isset($result[0]['cn'][0])) {
+    return $result[0]['cn'][0];
+  }
+
+ }
+
+ return FALSE;
+
+}
+
+
+##################################
+
 function ldap_complete_attribute_array($default_attributes,$additional_attributes) {
 
   if (isset($additional_attributes)) {
@@ -812,21 +835,25 @@ function ldap_new_account($ldap_connection,$account_r) {
 
      $account_attributes = array_merge($account_r, $account_attributes);
 
-     if (!isset($account_attributes['uidnumber']) or !is_numeric($account_attributes['uidnumber'])) {
+     if (!isset($account_attributes['uidnumber'][0]) or !is_numeric($account_attributes['uidnumber'][0])) {
        $highest_uid = ldap_get_highest_id($ldap_connection,'uid');
-       $account_attributes['uidnumber'] = $highest_uid + 1;
+       $account_attributes['uidnumber'][0] = $highest_uid + 1;
      }
 
-     if (!isset($account_attributes['gidnumber']) or !is_numeric($account_attributes['gidnumber'])) {
+     if (!isset($account_attributes['gidnumber'][0]) or !is_numeric($account_attributes['gidnumber'][0])) {
        $default_gid = ldap_get_gid_of_group($ldap_connection,$DEFAULT_USER_GROUP);
        if (!is_numeric($default_gid)) {
          $group_add = ldap_new_group($ldap_connection,$account_identifier,$account_identifier);
-         $account_attributes['gidnumber'] = ldap_get_gid_of_group($ldap_connection,$account_identifier);
+         $account_attributes['gidnumber'][0] = ldap_get_gid_of_group($ldap_connection,$account_identifier);
        }
        else {
-        $account_attributes['gidnumber'] = $default_gid;
+        $account_attributes['gidnumber'][0] = $default_gid;
         $add_to_group = $DEFAULT_USER_GROUP;
        }
+     }
+     else {
+       $add_to_group = ldap_get_group_name_from_gid($ldap_connection,$account_attributes['gidnumber'][0]);
+       if (!$add_to_group) { $add_to_group = $DEFAULT_USER_GROUP; }
      }
 
      if (empty($account_attributes['loginshell']))    { $account_attributes['loginshell']    = $DEFAULT_USER_SHELL; }
@@ -842,7 +869,7 @@ function ldap_new_account($ldap_connection,$account_r) {
        ldap_add_member_to_group($ldap_connection,$add_to_group,$account_identifier);
 
        $this_uid = fetch_id_stored_in_ldap($ldap_connection,"uid");
-       $new_uid = $account_attributes['uidnumber'];
+       $new_uid = $account_attributes['uidnumber'][0];
 
        if ($this_uid != FALSE) {
          $update_uid = @ ldap_mod_replace($ldap_connection, "cn=lastUID,${LDAP['base_dn']}", array( 'serialNumber' => $new_uid ));

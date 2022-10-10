@@ -25,7 +25,7 @@ COPY www/ /opt/ldap_user_manager
 RUN tar -xzf /tmp/v6.3.0.tar.gz -C /opt && mv /opt/PHPMailer-6.3.0 /opt/PHPMailer
 
 COPY entrypoint /usr/local/bin/entrypoint
-RUN chmod a+x /usr/local/bin/entrypoint
+RUN chmod a+x /usr/local/bin/entrypoint && touch /etc/ldap/ldap.conf
 
 CMD ["apache2-foreground"]
 ENTRYPOINT ["/usr/local/bin/entrypoint"]

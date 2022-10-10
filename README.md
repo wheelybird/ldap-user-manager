@@ -181,7 +181,7 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `SMTP_PASSWORD` (no default): The password to use when the SMTP server requires authentication.
    
-* `SMTP_USE_TLS` (default: *FALSE*): Set to TRUE if the SMTP server requires TLS to be enabled.  Overrides `SMTP_USE_TLS`.
+* `SMTP_USE_TLS` (default: *FALSE*): Set to TRUE if the SMTP server requires TLS to be enabled.  Overrides `SMTP_USE_SSL`.
    
 * `SMTP_USE_SSL` (default: *FALSE*): Set to TRUE if the SMTP server requires SSL to be enabled.  This will be unset if `SMTP_USE_TLS` is `TRUE`.
    

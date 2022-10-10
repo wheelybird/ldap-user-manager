@@ -8,8 +8,6 @@ include_once "module_functions.inc.php";
 
 $attribute_map = $LDAP['default_attribute_map'];
 if (isset($LDAP['account_additional_attributes'])) { $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['account_additional_attributes']); }
-unset($attribute_map['uidnumber']);
-unset($attribute_map['gidnumber']);
 
 if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
   $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => "Account UID")));
@@ -50,6 +48,10 @@ $invalid_account_identifier = FALSE;
 $account_attribute = $LDAP['account_attribute'];
 
 $new_account_r = array();
+
+if ($SHOW_POSIX_ATTRIBUTES == TRUE) {
+
+}
 
 foreach ($attribute_map as $attribute => $attr_r) {
 
@@ -103,11 +105,9 @@ if (isset($_GET['account_request'])) {
 
   $givenname[0]=filter_var($_GET['first_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   $new_account_r['givenname'] = $givenname[0];
-  unset($new_account_r['givenname']['count']);
 
   $sn[0]=filter_var($_GET['last_name'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   $new_account_r['sn'] = $sn[0];
-  unset($new_account_r['sn']['count']);
 
   $mail[0]=filter_var($_GET['email'], FILTER_SANITIZE_EMAIL);
   if ($mail[0] == "") {

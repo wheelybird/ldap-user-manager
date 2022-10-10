@@ -14,17 +14,17 @@ $ldap_connection = open_ldap_connection();
 
 if (isset($_POST['delete_user'])) {
 
- $this_user = $_POST['delete_user'];
- $this_user = urldecode($this_user);
+  $this_user = $_POST['delete_user'];
+  $this_user = urldecode($this_user);
 
- $del_user = ldap_delete_account($ldap_connection,$this_user);
+  $del_user = ldap_delete_account($ldap_connection,$this_user);
 
- if ($del_user) {
-   render_alert_banner("User <strong>$this_user</strong> was deleted.");
- }
- else {
-   render_alert_banner("User <strong>$this_user</strong> wasn't deleted.  See the logs for more information.","danger",15000);
- }
+  if ($del_user) {
+    render_alert_banner("User <strong>$this_user</strong> was deleted.");
+  }
+  else {
+    render_alert_banner("User <strong>$this_user</strong> wasn't deleted.  See the logs for more information.","danger",15000);
+  }
 
 
 }
@@ -61,15 +61,15 @@ $people = ldap_get_user_list($ldap_connection);
 <?php
 foreach ($people as $account_identifier => $attribs){
 
- $group_membership = ldap_user_group_membership($ldap_connection,$account_identifier);
- if (isset($people[$account_identifier]['mail'])) { $this_mail = $people[$account_identifier]['mail']; } else { $this_mail = ""; }
+  $group_membership = ldap_user_group_membership($ldap_connection,$account_identifier);
+  if (isset($people[$account_identifier]['mail'])) { $this_mail = $people[$account_identifier]['mail']; } else { $this_mail = ""; }
+  print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_user.php?account_identifier=" . urlencode($account_identifier) . "'>$account_identifier</a></td>\n";
+  print "   <td>" . $people[$account_identifier]['givenname'] . "</td>\n";
+  print "   <td>" . $people[$account_identifier]['sn'] . "</td>\n";
+  print "   <td>$this_mail</td>\n"; 
+  print "   <td>" . implode(", ", $group_membership) . "</td>\n";
+  print " </tr>\n";
 
- print " <tr>\n   <td><a href='${THIS_MODULE_PATH}/show_user.php?account_identifier=" . urlencode($account_identifier) . "'>$account_identifier</a></td>\n";
- print "   <td>" . $people[$account_identifier]['givenname'] . "</td>\n";
- print "   <td>" . $people[$account_identifier]['sn'] . "</td>\n";
- print "   <td>$this_mail</td>\n";
- print "   <td>" . implode(", ", $group_membership) . "</td>\n";
- print " </tr>\n";
 }
 ?>
   </tbody>
