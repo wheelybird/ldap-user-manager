@@ -278,7 +278,7 @@ function ldap_hashed_password($password) {
     break;
 
   case 'ARGON2':
-    $hashed_pwd = password_hash($password, PASSWORD_ARGON2ID, ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3]);
+    $hashed_pwd = '{ARGON2}' . password_hash($password, PASSWORD_ARGON2ID, ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3]);
     break;
 
   case 'CRYPT':
