@@ -205,6 +205,7 @@ function ldap_hashed_password($password) {
                             "SHA",
                             "SMD5",
                             "MD5",
+                            "ARGON2",
                             "CRYPT",
                             "CLEAR"
                           );
@@ -274,6 +275,10 @@ function ldap_hashed_password($password) {
   case 'SSHA':
     $salt = generate_salt(8);
     $hashed_pwd = '{SSHA}' . base64_encode(sha1($password . $salt, TRUE) . $salt);
+    break;
+
+  case 'ARGON2':
+    $hashed_pwd = password_hash($password, PASSWORD_ARGON2ID, ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3]);
     break;
 
   case 'CRYPT':
