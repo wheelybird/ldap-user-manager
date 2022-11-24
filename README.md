@@ -53,7 +53,7 @@ docker run \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
            -e "LDAP_IGNORE_CERT_ERRORS=true" \
            -e "EMAIL_DOMAIN=ldapusermanager.org" \
-           wheelybird/ldap-user-manager:v1.9
+           wheelybird/ldap-user-manager:v1.10
 ```
 Change the variable values to suit your environment.  Now go to https://lum.example.com/setup.
 
