@@ -34,8 +34,8 @@ function parse_mail_text($template,$password,$login,$first_name,$last_name) {
   $template = str_replace("{last_name}", $last_name, $template);
 
   $template = str_replace("{organisation}", $ORGANISATION_NAME, $template);
-  $template = str_replace("{site_url}", "${SITE_PROTOCOL}${SERVER_HOSTNAME}${SERVER_PATH}", $template);
-  $template = str_replace("{change_password_url}", "${SITE_PROTOCOL}${SERVER_HOSTNAME}${SERVER_PATH}change_password", $template);
+  $template = str_replace("{site_url}", "{$SITE_PROTOCOL}{$SERVER_HOSTNAME}{$SERVER_PATH}", $template);
+  $template = str_replace("{change_password_url}", "{$SITE_PROTOCOL}{$SERVER_HOSTNAME}{$SERVER_PATH}change_password", $template);
 
   return $template;
 

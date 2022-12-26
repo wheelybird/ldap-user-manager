@@ -31,16 +31,16 @@ if (isset($_POST["user_id"]) and isset($_POST["password"])) {
 
   set_passkey_cookie($user_auth,$is_admin);
   if (isset($_POST["redirect_to"])) {
-   header("Location: //${_SERVER['HTTP_HOST']}" . base64_decode($_POST['redirect_to']) . "\n\n");
+   header("Location: //{$_SERVER['HTTP_HOST']}" . base64_decode($_POST['redirect_to']) . "\n\n");
   }
   else {
 
    if ($IS_ADMIN) { $default_module = "account_manager"; } else { $default_module = "change_password"; }
-   header("Location: //${_SERVER['HTTP_HOST']}${SERVER_PATH}$default_module?logged_in\n\n");
+   header("Location: //{$_SERVER['HTTP_HOST']}{$SERVER_PATH}$default_module?logged_in\n\n");
   }
  }
  else {
-  header("Location: //${_SERVER['HTTP_HOST']}${THIS_MODULE_PATH}/index.php?invalid\n\n");
+  header("Location: //{$_SERVER['HTTP_HOST']}{$THIS_MODULE_PATH}/index.php?invalid\n\n");
  }
 
 }

@@ -30,7 +30,7 @@ if ($ldap_search) {
         header("Content-Type: application/octet-stream");
         header("Cache-Control: no-cache private");
         header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename='${this_resource}.${this_attribute}'");
+        header("Content-disposition: attachment; filename='{$this_resource}.{$this_attribute}'");
         header("Content-Length: ". strlen($this_record[$this_attribute][0]));
         print $this_record[$this_attribute][0];
       }
