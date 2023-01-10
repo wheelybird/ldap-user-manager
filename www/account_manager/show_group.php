@@ -61,7 +61,7 @@ if (isset($_POST['new_group'])) {
 }
 elseif (isset($_POST['initialise_group'])) {
   $initialise_group = TRUE;
-  $full_dn = "${LDAP['group_attribute']}=$group_cn,${LDAP['group_dn']}";
+  $full_dn = "{$LDAP['group_attribute']}=$group_cn,{$LDAP['group_dn']}";
   $has_been = "created";
 }
 else {
@@ -216,7 +216,7 @@ if (isset($_POST["update_members"])) {
       render_alert_banner("Groups can't be empty, so the final member hasn't been removed.  You could try deleting the group","danger",15000);
     }
     else {
-      render_alert_banner("The group has been ${has_been}.");
+      render_alert_banner("The group has been {$has_been}.");
     }
 
   }
@@ -349,7 +349,7 @@ ldap_close($ldap_connection);
         <div class="panel-heading clearfix">
           <h3 class="panel-title pull-left" style="padding-top: 7.5px;"><?php print $group_cn; ?><?php if ($group_cn == $LDAP["admins_group"]) { print " <sup>(admin group)</sup>" ; } ?></h3>
           <button class="btn btn-warning pull-right" onclick="show_delete_group_button();" <?php if ($group_cn == $LDAP["admins_group"]) { print "disabled"; } ?>>Delete group</button>
-          <form action="<?php print "${THIS_MODULE_PATH}"; ?>/groups.php" method="post" enctype="multipart/form-data"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
+          <form action="<?php print "{$THIS_MODULE_PATH}"; ?>/groups.php" method="post" enctype="multipart/form-data"><input type="hidden" name="delete_group" value="<?php print $group_cn; ?>"><button class="btn btn-danger pull-right invisible" id="delete_group">Confirm deletion</button></form>
         </div>
 
         <ul class="list-group">

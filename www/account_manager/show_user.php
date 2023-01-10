@@ -41,7 +41,7 @@ else {
 }
 
 $ldap_connection = open_ldap_connection();
-$ldap_search_query="(${LDAP['account_attribute']}=". ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ")";
+$ldap_search_query="({$LDAP['account_attribute']}=". ldap_escape($account_identifier, "", LDAP_ESCAPE_FILTER) . ")";
 $ldap_search = ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_query);
 
 
@@ -156,15 +156,15 @@ if ($ldap_search) {
   if (array_key_exists($LDAP['account_attribute'], $to_update)) {
     $account_attribute = $LDAP['account_attribute'];
     $new_account_identifier = $to_update[$account_attribute][0];
-    $new_rdn = "${account_attribute}=${new_account_identifier}";
+    $new_rdn = "{$account_attribute}={$new_account_identifier}";
     $renamed_entry = ldap_rename($ldap_connection, $dn, $new_rdn, $LDAP['user_dn'], true);
     if ($renamed_entry) {
-      $dn = "${new_rdn},${LDAP['user_dn']}";
+      $dn = "{$new_rdn},{$LDAP['user_dn']}";
       $account_identifier = $new_account_identifier;
     }
     else {
       ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
-      error_log("$log_prefix Failed to rename the DN for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
+      error_log("$log_prefix Failed to rename the DN for {$account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
     }
   }
 
@@ -176,7 +176,7 @@ if ($ldap_search) {
 
   if (!$updated_account) {
     ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
-    error_log("$log_prefix Failed to modify account details for ${account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
+    error_log("$log_prefix Failed to modify account details for {$account_identifier}: " . ldap_error($ldap_connection) . " -- " . $detailed_err,0);
   }
 
   $sent_email_message="";
@@ -187,9 +187,9 @@ if ($ldap_search) {
       $mail_body = parse_mail_text($new_account_mail_body, $password, $account_identifier, $givenname[0], $sn[0]);
       $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $givenname[0], $sn[0]);
 
-      $sent_email = send_email($mail[0],"${givenname[0]} ${sn[0]}",$mail_subject,$mail_body);
+      $sent_email = send_email($mail[0],"{$givenname[0]} {$sn[0]}",$mail_subject,$mail_body);
       if ($sent_email) {
-        $sent_email_message .= "  An email sent to ${mail[0]}.";
+        $sent_email_message .= "  An email sent to {$mail[0]}.";
       }
       else {
         $sent_email_message .= "  Unfortunately the email wasn't sent; check the logs for more information.";
@@ -443,7 +443,7 @@ if ($ldap_search) {
     <div class="panel-heading clearfix">
      <span class="panel-title pull-left"><h3><?php print $account_identifier; ?></h3></span>
      <button class="btn btn-warning pull-right align-self-end" style="margin-top: auto;" onclick="show_delete_user_button();" <?php if ($account_identifier == $USER_ID) { print "disabled"; }?>>Delete account</button>
-     <form action="<?php print "${THIS_MODULE_PATH}"; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
+     <form action="<?php print "{$THIS_MODULE_PATH}"; ?>/index.php" method="post"><input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>"><button class="btn btn-danger pull-right invisible" id="delete_user">Confirm deletion</button></form>
     </div>
     <ul class="list-group">
       <li class="list-group-item"><?php print $dn; ?></li>
@@ -542,7 +542,7 @@ if ($ldap_search) {
             <?php
             foreach ($member_of as $group) {
               if ($group == $LDAP["admins_group"] and $USER_ID == $account_identifier) {
-                print "<div class='list-group-item' style='opacity: 0.5; pointer-events:none;'>${group}</div>\n";
+                print "<div class='list-group-item' style='opacity: 0.5; pointer-events:none;'>{$group}</div>\n";
               }
               else {
                 print "<li class='list-group-item'>$group</li>\n";

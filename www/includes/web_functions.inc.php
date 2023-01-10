@@ -33,7 +33,7 @@ include ("config.inc.php");    # get local settings
 include ("modules.inc.php");   # module definitions
 
 if (substr($SERVER_PATH, -1) != "/") { $SERVER_PATH .= "/"; }
-$THIS_MODULE_PATH="${SERVER_PATH}${THIS_MODULE}";
+$THIS_MODULE_PATH="{$SERVER_PATH}{$THIS_MODULE}";
 
 $DEFAULT_COOKIE_OPTIONS = array( 'expires' => time()+(60 * $SESSION_TIMEOUT),
                                  'path' => $SERVER_PATH,
@@ -84,7 +84,7 @@ function set_passkey_cookie($user_id,$is_admin) {
  $sessto_cookie_opts = $DEFAULT_COOKIE_OPTIONS;
  $sessto_cookie_opts['expires'] = $this_time+7200;
  setcookie('sessto_cookie', $this_time+(60 * $SESSION_TIMEOUT), $sessto_cookie_opts);
- if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: user $user_id validated (IS_ADMIN=${IS_ADMIN}), sent orf_cookie to the browser.",0); }
+ if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: user $user_id validated (IS_ADMIN={$IS_ADMIN}), sent orf_cookie to the browser.",0); }
  $VALIDATED = TRUE;
 
 }
@@ -129,7 +129,7 @@ function validate_passkey_cookie() {
         if ($f_is_admin == 1) { $IS_ADMIN = TRUE; }
         $VALIDATED = TRUE;
         $USER_ID=$user_id;
-        if ($SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: Cookie and session file values match for user ${user_id} - VALIDATED (ADMIN = ${IS_ADMIN})",0); }
+        if ($SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: Cookie and session file values match for user {$user_id} - VALIDATED (ADMIN = {$IS_ADMIN})",0); }
         set_passkey_cookie($USER_ID,$IS_ADMIN);
       }
       else {
@@ -137,7 +137,7 @@ function validate_passkey_cookie() {
           $this_error="$log_prefix Session: orf_cookie was sent by the client and the session file was found at /tmp/$filename, but";
           if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
           if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
-          $this_error.=" Cookie: ${_COOKIE['orf_cookie']} - Session file contents: $session_file";
+          $this_error.=" Cookie: {$_COOKIE['orf_cookie']} - Session file contents: $session_file";
           error_log($this_error,0);
         }
       }
@@ -205,7 +205,7 @@ function validate_setup_cookie() {
    $this_error="$log_prefix Setup session: setup_cookie was sent by the client and the session file was found at /tmp/ldap_setup, but";
    if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
    if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
-   $this_error += " Cookie: ${_COOKIE['setup_cookie']} - Session file contents: $session_file";
+   $this_error += " Cookie: {$_COOKIE['setup_cookie']} - Session file contents: $session_file";
    error_log($this_error,0);
   }
  }
@@ -238,7 +238,7 @@ function log_out($method='normal') {
  @ unlink("/tmp/$filename");
 
  if ($method == 'auto') { $options = "?logged_out"; } else { $options = ""; }
- header("Location:  //${_SERVER["HTTP_HOST"]}${SERVER_PATH}index.php$options\n\n");
+ header("Location:  //{$_SERVER["HTTP_HOST"]}{$SERVER_PATH}index.php$options\n\n");
 
 }
 
@@ -325,7 +325,7 @@ function render_menu() {
        else {
         print '<li>';
        }
-       print "<a href='${SERVER_PATH}{$module}/'>$this_module_name</a></li>\n";
+       print "<a href='{$SERVER_PATH}{$module}/'>$this_module_name</a></li>\n";
       }
      }
      ?>
@@ -369,7 +369,7 @@ function set_page_access($level) {
    return;
   }
   else {
-   header("Location: //" . $_SERVER["HTTP_HOST"] . "${SERVER_PATH}setup/index.php?unauthorised\n\n");
+   header("Location: //" . $_SERVER["HTTP_HOST"] . "{$SERVER_PATH}setup/index.php?unauthorised\n\n");
    if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: UNAUTHORISED: page security level is 'setup' but IS_SETUP_ADMIN isn't TRUE",0); }
    exit(0);
   }
@@ -382,8 +382,8 @@ function set_page_access($level) {
    return;
   }
   else {
-   header("Location: //" . $_SERVER["HTTP_HOST"] . "${SERVER_PATH}log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
-   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: no access to page ($reason): page security level is 'admin' but IS_ADMIN = '${IS_ADMIN}' and VALIDATED = '${VALIDATED}' (user) ",0); }
+   header("Location: //" . $_SERVER["HTTP_HOST"] . "{$SERVER_PATH}log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: no access to page ($reason): page security level is 'admin' but IS_ADMIN = '{$IS_ADMIN}' and VALIDATED = '{$VALIDATED}' (user) ",0); }
    exit(0);
   }
  }
@@ -393,8 +393,8 @@ function set_page_access($level) {
    return;
   }
   else {
-   header("Location: //" . $_SERVER["HTTP_HOST"] . "${SERVER_PATH}log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
-   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: no access to page ($reason): page security level is 'user' but VALIDATED = '${VALIDATED}'",0); }
+   header("Location: //" . $_SERVER["HTTP_HOST"] . "{$SERVER_PATH}log_in/index.php?$reason&redirect_to=" . base64_encode($_SERVER['REQUEST_URI']) . "\n\n");
+   if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Session: no access to page ($reason): page security level is 'user' but VALIDATED = '{$VALIDATED}'",0); }
    exit(0);
   }
  }
@@ -679,7 +679,7 @@ function render_attribute_fields($attribute,$label,$values_r,$resource_identifie
                  $description="Download $mimetype file (" . human_readable_filesize(strlen($values_r[0])) . ")";
                  $button_text="Replace file";
                  if ($resource_identifier != "") {
-                   $this_url="//${_SERVER['HTTP_HOST']}${THIS_MODULE_PATH}/download.php?resource_identifier=${resource_identifier}&attribute=${attribute}";
+                   $this_url="//{$_SERVER['HTTP_HOST']}{$THIS_MODULE_PATH}/download.php?resource_identifier={$resource_identifier}&attribute={$attribute}";
                    $file_button_action="onclick=\"window.open('$this_url','_blank');\"";
                  }
                }

@@ -20,7 +20,7 @@ if ( isset($_POST['setup_admin_account']) ) {
   validate_setup_cookie();
   set_page_access("setup");
 
-  $completed_action="${SERVER_PATH}log_in";
+  $completed_action="{$SERVER_PATH}log_in";
   $page_title="New administrator account";
 
   render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
@@ -29,7 +29,7 @@ if ( isset($_POST['setup_admin_account']) ) {
 else {
   set_page_access("admin");
 
-  $completed_action="${THIS_MODULE_PATH}/";
+  $completed_action="{$THIS_MODULE_PATH}/";
   $page_title="New account";
   $admin_setup = FALSE;
 

@@ -83,8 +83,8 @@
    if (strtoupper(getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) == 'FALSE' )  { $LDAP['group_membership_uses_uid']  = FALSE; }
  }
 
- $LDAP['group_dn'] = "ou=${LDAP['group_ou']},${LDAP['base_dn']}";
- $LDAP['user_dn'] = "ou=${LDAP['user_ou']},${LDAP['base_dn']}";
+ $LDAP['group_dn'] = "ou={$LDAP['group_ou']},{$LDAP['base_dn']}";
+ $LDAP['user_dn'] = "ou={$LDAP['user_ou']},{$LDAP['base_dn']}";
 
  if (isset($account_additional_objectclasses) and $account_additional_objectclasses != "") {
    $LDAP['account_objectclasses'] = array_merge($LDAP['account_objectclasses'], explode(",", $account_additional_objectclasses));
