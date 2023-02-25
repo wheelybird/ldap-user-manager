@@ -44,6 +44,8 @@ $weak_password = FALSE;
 $invalid_email = FALSE;
 $disabled_email_tickbox = TRUE;
 $invalid_cn = FALSE;
+$invalid_givenname = FALSE;
+$invalid_sn = FALSE;
 $invalid_account_identifier = FALSE;
 $account_attribute = $LDAP['account_attribute'];
 
@@ -160,6 +162,8 @@ if (isset($_POST['create_account'])) {
 
  if (!isset($this_cn) or $this_cn == "") { $invalid_cn = TRUE; }
  if ((!isset($account_identifier) or $account_identifier == "") and $invalid_cn != TRUE) { $invalid_account_identifier = TRUE; }
+ if (!isset($this_givenname) or $this_givenname == "") { $invalid_givenname = TRUE; }
+ if (!isset($this_sn) or $this_sn == "") { $invalid_sn = TRUE; }
  if ((!is_numeric($_POST['pass_score']) or $_POST['pass_score'] < 3) and $ACCEPT_WEAK_PASSWORDS != TRUE) { $weak_password = TRUE; }
  if (isset($this_mail) and !is_valid_email($this_mail)) { $invalid_email = TRUE; }
  if (preg_match("/\"|'/",$password)) { $invalid_password = TRUE; }
@@ -253,6 +257,8 @@ if (isset($_POST['create_account'])) {
 
 $errors="";
 if ($invalid_cn) { $errors.="<li>The Common Name is required</li>\n"; }
+if ($invalid_givenname) { $errors.="<li>First Name is required</li>\n"; }
+if ($invalid_sn) { $errors.="<li>Last Name is required</li>\n"; }
 if ($invalid_account_identifier) {  $errors.="<li>The account identifier (" . $attribute_map[$account_attribute]['label'] . ") is invalid.</li>\n"; }
 if ($weak_password) { $errors.="<li>The password is too weak</li>\n"; }
 if ($invalid_password) { $errors.="<li>The password contained invalid characters</li>\n"; }
@@ -358,6 +364,7 @@ $tabindex=1;
          $label = $attr_r['label'];
          if (isset($attr_r['onkeyup'])) { $onkeyup = $attr_r['onkeyup']; } else { $onkeyup = ""; }
          if ($attribute == $LDAP['account_attribute']) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
+         if (isset($attr_r['required']) and $attr_r['required'] == TRUE) { $label = "<strong>$label</strong><sup>&ast;</sup>"; }
          if (isset($$attribute)) { $these_values=$$attribute; } else { $these_values = array(); }
          if (isset($attr_r['inputtype'])) { $inputtype = $attr_r['inputtype']; } else { $inputtype = ""; }
          render_attribute_fields($attribute,$label,$these_values,"",$onkeyup,$inputtype,$tabindex);
