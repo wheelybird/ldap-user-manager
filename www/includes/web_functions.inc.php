@@ -330,9 +330,9 @@ function render_menu() {
      }
      ?>
      </ul>
-     <div style="text-align: right;">
-     <?php if(isset($USER_ID)) { print $USER_ID; } ?>
-     </div>
+     <ul class="nav navbar-nav navbar-right">
+      <li><a style="color:#333"><?php if(isset($USER_ID)) { print $USER_ID; } ?></a></li>
+     </ul>
    </div>
   </nav>
  <?php
