@@ -386,7 +386,7 @@ docker run \
              -e "LDAP_RFC2307BIS_SCHEMA=true" \
              -e "LDAP_REMOVE_CONFIG_AFTER_SETUP=true" \
              -e "LDAP_TLS_VERIFY_CLIENT=never" \
-             -p 389:389
+             -p 389:389 \
              --volume /opt/docker/openldap/var_lib_ldap:/var/lib/ldap \
              --volume /opt/docker/openldap/etc_ldap_slapd.d:/etc/ldap/slapd.d \
              osixia/openldap:latest
