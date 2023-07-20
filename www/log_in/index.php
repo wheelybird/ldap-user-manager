@@ -22,19 +22,18 @@ if (isset($_GET['logged_out'])) {
 if (isset($_POST["user_id"]) and isset($_POST["password"])) {
 
  $ldap_connection = open_ldap_connection();
- $user_auth = ldap_auth_username($ldap_connection,$_POST["user_id"],$_POST["password"]);
- $is_admin = ldap_is_group_member($ldap_connection,$LDAP['admins_group'],$_POST["user_id"]);
+ $account_id = ldap_auth_username($ldap_connection,$_POST["user_id"],$_POST["password"]);
+ $is_admin = ldap_is_group_member($ldap_connection,$LDAP['admins_group'],$account_id);
 
  ldap_close($ldap_connection);
 
- if ($user_auth != FALSE) {
+ if ($account_id != FALSE) {
 
-  set_passkey_cookie($user_auth,$is_admin);
+  set_passkey_cookie($account_id,$is_admin);
   if (isset($_POST["redirect_to"])) {
    header("Location: //{$_SERVER['HTTP_HOST']}" . base64_decode($_POST['redirect_to']) . "\n\n");
   }
   else {
-
    if ($IS_ADMIN) { $default_module = "account_manager"; } else { $default_module = "change_password"; }
    header("Location: //{$_SERVER['HTTP_HOST']}{$SERVER_PATH}$default_module?logged_in\n\n");
   }
@@ -78,7 +77,7 @@ else {
     <?php if (isset($redirect_to) and ($redirect_to != "")) { ?><input type="hidden" name="redirect_to" value="<?php print htmlspecialchars($redirect_to); ?>"><?php } ?>
 
     <div class="form-group">
-     <label for="username" class="col-sm-4 control-label">Username</label>
+     <label for="username" class="col-sm-4 control-label"><?php print $SITE_LOGIN_FIELD_LABEL; ?></label>
      <div class="col-sm-6">
       <input type="text" class="form-control" id="user_id" name="user_id">
      </div>

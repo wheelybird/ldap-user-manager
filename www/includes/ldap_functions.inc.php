@@ -83,14 +83,14 @@ function open_ldap_connection($ldap_bind=TRUE) {
 
 ###################################
 
-function ldap_auth_username($ldap_connection,$username, $password) {
+function ldap_auth_username($ldap_connection, $username, $password) {
 
  # Search for the DN for the given username.  If found, try binding with the DN and user's password.
  # If the binding succeeds, return the DN.
 
- global $log_prefix, $LDAP, $LDAP_DEBUG;
+ global $log_prefix, $LDAP, $SITE_LOGIN_LDAP_ATTRIBUTE, $LDAP_DEBUG;
 
- $ldap_search_query="{$LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER);
+ $ldap_search_query="{$SITE_LOGIN_LDAP_ATTRIBUTE}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER);
  if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Running LDAP search for: $ldap_search_query"); }
 
  $ldap_search = @ ldap_search( $ldap_connection, $LDAP['user_dn'], $ldap_search_query );
@@ -117,13 +117,14 @@ function ldap_auth_username($ldap_connection,$username, $password) {
   $this_dn = $result[0]['dn'];
   if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Attempting authenticate as $username by binding with {$this_dn} ",0); }
   $auth_ldap_connection = open_ldap_connection(FALSE);
-  $can_bind =  @ ldap_bind( $auth_ldap_connection, $result[0]['dn'], $password);
+  $can_bind =  @ ldap_bind($auth_ldap_connection, $result[0]['dn'], $password);
 
   if ($can_bind) {
    preg_match("/{$LDAP['account_attribute']}=(.*?),/",$result[0]['dn'],$dn_match);
-   if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Able to bind as {$username}",0); }
+   $account_id=$dn_match[1];
+   if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Able to bind as {$username}: dn is {$result[0]['dn']} and account ID is {$account_id}",0); }
    ldap_close($auth_ldap_connection);
-   return $dn_match[1];
+   return $account_id;
   }
   else {
    if ($LDAP_DEBUG == TRUE) { error_log("$log_prefix Unable to bind as {$username}: " . ldap_error($auth_ldap_connection),0); }

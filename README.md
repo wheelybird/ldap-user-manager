@@ -53,7 +53,7 @@ docker run \
            -e "LDAP_ADMIN_BIND_PWD=secret"\
            -e "LDAP_IGNORE_CERT_ERRORS=true" \
            -e "EMAIL_DOMAIN=ldapusermanager.org" \
-           wheelybird/ldap-user-manager:v1.10
+           wheelybird/ldap-user-manager:v1.11
 ```
 Change the variable values to suit your environment.  Now go to https://lum.example.com/setup.
 
@@ -105,15 +105,6 @@ For example, if you're using Docker Swarm and you've set the LDAP bind password 
    
 * `SESSION_TIMEOUT` (default: *10 minutes*):  How long before an idle session will be timed out.
 
-
-#### Interface customisation
-
-* `ORGANISATION_NAME`: (default: *LDAP*): Your organisation's name.
-   
-* `SITE_NAME` (default: *`ORGANISATION_NAME` user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".
-   
-* `SHOW_POSIX_ATTRIBUTES` (default: *FALSE*):  If set to `TRUE` this show extra attributes for **posixAccount** and **posixGroup** in the account and group forms.  Leave this set to `FALSE` if you don't use LDAP accounts to log into servers etc., as it makes the interface much simpler.   The Posix values are still set in the background using the default values.  This setting doesn't hide any Posix attributes set via `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` or `LDAP_GROUP_ADDITIONAL_ATTRIBUTES`.
-
 #### LDAP settings
 
 * `LDAP_USER_OU` (default: *people*):  The name of the OU used to store user accounts (without the base DN appended).
@@ -149,7 +140,7 @@ These settings should only be changed if you're trying to make the user manager 
 * `FORCE_RFC2307BIS` (default: *FALSE*): Set to *TRUE* if the auto-detection is failing to spot that the RFC2307BIS schema is available.  When *FALSE* the user manager will use auto-detection.  See [Using the RFC2307BIS schema](#using-the-rfc2307bis-schema) for more information.
    
 
-#### User account settings
+#### User account creation settings
 
 * `DEFAULT_USER_GROUP` (default: *everybody*):  The group that new accounts are automatically added to when created.  *NOTE*: If this group doesn't exist then a group is created with the same name as the username and the user is added to that group.
    
@@ -166,8 +157,22 @@ These settings should only be changed if you're trying to make the user manager 
 * `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are (in order of precedence) `SHA512CRYPT`, `SHA256CRYPT`, `MD5CRYPT`, `SSHA`, `SHA`, `SMD5`, `MD5`, `ARGON2`, `CRYPT` & `CLEAR`.  If your chosen method isn't available on your system then the strongest available method will be automatically selected - `SSHA` is the strongest method guaranteed to be available. (Note that for `ARGON2` to work your LDAP server will need to have the ARGON2 module enabled. If you don't the passwords will be saved but the user won't be able to authenticate.) Cleartext passwords should NEVER be used in any situation outside of a test.
    
 * `ACCEPT_WEAK_PASSWORDS` (default: *FALSE*):  Set this to *TRUE* to prevent a password being rejected for being too weak.  The password strength indicators will still gauge the strength of the password.  Don't enable this in a production environment.
+
+
+#### Website appearance and behaviour settings
+
+* `ORGANISATION_NAME`: (default: *LDAP*): Your organisation's name.
    
+* `SITE_NAME` (default: *`ORGANISATION_NAME` user manager*):  Change this to replace the title in the menu, e.g. "My Company Account Management".
+   
+* `SITE_LOGIN_LDAP_ATTRIBUTE` (default: *`LDAP_ACCOUNT_ATTRIBUTE`*):  The LDAP account attribute to use when logging into the user-manager.  For example, set this to `mail` to use email addresses to log in. Use this with extreme caution. The value for this attribute needs to be unique for each account; if more than one result is found when searching for an account then you won't be able to log in.
+   
+* `SITE_LOGIN_FIELD_LABEL` (default: *Username*):  This is the label that appears next to the username field on the login page.  If you change `SITE_LOGIN_LDAP_ATTRIBUTE` then you might want to change this.  For example, `SITE_LOGIN_FIELD_LABEL="Email address"`.
+   
+* `SHOW_POSIX_ATTRIBUTES` (default: *FALSE*):  If set to `TRUE` this show extra attributes for **posixAccount** and **posixGroup** in the account and group forms.  Leave this set to `FALSE` if you don't use LDAP accounts to log into servers etc., as it makes the interface much simpler.   The Posix values are still set in the background using the default values.  This setting doesn't hide any Posix attributes set via `LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES` or `LDAP_GROUP_ADDITIONAL_ATTRIBUTES`.
+
 * `REMOTE_HTTP_HEADERS_LOGIN`(default: *FALSE*) Enables session managment from an external service like Authelia. _This setting will compromise your security if you're not using an Auth-Proxy in front of this application_.
+
 
 #### Email sending settings
 
