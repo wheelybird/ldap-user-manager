@@ -11,6 +11,7 @@
                     'log_in'          => 'hidden_on_login',
                     'change_password' => 'auth',
                     'account_manager' => 'admin',
+                    'import' => 'admin',
                   );
 
 if ($ACCOUNT_REQUESTS_ENABLED == TRUE) {
