@@ -182,6 +182,8 @@ To send emails you'll need to use an existing SMTP server.  Email sending will b
    
 * `SMTP_HOST_PORT` (default: *25*): The SMTP port on the SMTP server.
    
+* `SMTP_HELO_HOST` (no default): The hostname to send with the HELO/EHLO command.
+
 * `SMTP_USERNAME` (no default): The username to use when the SMTP server requires authentication.
    
 * `SMTP_PASSWORD` (no default): The password to use when the SMTP server requires authentication.

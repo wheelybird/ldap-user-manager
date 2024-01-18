@@ -55,6 +55,10 @@ function send_email($recipient_email,$recipient_name,$subject,$body) {
   $mail->Host = $SMTP['host'];
   $mail->Port = $SMTP['port'];
 
+  if (isset($SMTP['helo'])) {
+    $mail->Helo = $SMTP['helo'];
+  }
+
   if (isset($SMTP['user'])) {
     $mail->SMTPAuth = true;
     $mail->Username = $SMTP['user'];
