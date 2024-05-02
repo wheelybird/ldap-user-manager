@@ -169,6 +169,9 @@
 
  # Sanity checking
 
+ $CUSTOM_LOGO = (getenv('CUSTOM_LOGO') ? getenv('CUSTOM_LOGO') : FALSE);
+ $CUSTOM_STYLES = (getenv('CUSTOM_STYLES') ? getenv('CUSTOM_STYLES') : FALSE);
+
  $errors = "";
 
  if (empty($LDAP['uri'])) {
