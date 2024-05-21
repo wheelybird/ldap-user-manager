@@ -152,7 +152,7 @@ These settings should only be changed if you're trying to make the user manager 
    
 * `USERNAME_FORMAT` (default: *{first_name}-{last_name}*):  The template used to dynamically generate the usernames stored in the `uid` attribute.  See [Username format](#username-format).
    
-* `USERNAME_REGEX` (default: *^[a-z][a-zA-Z0-9\._-]{3,32}$*): The regular expression used to ensure account names and group names are safe to use on servers.  See [Username format](#username-format).
+* `USERNAME_REGEX` (default: *[a-z][a-zA-Z0-9\._-]{3,32}*): The regular expression used to ensure account names and group names are safe to use on servers. The regex is automatically anchored with `^$`. See [Username format](#username-format).
    
 * `PASSWORD_HASH` (no default):  Select which hashing method which will be used to store passwords in LDAP.  Options are (in order of precedence) `SHA512CRYPT`, `SHA256CRYPT`, `MD5CRYPT`, `SSHA`, `SHA`, `SMD5`, `MD5`, `ARGON2`, `CRYPT` & `CLEAR`.  If your chosen method isn't available on your system then the strongest available method will be automatically selected - `SSHA` is the strongest method guaranteed to be available. (Note that for `ARGON2` to work your LDAP server will need to have the ARGON2 module enabled. If you don't the passwords will be saved but the user won't be able to authenticate.) Cleartext passwords should NEVER be used in any situation outside of a test.
    
