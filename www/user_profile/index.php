@@ -8,7 +8,7 @@ include_once "totp_functions.inc.php";
 
 set_page_access("user");
 
-render_header("$ORGANISATION_NAME user profile");
+render_header($ORGANISATION_NAME . ' ' . t('user_profile.title'));
 
 $ldap_connection = open_ldap_connection();
 
@@ -17,33 +17,33 @@ $attribute_map = array();
 
 // Map attribute names to input types and friendly labels
 $attribute_config = array(
-  'telephonenumber' => array('label' => 'Telephone Number', 'inputtype' => 'tel'),
-  'mobile' => array('label' => 'Mobile Number', 'inputtype' => 'tel'),
-  'displayname' => array('label' => 'Display Name', 'inputtype' => 'text'),
-  'description' => array('label' => 'About Me', 'inputtype' => 'textarea'),
-  'title' => array('label' => 'Job Title', 'inputtype' => 'text'),
-  'jpegphoto' => array('label' => 'Profile Photo', 'inputtype' => 'binary'),
-  'sshpublickey' => array('label' => 'SSH Public Keys', 'inputtype' => 'multipleinput'),
+  'telephonenumber' => array('label' => t('attr.telephonenumber'), 'inputtype' => 'tel'),
+  'mobile' => array('label' => t('attr.mobile'), 'inputtype' => 'tel'),
+  'displayname' => array('label' => t('attr.displayname'), 'inputtype' => 'text'),
+  'description' => array('label' => t('attr.description'), 'inputtype' => 'textarea'),
+  'title' => array('label' => t('attr.title'), 'inputtype' => 'text'),
+  'jpegphoto' => array('label' => t('attr.jpegphoto'), 'inputtype' => 'binary'),
+  'sshpublickey' => array('label' => t('attr.sshpublickey'), 'inputtype' => 'multipleinput'),
 
   // Common additional attributes with good defaults
-  'homephone' => array('label' => 'Home Phone', 'inputtype' => 'tel'),
-  'facsimiletelephonenumber' => array('label' => 'Fax Number', 'inputtype' => 'tel'),
-  'pager' => array('label' => 'Pager', 'inputtype' => 'tel'),
-  'employeetype' => array('label' => 'Employee Type', 'inputtype' => 'text'),
-  'employeenumber' => array('label' => 'Employee Number', 'inputtype' => 'text'),
-  'preferredlanguage' => array('label' => 'Preferred Language', 'inputtype' => 'text'),
-  'street' => array('label' => 'Street Address', 'inputtype' => 'text'),
-  'postaladdress' => array('label' => 'Postal Address', 'inputtype' => 'textarea'),
-  'postalcode' => array('label' => 'Postal Code', 'inputtype' => 'text'),
-  'l' => array('label' => 'City', 'inputtype' => 'text'),
-  'st' => array('label' => 'State/Province', 'inputtype' => 'text'),
-  'postofficebox' => array('label' => 'P.O. Box', 'inputtype' => 'text'),
-  'usercertificate' => array('label' => 'Certificate', 'inputtype' => 'binary'),
-  'labeleduri' => array('label' => 'Website', 'inputtype' => 'url'),
-  'carlicense' => array('label' => 'Car Licence', 'inputtype' => 'text'),
-  'roomnumber' => array('label' => 'Room Number', 'inputtype' => 'text'),
-  'departmentnumber' => array('label' => 'Department', 'inputtype' => 'text'),
-  'initials' => array('label' => 'Initials', 'inputtype' => 'text'),
+  'homephone' => array('label' => t('attr.homephone'), 'inputtype' => 'tel'),
+  'facsimiletelephonenumber' => array('label' => t('attr.facsimiletelephonenumber'), 'inputtype' => 'tel'),
+  'pager' => array('label' => t('attr.pager'), 'inputtype' => 'tel'),
+  'employeetype' => array('label' => t('attr.employeetype'), 'inputtype' => 'text'),
+  'employeenumber' => array('label' => t('attr.employeenumber'), 'inputtype' => 'text'),
+  'preferredlanguage' => array('label' => t('attr.preferredlanguage'), 'inputtype' => 'text'),
+  'street' => array('label' => t('attr.street'), 'inputtype' => 'text'),
+  'postaladdress' => array('label' => t('attr.postaladdress'), 'inputtype' => 'textarea'),
+  'postalcode' => array('label' => t('attr.postalcode'), 'inputtype' => 'text'),
+  'l' => array('label' => t('attr.l'), 'inputtype' => 'text'),
+  'st' => array('label' => t('attr.st'), 'inputtype' => 'text'),
+  'postofficebox' => array('label' => t('attr.postofficebox'), 'inputtype' => 'text'),
+  'usercertificate' => array('label' => t('attr.usercertificate'), 'inputtype' => 'binary'),
+  'labeleduri' => array('label' => t('attr.labeleduri'), 'inputtype' => 'url'),
+  'carlicense' => array('label' => t('attr.carlicense'), 'inputtype' => 'text'),
+  'roomnumber' => array('label' => t('attr.roomnumber'), 'inputtype' => 'text'),
+  'departmentnumber' => array('label' => t('attr.departmentnumber'), 'inputtype' => 'text'),
+  'initials' => array('label' => t('attr.initials'), 'inputtype' => 'text'),
 );
 
 // Build attribute map from editable attributes list
@@ -54,10 +54,9 @@ foreach ($USER_EDITABLE_ATTRIBUTES as $attr) {
   if (isset($attribute_config[$attr_lower])) {
     $attribute_map[$attr_lower] = $attribute_config[$attr_lower];
   } else {
-    // Fallback: create readable label from attribute name
-    $label = ucwords(str_replace('_', ' ', $attr));
+    // Fallback to translated attribute labels when available.
     $attribute_map[$attr_lower] = array(
-      'label' => $label,
+      'label' => t('attr.' . $attr_lower) ?? ucwords(str_replace('_', ' ', $attr_lower)),
       'inputtype' => 'text'
     );
   }
@@ -69,7 +68,7 @@ $user_search = ldap_search($ldap_connection, $LDAP['user_dn'],
   array_merge(array('dn', 'cn', 'givenname', 'sn'), array_keys($attribute_map)));
 
 if (!$user_search) {
-  render_alert_banner("Failed to load user profile.", "danger", 15000);
+  render_alert_banner(t('user_profile.load_failed'), "danger", 15000);
   render_footer();
   exit(1);
 }
@@ -77,7 +76,7 @@ if (!$user_search) {
 $user = ldap_get_entries($ldap_connection, $user_search);
 
 if ($user['count'] == 0) {
-  render_alert_banner("User not found.", "danger", 15000);
+  render_alert_banner(t('user_profile.not_found'), "danger", 15000);
   render_footer();
   exit(1);
 }
@@ -103,20 +102,20 @@ foreach ($attribute_map as $attribute => $attr_config) {
       // Check file size (500KB limit for LDAP performance)
       $max_size = 500 * 1024; // 500KB in bytes
       if ($_FILES[$attribute]['size'] > $max_size) {
-        $upload_error = "Profile photo must be smaller than 500KB. Please resize your image.";
+        $upload_error = t('user_profile.upload_too_large');
       }
 
       // Check MIME type
       $finfo = new finfo(FILEINFO_MIME_TYPE);
       $mime_type = $finfo->file($_FILES[$attribute]['tmp_name']);
       if ($mime_type !== 'image/jpeg') {
-        $upload_error = "Profile photo must be a JPEG image. Uploaded file type: " . htmlspecialchars($mime_type);
+        $upload_error = t('user_profile.upload_must_be_jpeg', array('mime' => $mime_type));
       }
 
       // Verify it's actually a valid JPEG by attempting to load it
       $image_check = @imagecreatefromjpeg($_FILES[$attribute]['tmp_name']);
       if ($image_check === false) {
-        $upload_error = "The uploaded file is not a valid JPEG image.";
+        $upload_error = t('user_profile.upload_invalid_jpeg');
       } else {
         imagedestroy($image_check);
       }
@@ -189,13 +188,13 @@ if (isset($_POST['update_profile'])) {
   }
 
   if ($security_violation) {
-    render_alert_banner("Security violation: You cannot edit that attribute.", "danger", 15000);
+    render_alert_banner(t('user_profile.security_violation'), "danger", 15000);
   } elseif (!empty($to_update)) {
     // Perform LDAP update
     $updated_profile = @ldap_mod_replace($ldap_connection, $dn, $to_update);
 
     if ($updated_profile) {
-      render_alert_banner("Profile updated successfully.");
+      render_alert_banner(t('user_profile.updated'));
 
       // Reload user data to show updated values
       $user_search = ldap_search($ldap_connection, $LDAP['user_dn'],
@@ -217,10 +216,10 @@ if (isset($_POST['update_profile'])) {
     } else {
       ldap_get_option($ldap_connection, LDAP_OPT_DIAGNOSTIC_MESSAGE, $detailed_err);
       error_log("$log_prefix Failed to update profile for $USER_ID: " . ldap_error($ldap_connection) . " -- " . $detailed_err);
-      render_alert_banner("Failed to update profile. Please try again.", "danger", 15000);
+      render_alert_banner(t('user_profile.update_failed'), "danger", 15000);
     }
   } else {
-    render_alert_banner("No changes detected.", "info", 4000);
+    render_alert_banner(t('user_profile.no_changes'), "info", 4000);
   }
 }
 
@@ -238,19 +237,19 @@ if (isset($user[0]['cn'][0])) {
 
 <div class="container">
 
-  <h2>My profile</h2>
-  <p class="text-muted">Manage your personal information and contact details</p>
+  <h2><?php echo t('user_profile.heading'); ?></h2>
+  <p class="text-muted"><?php echo t('user_profile.subtitle'); ?></p>
 
   <div class="card">
     <div class="card-header">
       <h4 class="card-title"><?php echo htmlspecialchars($display_name); ?></h4>
-      <p class="text-muted mb-0">Username: <?php echo htmlspecialchars($USER_ID); ?></p>
+      <p class="text-muted mb-0"><?php echo t('user_profile.username'); ?> <?php echo htmlspecialchars($USER_ID); ?></p>
     </div>
     <div class="card-body">
 
       <?php if (empty($attribute_map)) { ?>
         <div class="alert alert-info">
-          <p class="text-center">No editable attributes are configured. Contact your administrator to enable user profile editing.</p>
+          <p class="text-center"><?php echo t('user_profile.no_editable'); ?></p>
         </div>
       <?php } else { ?>
 
@@ -269,10 +268,10 @@ if (isset($user[0]['cn'][0])) {
           <div class="row mb-3">
             <div class="col-sm-9 offset-sm-3">
               <button type="submit" name="update_profile" class="btn btn-primary">
-                <i class="bi bi-save"></i> Update Profile
+                <i class="bi bi-save"></i> <?php echo t('user_profile.update'); ?>
               </button>
               <a href="<?php echo url('/'); ?>" class="btn btn-secondary">
-                <i class="bi bi-x-circle"></i> Cancel
+                <i class="bi bi-x-circle"></i> <?php echo t('user_profile.cancel'); ?>
               </a>
             </div>
           </div>
@@ -311,50 +310,50 @@ if (isset($user[0]['cn'][0])) {
 
           // Determine status
           $status_class = 'success';
-          $status_text = 'OK';
+          $status_text = t('status.ok');
           if ($password_expires_in_days <= 0) {
             $status_class = 'danger';
-            $status_text = 'Expired';
+            $status_text = t('status.expired');
           } elseif ($password_expires_in_days <= $PASSWORD_EXPIRY_WARNING_DAYS) {
             $status_class = 'warning';
-            $status_text = 'Expiring Soon';
+            $status_text = t('status.expiring_soon');
           }
   ?>
 
   <div class="card mt-3">
     <div class="card-header">
       <h4 class="card-title">
-        Password information
+        <?php echo t('user_profile.password_info'); ?>
         <span class="badge bg-<?php echo $status_class; ?> float-end"><?php echo $status_text; ?></span>
       </h4>
     </div>
     <div class="card-body">
       <div class="row mb-3">
-        <div class="col-sm-4"><strong>Last Changed:</strong></div>
+        <div class="col-sm-4"><strong><?php echo t('user_profile.last_changed'); ?></strong></div>
         <div class="col-sm-8"><?php echo $password_changed_formatted; ?></div>
       </div>
       <div class="row mb-3">
-        <div class="col-sm-4"><strong>Password Age:</strong></div>
-        <div class="col-sm-8"><?php echo $password_age_days; ?> day<?php echo $password_age_days != 1 ? 's' : ''; ?></div>
+        <div class="col-sm-4"><strong><?php echo t('user_profile.password_age'); ?></strong></div>
+        <div class="col-sm-8"><?php echo $password_age_days . ' ' . ($password_age_days != 1 ? t('unit.days') : t('unit.day')); ?></div>
       </div>
       <div class="row mb-3">
-        <div class="col-sm-4"><strong>Expiry Date:</strong></div>
+        <div class="col-sm-4"><strong><?php echo t('user_profile.expiry_date'); ?></strong></div>
         <div class="col-sm-8"><?php echo $expiry_date; ?></div>
       </div>
       <div class="row mb-3">
-        <div class="col-sm-4"><strong>Days Until Expiry:</strong></div>
+        <div class="col-sm-4"><strong><?php echo t('user_profile.days_until_expiry'); ?></strong></div>
         <div class="col-sm-8">
           <?php if ($password_expires_in_days > 0): ?>
-            <span class="text-<?php echo $status_class; ?>"><?php echo $password_expires_in_days; ?> day<?php echo $password_expires_in_days != 1 ? 's' : ''; ?></span>
+            <span class="text-<?php echo $status_class; ?>"><?php echo $password_expires_in_days . ' ' . ($password_expires_in_days != 1 ? t('unit.days') : t('unit.day')); ?></span>
           <?php else: ?>
-            <span class="text-danger">Password has expired</span>
+            <span class="text-danger"><?php echo t('user_profile.password_expired'); ?></span>
           <?php endif; ?>
         </div>
       </div>
       <div class="row">
         <div class="col-sm-12">
           <a href="<?php echo url('/change_password'); ?>" class="btn btn-primary">
-            <i class="bi bi-key"></i> Change password
+            <i class="bi bi-key"></i> <?php echo t('user_profile.change_password'); ?>
           </a>
         </div>
       </div>
@@ -395,42 +394,43 @@ if (isset($user[0]['cn'][0])) {
 
       // Determine account status
       $account_status_class = 'success';
-      $account_status_text = 'OK';
+      $account_status_text = t('status.ok');
       if ($account_is_expired) {
         $account_status_class = 'danger';
-        $account_status_text = 'Expired';
+        $account_status_text = t('status.expired');
       } elseif ($account_should_warn) {
         $account_status_class = 'warning';
-        $account_status_text = 'Expiring Soon';
+        $account_status_text = t('status.expiring_soon');
       }
   ?>
 
   <div class="card mt-3">
     <div class="card-header">
       <h4 class="card-title">
-        Account information
+        <?php echo t('user_profile.account_info'); ?>
         <span class="badge bg-<?php echo $account_status_class; ?> float-end"><?php echo $account_status_text; ?></span>
       </h4>
     </div>
     <div class="card-body">
       <?php if ($account_created_formatted): ?>
       <div class="row mb-3">
-        <div class="col-sm-4"><strong>Account Created:</strong></div>
+        <div class="col-sm-4"><strong><?php echo t('user_profile.account_created'); ?></strong></div>
         <div class="col-sm-8"><?php echo $account_created_formatted; ?></div>
       </div>
       <?php endif; ?>
       <?php if ($account_expiry_date_formatted !== null): ?>
       <div class="row mb-3">
-        <div class="col-sm-4"><strong>Expiration Date:</strong></div>
+        <div class="col-sm-4"><strong><?php echo t('user_profile.expiration_date'); ?></strong></div>
         <div class="col-sm-8"><?php echo $account_expiry_date_formatted; ?></div>
       </div>
       <div class="row mb-3">
-        <div class="col-sm-4"><strong>Days Until Expiry:</strong></div>
+        <div class="col-sm-4"><strong><?php echo t('user_profile.days_until_expiry'); ?></strong></div>
         <div class="col-sm-8">
           <?php if ($account_is_expired): ?>
-            <span class="text-danger">Account expired <?php echo abs($account_days_remaining); ?> day<?php echo abs($account_days_remaining) != 1 ? 's' : ''; ?> ago</span>
+            <?php $abs_days = abs($account_days_remaining); ?>
+            <span class="text-danger"><?php echo t('user_profile.account_expired_ago', array('days' => $abs_days, 'suffix' => ($abs_days != 1 ? 's' : ''))); ?></span>
           <?php elseif ($account_days_remaining !== null && $account_days_remaining > 0): ?>
-            <span class="text-<?php echo $account_status_class; ?>"><?php echo $account_days_remaining; ?> day<?php echo $account_days_remaining != 1 ? 's' : ''; ?></span>
+            <span class="text-<?php echo $account_status_class; ?>"><?php echo $account_days_remaining . ' ' . ($account_days_remaining != 1 ? t('unit.days') : t('unit.day')); ?></span>
           <?php endif; ?>
         </div>
       </div>
@@ -438,9 +438,9 @@ if (isset($user[0]['cn'][0])) {
       <?php if ($account_should_warn || $account_is_expired): ?>
       <div class="alert alert-<?php echo $account_status_class; ?>">
         <?php if ($account_is_expired): ?>
-          <strong>Your account has expired.</strong> Please contact your administrator for assistance.
+          <?php echo t('user_profile.account_expired_contact'); ?>
         <?php else: ?>
-          <strong>Your account will expire soon.</strong> Please contact your administrator if you need an extension.
+          <?php echo t('user_profile.account_expiry_soon'); ?>
         <?php endif; ?>
       </div>
       <?php endif; ?>

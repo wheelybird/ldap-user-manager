@@ -20,7 +20,7 @@ $password_age_days = null;
 $password_expires_in_days = null;
 $expiry_date = null;
 $status_badge = 'bg-secondary';
-$status_text = 'Unknown';
+$status_text = t('user_password.unknown');
 
 if ($password_changed_time) {
   // Calculate password age and expiry
@@ -33,52 +33,52 @@ if ($password_changed_time) {
 
   // Determine status
   $status_badge = 'bg-success';
-  $status_text = 'OK';
+  $status_text = t('user_password.ok');
   if ($password_expires_in_days <= 0) {
     $status_badge = 'bg-danger';
-    $status_text = 'Expired';
+    $status_text = t('user_password.expired');
   } elseif ($password_expires_in_days <= $PASSWORD_EXPIRY_WARNING_DAYS) {
     $status_badge = 'bg-warning text-dark';
-    $status_text = 'Expiring Soon';
+    $status_text = t('user_password.expiring_soon');
   }
 }
 ?>
 <?php if ($password_changed_time): ?>
 <table class="table table-condensed">
   <tr>
-    <th width="30%">Password Status:</th>
+    <th width="30%"><?php print t('user_password.status'); ?></th>
     <td>
       <span class="badge <?php echo $status_badge; ?>"><?php echo $status_text; ?></span>
     </td>
   </tr>
   <tr>
-    <th>Last Changed:</th>
+    <th><?php print t('user_password.last_changed'); ?></th>
     <td><?php echo $password_changed_formatted; ?></td>
   </tr>
   <tr>
-    <th>Password Age:</th>
-    <td><?php echo $password_age_days; ?> day<?php echo $password_age_days != 1 ? 's' : ''; ?></td>
+    <th><?php print t('user_password.password_age'); ?></th>
+    <td><?php print t('user_password.days_value', array('days' => $password_age_days)); ?></td>
   </tr>
   <tr>
-    <th>Expiry Date:</th>
+    <th><?php print t('user_password.expiry_date'); ?></th>
     <td><?php echo $expiry_date; ?></td>
   </tr>
   <tr>
-    <th>Days Until Expiry:</th>
+    <th><?php print t('user_password.days_until_expiry'); ?></th>
     <td>
       <?php if ($password_expires_in_days > 0): ?>
         <span class="text-<?php echo $status_badge == 'bg-warning text-dark' ? 'warning' : 'success'; ?>">
-          <?php echo $password_expires_in_days; ?> day<?php echo $password_expires_in_days != 1 ? 's' : ''; ?>
+          <?php print t('user_password.days_value', array('days' => $password_expires_in_days)); ?>
         </span>
       <?php else: ?>
-        <span class="text-danger">Password has expired</span>
+        <span class="text-danger"><?php print t('user_password.password_has_expired'); ?></span>
       <?php endif; ?>
     </td>
   </tr>
 </table>
 <?php else: ?>
 <div class="alert alert-info">
-  <p><strong><i class="bi bi-info-circle"></i> Password Information Not Available</strong></p>
-  <p>Password expiry tracking requires the ppolicy overlay to be configured on the LDAP server and the user to have changed their password at least once.</p>
+  <p><strong><i class="bi bi-info-circle"></i> <?php print t('user_password.info_not_available_title'); ?></strong></p>
+  <p><?php print t('user_password.info_not_available_body'); ?></p>
 </div>
 <?php endif; ?>

@@ -7,7 +7,7 @@ include_once "ldap_functions.inc.php";
 include_once "totp_functions.inc.php";
 set_page_access("admin");
 
-render_header("$ORGANISATION_NAME - System Configuration");
+render_header($ORGANISATION_NAME . ' ' . t('system_config.title'));
 
 /**
  * Display a configuration value with default highlighting
@@ -44,7 +44,7 @@ function display_config_item($key, $metadata) {
 
     if (!$is_default) {
       $default_display = $default_value ? 'TRUE' : 'FALSE';
-      echo ' <small class="text-muted">(default: ' . $default_display . ')</small>';
+      echo ' <small class="text-muted">' . t('system_config.value_default', array('value' => $default_display)) . '</small>';
     }
   } elseif ($metadata['type'] == 'array') {
     if (is_array($current_value) && !empty($current_value)) {
@@ -57,7 +57,7 @@ function display_config_item($key, $metadata) {
     }
 
     if (!$is_default && is_array($default_value) && !empty($default_value)) {
-      echo '<br><small class="text-muted">Default: ';
+      echo '<br><small class="text-muted">' . t('system_config.value_default_plain') . ' ';
       foreach ($default_value as $item) {
         echo htmlspecialchars($item) . ', ';
       }
@@ -68,7 +68,7 @@ function display_config_item($key, $metadata) {
     $display_value = (string)$current_value;
 
     if ($display_value === '' || $display_value === null) {
-      echo '<em class="text-muted">(not set)</em>';
+      echo '<em class="text-muted">' . t('system_config.value_not_set') . '</em>';
     } else {
       $badge_class = $is_default ? 'bg-secondary' : 'bg-primary';
 
@@ -82,7 +82,7 @@ function display_config_item($key, $metadata) {
       if (!$is_default) {
         $default_display = (string)$default_value;
         if ($default_display !== '') {
-          echo ' <small class="text-muted">(default: ' . htmlspecialchars($default_display) . ')</small>';
+          echo ' <small class="text-muted">' . t('system_config.value_default', array('value' => htmlspecialchars($default_display))) . '</small>';
         }
       }
     }
@@ -90,7 +90,7 @@ function display_config_item($key, $metadata) {
 
   // Show environment variable name if available
   if (!empty($metadata['env_var'])) {
-    echo '<br><small class="text-muted">Env: <code>' . htmlspecialchars($metadata['env_var']) . '</code></small>';
+    echo '<br><small class="text-muted">' . t('system_config.env_var_label') . ' <code>' . htmlspecialchars($metadata['env_var']) . '</code></small>';
   }
 
   echo '</td>';
@@ -101,11 +101,11 @@ function display_config_item($key, $metadata) {
 
 <div class="container-fluid">
 
-  <h2>System configuration</h2>
+  <h2><?php echo t('system_config.heading'); ?></h2>
   <p class="text-muted">
-    Current configuration values.
-    <span class="badge bg-primary">Blue badges</span> indicate values changed from defaults.
-    <span class="badge bg-warning text-dark">Optional</span> features are disabled by default.
+    <?php echo t('system_config.badge_description'); ?>
+    <span class="badge bg-primary"><?php echo t('system_config.badge_blue_label'); ?></span> <?php echo t('system_config.badge_blue_hint'); ?>
+    <span class="badge bg-warning text-dark"><?php echo t('system_config.badge_optional_label'); ?></span> <?php echo t('system_config.badge_optional_hint'); ?>
   </p>
 
   <!-- Search/Filter -->
@@ -113,22 +113,22 @@ function display_config_item($key, $metadata) {
     <div class="col-md-6">
       <div class="input-group">
         <span class="input-group-text"><i class="bi bi-search"></i></span>
-        <input type="text" id="configSearch" class="form-control" placeholder="Search configurations...">
+        <input type="text" id="configSearch" class="form-control" placeholder="<?php echo t('system_config.search_placeholder'); ?>">
         <button class="btn btn-outline-secondary" type="button" id="clearSearch">
-          <i class="bi bi-x-circle"></i> Clear
+          <i class="bi bi-x-circle"></i> <?php echo t('system_config.clear'); ?>
         </button>
       </div>
-      <small class="text-muted">Search by name, description, value, or environment variable</small>
+      <small class="text-muted"><?php echo t('system_config.search_hint'); ?></small>
     </div>
     <div class="col-md-6 text-end">
       <button class="btn btn-outline-primary btn-sm" id="showOnlyCustomised" type="button">
-        <i class="bi bi-filter"></i> Show Only Customised
+        <i class="bi bi-filter"></i> <?php echo t('system_config.show_customised'); ?>
       </button>
       <button class="btn btn-outline-secondary btn-sm" id="expandAll" type="button">
-        <i class="bi bi-arrows-expand"></i> Expand All
+        <i class="bi bi-arrows-expand"></i> <?php echo t('system_config.expand_all'); ?>
       </button>
       <button class="btn btn-outline-secondary btn-sm" id="collapseAll" type="button">
-        <i class="bi bi-arrows-collapse"></i> Collapse All
+        <i class="bi bi-arrows-collapse"></i> <?php echo t('system_config.collapse_all'); ?>
       </button>
     </div>
   </div>
@@ -205,9 +205,9 @@ function display_config_item($key, $metadata) {
     // Badges for optional/disabled status
     if ($is_optional) {
       if ($is_disabled) {
-        echo ' <span class="badge bg-secondary">Optional - Disabled</span>';
+        echo ' <span class="badge bg-secondary">' . t('system_config.optional_disabled') . '</span>';
       } else {
-        echo ' <span class="badge bg-success">Optional - Enabled</span>';
+        echo ' <span class="badge bg-success">' . t('system_config.optional_enabled') . '</span>';
       }
     }
 
@@ -230,12 +230,12 @@ function display_config_item($key, $metadata) {
 
     // If optional and disabled, show how to enable
     if ($is_disabled) {
-      echo '<p class="text-muted">This optional feature is currently disabled. ';
+      echo '<p class="text-muted">' . t('system_config.feature_disabled') . ' ';
 
       // Find the enable environment variable
       foreach ($configs as $key => $metadata) {
         if (strpos($key, '_ENABLED') !== false && !empty($metadata['env_var'])) {
-          echo 'Set <code>' . htmlspecialchars($metadata['env_var']) . '=TRUE</code> to enable.';
+          echo t('system_config.feature_enable_hint', array('env_var' => htmlspecialchars($metadata['env_var'])));
           break;
         }
       }
@@ -259,17 +259,15 @@ function display_config_item($key, $metadata) {
   </div> <!-- End configCategories -->
 
   <div class="alert alert-info">
-    <h5><i class="bi bi-info-circle"></i> About this page</h5>
+    <h5><i class="bi bi-info-circle"></i> <?php echo t('system_config.about_title'); ?></h5>
     <p class="mb-0">
-      This page is automatically generated from the configuration registry.
-      All configuration options are defined in <code>config.inc.php</code>.
-      To add new configuration options, add them to the registry and they will automatically appear here.
+      <?php echo t('system_config.about_body'); ?>
     </p>
   </div>
 
   <!-- System Information Section -->
-  <h2 class="mt-5"><i class="bi bi-info-square"></i> System information</h2>
-  <p class="text-muted">Runtime environment and server details</p>
+  <h2 class="mt-5"><i class="bi bi-info-square"></i> <?php echo t('system_config.sysinfo_title'); ?></h2>
+  <p class="text-muted"><?php echo t('system_config.sysinfo_subtitle'); ?></p>
 
   <?php
   // Get Luminary version
@@ -342,16 +340,16 @@ function display_config_item($key, $metadata) {
     <div class="col-md-6 mb-3">
       <div class="card">
         <div class="card-header">
-          <h5 class="card-title mb-0"><i class="bi bi-app-indicator"></i> Application</h5>
+          <h5 class="card-title mb-0"><i class="bi bi-app-indicator"></i> <?php echo t('system_config.app_section'); ?></h5>
         </div>
         <div class="card-body">
           <table class="table table-sm mb-0">
             <tr>
-              <th style="width: 40%;">Luminary Version</th>
+              <th style="width: 40%;"><?php echo t('system_config.version_label'); ?></th>
               <td><span class="badge bg-primary"><?php echo htmlspecialchars($luminary_version); ?></span></td>
             </tr>
             <tr>
-              <th>Persistent Data Storage</th>
+              <th><?php echo t('system_config.storage_label'); ?></th>
               <td>
                 <?php
                   include_once "ldap_app_data_functions.inc.php";
@@ -377,7 +375,7 @@ function display_config_item($key, $metadata) {
                 ?>
                 <i class="bi <?php echo $storage_icon; ?>"></i>
                 <span class="badge <?php echo $storage_class; ?>"><?php echo htmlspecialchars($storage_status); ?></span>
-                <br><small class="text-muted">Sessions, password reset tokens</small>
+                <br><small class="text-muted"><?php echo t('system_config.storage_hint'); ?></small>
               </td>
             </tr>
           </table>
@@ -389,29 +387,29 @@ function display_config_item($key, $metadata) {
     <div class="col-md-6 mb-3">
       <div class="card">
         <div class="card-header">
-          <h5 class="card-title mb-0"><i class="bi bi-server"></i> Server</h5>
+          <h5 class="card-title mb-0"><i class="bi bi-server"></i> <?php echo t('system_config.server_section'); ?></h5>
         </div>
         <div class="card-body">
           <table class="table table-sm mb-0">
             <tr>
-              <th style="width: 40%;">Server Software</th>
+              <th style="width: 40%;"><?php echo t('system_config.server_software'); ?></th>
               <td><?php echo htmlspecialchars($_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'); ?></td>
             </tr>
             <tr>
-              <th>Operating System</th>
+              <th><?php echo t('system_config.os'); ?></th>
               <td><?php echo php_uname('s') . ' ' . php_uname('r') . ' (' . php_uname('m') . ')'; ?></td>
             </tr>
             <tr>
-              <th>Hostname</th>
+              <th><?php echo t('system_config.hostname_label'); ?></th>
               <td><?php echo htmlspecialchars(gethostname()); ?></td>
             </tr>
             <tr>
-              <th>Server Time</th>
+              <th><?php echo t('system_config.server_time'); ?></th>
               <td><?php echo date('Y-m-d H:i:s T'); ?></td>
             </tr>
             <?php if ($disk_total) { ?>
             <tr>
-              <th>Disk Usage</th>
+              <th><?php echo t('system_config.disk_usage'); ?></th>
               <td>
                 <?php echo format_bytes($disk_used); ?> / <?php echo format_bytes($disk_total); ?>
                 <span class="badge <?php echo $disk_percent > 90 ? 'bg-danger' : ($disk_percent > 75 ? 'bg-warning' : 'bg-success'); ?>">
@@ -429,28 +427,28 @@ function display_config_item($key, $metadata) {
     <div class="col-md-6 mb-3">
       <div class="card">
         <div class="card-header">
-          <h5 class="card-title mb-0"><i class="bi bi-diagram-3"></i> LDAP connection</h5>
+          <h5 class="card-title mb-0"><i class="bi bi-diagram-3"></i> <?php echo t('system_config.ldap_section'); ?></h5>
         </div>
         <div class="card-body">
           <table class="table table-sm mb-0">
             <tr>
-              <th style="width: 40%;">Server URI</th>
-              <td><code><?php echo htmlspecialchars($LDAP['uri'] ?? 'Not configured'); ?></code></td>
+              <th style="width: 40%;"><?php echo t('system_config.server_uri'); ?></th>
+              <td><code><?php echo htmlspecialchars($LDAP['uri'] ?? t('system_config.not_configured')); ?></code></td>
             </tr>
             <tr>
-              <th>Base DN</th>
-              <td><code><?php echo htmlspecialchars($LDAP['base_dn'] ?? 'Not configured'); ?></code></td>
+              <th><?php echo t('system_config.base_dn_label'); ?></th>
+              <td><code><?php echo htmlspecialchars($LDAP['base_dn'] ?? t('system_config.not_configured')); ?></code></td>
             </tr>
             <tr>
-              <th>User Base DN</th>
-              <td><code><?php echo htmlspecialchars($LDAP['user_dn'] ?? 'Not configured'); ?></code></td>
+              <th><?php echo t('system_config.user_base_dn'); ?></th>
+              <td><code><?php echo htmlspecialchars($LDAP['user_dn'] ?? t('system_config.not_configured')); ?></code></td>
             </tr>
             <tr>
-              <th>Connection Status</th>
+              <th><?php echo t('system_config.connection_status'); ?></th>
               <td><span class="badge <?php echo $ldap_status_class; ?>"><?php echo htmlspecialchars($ldap_status); ?></span></td>
             </tr>
             <tr>
-              <th>TLS/SSL Encryption</th>
+              <th><?php echo t('system_config.tls_ssl'); ?></th>
               <td><i class="<?php echo $tls_icon; ?>"></i> <span class="badge <?php echo $tls_status_class; ?>"><?php echo htmlspecialchars($tls_status); ?></span></td>
             </tr>
           </table>

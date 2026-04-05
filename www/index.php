@@ -9,7 +9,7 @@ render_header();
  ?>
  <div class="container">
   <div class="alert alert-success">
-   <p class="text-center">You're logged in. Select from the menu above.</p>
+   <p class="text-center"><?php print t('index.logged_in'); ?></p>
   </div>
  </div>
  <?php

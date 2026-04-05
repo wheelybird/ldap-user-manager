@@ -41,7 +41,7 @@ if (isset($this_group[0]['objectclass'])) {
 
   <div class="col-md-8">
     <p class="text-muted">
-      Configure MFA requirements for members of this group. When enabled, users in this group will be required to set up TOTP-based multi-factor authentication.
+      <?php print t('group_mfa.description'); ?>
     </p>
 
   <?php
@@ -53,27 +53,27 @@ if (isset($this_group[0]['objectclass'])) {
 
   if ($has_mfa_required) {
     $mfa_grace = isset($this_group[0][strtolower($mfa_grace_period_attr)][0]) ?
-                 $this_group[0][strtolower($mfa_grace_period_attr)][0] : 'Not set';
+                 $this_group[0][strtolower($mfa_grace_period_attr)][0] : t('group_mfa.not_set');
     $badge_class = $mfa_is_required ? 'bg-success' : 'bg-secondary';
-    $badge_text = $mfa_is_required ? 'Required' : 'Not required';
+    $badge_text = $mfa_is_required ? t('group_mfa.required') : t('group_mfa.not_required');
   ?>
   <div class="alert alert-info mb-3">
-    <strong><i class="bi bi-shield-lock"></i> Current Status:</strong>
+    <strong><i class="bi bi-shield-lock"></i> <?php print t('group_mfa.current_status'); ?></strong>
     <span class="badge <?php echo $badge_class; ?>"><?php echo $badge_text; ?></span>
     <?php if ($mfa_is_required) { ?>
-      <span class="text-muted ms-2">(Grace period: <?php echo htmlspecialchars($mfa_grace); ?> days)</span>
+      <span class="text-muted ms-2"><?php print t('group_mfa.grace_period_days', array('days' => $mfa_grace)); ?></span>
     <?php } ?>
   </div>
   <?php } else { ?>
   <div class="alert alert-secondary mb-3">
-    <strong><i class="bi bi-shield-lock"></i> Current Status:</strong>
-    <span class="badge bg-secondary">Not configured</span>
+    <strong><i class="bi bi-shield-lock"></i> <?php print t('group_mfa.current_status'); ?></strong>
+    <span class="badge bg-secondary"><?php print t('group_mfa.not_configured'); ?></span>
   </div>
   <?php } ?>
 
   <div class="row mb-3">
     <label class="col-md-3 col-form-label">
-      Require MFA
+      <?php print t('group_mfa.require_mfa'); ?>
     </label>
     <div class="col-md-4">
       <div class="form-check form-switch">
@@ -82,7 +82,7 @@ if (isset($this_group[0]['objectclass'])) {
                <?php if ($group_mfa_required) echo 'checked'; ?>
                <?php if (count($group_members)==0) print 'disabled'; ?>>
         <label class="form-check-label" for="mfa_required">
-          Members must enroll in MFA
+          <?php print t('group_mfa.members_must_enroll'); ?>
         </label>
       </div>
     </div>
@@ -90,7 +90,7 @@ if (isset($this_group[0]['objectclass'])) {
 
   <div class="row mb-3">
     <label for="mfa_grace_period" class="col-md-3 col-form-label">
-      Grace Period (days)
+      <?php print t('group_mfa.grace_period_label'); ?>
     </label>
     <div class="col-md-4">
       <input type="number" class="form-control"
@@ -99,7 +99,7 @@ if (isset($this_group[0]['objectclass'])) {
              min="1" max="365"
              <?php if (count($group_members)==0) print 'disabled'; ?>>
       <small class="form-text text-muted">
-        Days users have to set up MFA after being added to this group
+        <?php print t('group_mfa.grace_period_help'); ?>
       </small>
     </div>
   </div>
@@ -107,7 +107,7 @@ if (isset($this_group[0]['objectclass'])) {
   <?php if (!$has_mfa_objectclass) { ?>
   <div class="alert alert-info">
     <i class="bi bi-info-circle"></i>
-    Enabling MFA will add the <code><?php echo htmlspecialchars($mfa_objectclass); ?></code> object class to this group.
+    <?php print t('group_mfa.enable_adds_objectclass', array('objectclass' => $mfa_objectclass)); ?>
   </div>
   <?php } ?>
 
@@ -117,7 +117,7 @@ if (isset($this_group[0]['objectclass'])) {
               id="submit_mfa"
               name="submit_mfa"
               <?php if (count($group_members)==0) print 'disabled'; ?>>
-        Save MFA Settings
+        <?php print t('group_mfa.save_settings'); ?>
       </button>
     </div>
   </div>

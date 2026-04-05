@@ -15,7 +15,7 @@ define('LDAP_USER_MANAGER', true);
 // Include tab configuration
 include_once __DIR__ . '/includes/group_tab_config.php';
 
-render_header("$ORGANISATION_NAME account manager");
+render_header($ORGANISATION_NAME . ' ' . t('show_group.title'));
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -24,7 +24,7 @@ if (!isset($_POST['group_name']) and !isset($_GET['group_name'])) {
 ?>
  <div class="container">
   <div class="alert alert-danger">
-   <p class="text-center">The group name is missing.</p>
+  <p class="text-center"><?php print t('show_group.error_missing_name'); ?></p>
   </div>
  </div>
 <?php
@@ -40,7 +40,7 @@ if ($ENFORCE_SAFE_SYSTEM_NAMES == TRUE and !preg_match("/$USERNAME_REGEX/u",$gro
 ?>
  <div class="container">
   <div class="alert alert-danger">
-   <p class="text-center">The group name is invalid.</p>
+  <p class="text-center"><?php print t('show_group.error_invalid_name'); ?></p>
   </div>
  </div>
 <?php
@@ -55,7 +55,7 @@ $initialise_group = FALSE;
 $new_group = FALSE;
 $group_exists = FALSE;
 
-$create_group_message = "Add members to create the new group";
+$create_group_message = t('show_group.create_group_message');
 $current_members = array();
 $full_dn = $create_group_message;
 $has_been = "";
@@ -368,14 +368,14 @@ ldap_close($ldap_connection);
     <!-- Page Header -->
     <div class="row mb-3">
       <div class="col-md-8">
-        <h2><?php print htmlspecialchars(decode_ldap_value($group_cn), ENT_QUOTES, 'UTF-8'); ?><?php if ($group_cn == $LDAP["admins_group"]) { print " <sup>(admin group)</sup>" ; } ?></h2>
+        <h2><?php print htmlspecialchars(decode_ldap_value($group_cn), ENT_QUOTES, 'UTF-8'); ?><?php if ($group_cn == $LDAP["admins_group"]) { print " <sup>(" . t('show_group.admin_group_suffix') . ")</sup>" ; } ?></h2>
         <p class="text-muted"><?php print htmlspecialchars(decode_ldap_value($full_dn), ENT_QUOTES, 'UTF-8'); ?></p>
       </div>
       <div class="col-md-4 text-end">
-        <button class="btn btn-warning" onclick="show_delete_group_button();" <?php if ($group_cn == $LDAP["admins_group"]) { print "disabled"; } ?>>Delete group</button>
+        <button class="btn btn-warning" onclick="show_delete_group_button();" <?php if ($group_cn == $LDAP["admins_group"]) { print "disabled"; } ?>><?php print t('show_group.delete_group'); ?></button>
         <form action="<?php print "{$THIS_MODULE_PATH}"; ?>/groups.php" method="post" enctype="multipart/form-data" style="display: inline;">
           <input type="hidden" name="delete_group" value="<?php print $group_cn; ?>">
-          <button class="btn btn-danger invisible" id="delete_group">Confirm deletion</button>
+          <button class="btn btn-danger invisible" id="delete_group"><?php print t('show_group.confirm_deletion'); ?></button>
         </form>
       </div>
     </div>
@@ -402,7 +402,7 @@ ldap_close($ldap_connection);
           include $tab_file_path;
         } else {
           echo '      <div class="alert alert-warning">' . "\n";
-          echo '        Tab content not yet implemented: ' . htmlspecialchars($tab['label']) . "\n";
+          echo '        ' . t('tabs.not_implemented', array('label' => $tab['label'])) . "\n";
           echo '      </div>' . "\n";
         }
 

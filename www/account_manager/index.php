@@ -10,7 +10,7 @@ include_once "module_functions.inc.php";
 include_once "ldap_app_data_functions.inc.php";
 set_page_access("admin");
 
-render_header("$ORGANISATION_NAME account manager");
+render_header($ORGANISATION_NAME . ' ' . t('account_manager.title'));
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -21,11 +21,11 @@ if (isset($_POST['create_ldap_storage'])) {
 
   if ($created) {
     audit_log('ldap_storage_created', 'system', 'LDAP application data entry created', 'success', $USER_ID);
-    render_alert_banner("LDAP storage entry created successfully. Persistent data storage is now available.");
+    render_alert_banner(t('account_manager.ldap_storage_success'));
   }
   else {
     audit_log('ldap_storage_create_failure', 'system', 'Failed to create LDAP application data entry', 'failure', $USER_ID);
-    render_alert_banner("Failed to create LDAP storage entry. Check the logs for more information.","danger",15000);
+    render_alert_banner(t('account_manager.ldap_storage_fail'),"danger",15000);
   }
 }
 
@@ -47,12 +47,12 @@ if (isset($_POST['delete_user'])) {
   if ($del_user) {
     // Audit log user deletion
     audit_log('user_deleted', $this_user, "User account deleted by admin", 'success', $USER_ID);
-    render_alert_banner("User <strong>$this_user</strong> was deleted.");
+    render_alert_banner(t('account_manager.user_deleted', array('user' => $this_user)));
   }
   else {
     // Audit log failed deletion
     audit_log('user_delete_failure', $this_user, "Failed to delete user account", 'failure', $USER_ID);
-    render_alert_banner("User <strong>$this_user</strong> wasn't deleted.  See the logs for more information.","danger",15000);
+    render_alert_banner(t('account_manager.user_delete_failed', array('user' => $this_user)),"danger",15000);
   }
 
 
@@ -84,16 +84,16 @@ $people = array_slice($all_people, $offset, $per_page, true);
  <div class="row mb-3">
    <div class="col-md-6">
      <form action="<?php print $THIS_MODULE_PATH; ?>/new_user.php" method="post" class="d-inline">
-       <button type="button" class="btn btn-light"><?php print number_format($total_users);?> account<?php if ($total_users != 1) { print "s"; }?></button>
-       <button id="add_group" class="btn btn-secondary" type="submit">New user</button>
+       <button type="button" class="btn btn-light"><?php print number_format($total_users);?> <?php print $total_users == 1 ? t('account_manager.account_count') : t('account_manager.account_count_plural'); ?></button>
+       <button id="add_group" class="btn btn-secondary" type="submit"><?php print t('account_manager.new_user'); ?></button>
      </form>
    </div>
    <div class="col-md-6">
      <form action="" method="get" class="d-flex">
-       <input class="form-control me-2" id="search_input" name="filter" type="text" placeholder="Search users..." value="<?php echo htmlspecialchars($filter); ?>">
-       <button type="submit" class="btn btn-primary">Search</button>
+       <input class="form-control me-2" id="search_input" name="filter" type="text" placeholder="<?php echo t('account_manager.search_placeholder'); ?>" value="<?php echo htmlspecialchars($filter); ?>">
+       <button type="submit" class="btn btn-primary"><?php echo t('account_manager.search'); ?></button>
        <?php if (!empty($filter)) { ?>
-         <a href="?" class="btn btn-secondary ms-2">Clear</a>
+         <a href="?" class="btn btn-secondary ms-2"><?php echo t('account_manager.clear'); ?></a>
        <?php } ?>
      </form>
    </div>
@@ -101,7 +101,7 @@ $people = array_slice($all_people, $offset, $per_page, true);
 
  <?php if (!empty($filter)) { ?>
    <div class="alert alert-info">
-     Showing <?php echo count($people); ?> of <?php echo number_format($total_users); ?> users matching "<?php echo htmlspecialchars($filter); ?>"
+     <?php echo t('account_manager.showing_matches', array('shown' => count($people), 'total' => number_format($total_users), 'filter' => $filter)); ?>
    </div>
  <?php } ?>
 
@@ -116,17 +116,17 @@ $people = array_slice($all_people, $offset, $per_page, true);
  ?>
  <div class="card mb-3 border-danger">
    <div class="card-header bg-danger text-white">
-     <strong>⚠ Action Required: LDAP Storage Entry Missing</strong>
+     <strong>⚠ <?php echo t('account_manager.ldap_storage_missing'); ?></strong>
    </div>
    <div class="card-body">
-     <p><strong>LDAP persistent storage is enabled but the required entry doesn't exist.</strong></p>
-     <p>Sessions, password reset tokens, and other persistent data cannot be stored in LDAP until you create the storage entry.</p>
-     <p class="mb-3"><small class="text-muted">Currently using /tmp storage - data will be lost on container restart.</small></p>
+     <p><strong><?php echo t('account_manager.ldap_storage_missing_body'); ?></strong></p>
+     <p><?php echo t('account_manager.ldap_storage_missing_body2'); ?></p>
+     <p class="mb-3"><small class="text-muted"><?php echo t('account_manager.ldap_storage_missing_body3'); ?></small></p>
      <form method="post" class="d-inline">
        <button type="submit" name="create_ldap_storage" class="btn btn-primary">
-         Create LDAP Storage Entry
+         <?php echo t('account_manager.create_ldap_storage'); ?>
        </button>
-       <small class="text-muted ms-2">This will create cn=luminary,ou=applications in your LDAP directory</small>
+       <small class="text-muted ms-2"><?php echo t('account_manager.create_ldap_storage_hint'); ?></small>
      </form>
    </div>
  </div>
@@ -138,10 +138,10 @@ $people = array_slice($all_people, $offset, $per_page, true);
  <table class="table table-striped">
   <thead>
    <tr>
-     <th>Account name</th>
-     <th>First name</th>
-     <th>Last name</th>
-     <th>Email</th>
+     <th><?php echo t('account_manager.col_account'); ?></th>
+     <th><?php echo t('account_manager.col_first_name'); ?></th>
+     <th><?php echo t('account_manager.col_last_name'); ?></th>
+     <th><?php echo t('account_manager.col_email'); ?></th>
    </tr>
   </thead>
  <tbody id="userlist">
@@ -159,7 +159,7 @@ foreach ($people as $account_identifier => $attribs){
 }
 
 if (count($people) == 0) {
-  print " <tr><td colspan='4' class='text-center text-muted'>No users found</td></tr>\n";
+  print " <tr><td colspan='4' class='text-center text-muted'>" . t('account_manager.no_users') . "</td></tr>\n";
 }
 ?>
   </tbody>
@@ -171,7 +171,7 @@ if (count($people) == 0) {
      <ul class="pagination justify-content-center">
        <!-- Previous -->
        <li class="page-item <?php if ($page <= 1) echo 'disabled'; ?>">
-         <a class="page-link" href="?page=<?php echo $page - 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>">Previous</a>
+         <a class="page-link" href="?page=<?php echo $page - 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>"><?php echo t('account_manager.previous'); ?></a>
        </li>
 
        <!-- Page numbers -->
@@ -207,14 +207,13 @@ if (count($people) == 0) {
 
        <!-- Next -->
        <li class="page-item <?php if ($page >= $total_pages) echo 'disabled'; ?>">
-         <a class="page-link" href="?page=<?php echo $page + 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>">Next</a>
+         <a class="page-link" href="?page=<?php echo $page + 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>"><?php echo t('account_manager.next'); ?></a>
        </li>
      </ul>
    </nav>
 
    <p class="text-center text-muted">
-     Page <?php echo $page; ?> of <?php echo number_format($total_pages); ?>
-     (Showing <?php echo (($page - 1) * $per_page) + 1; ?>-<?php echo min($page * $per_page, $total_users); ?> of <?php echo number_format($total_users); ?>)
+     <?php echo t('account_manager.page_summary', array('page' => $page, 'total_pages' => number_format($total_pages), 'start' => (($page - 1) * $per_page) + 1, 'end' => min($page * $per_page, $total_users), 'total_users' => number_format($total_users))); ?>
    </p>
  <?php } ?>
 </div>

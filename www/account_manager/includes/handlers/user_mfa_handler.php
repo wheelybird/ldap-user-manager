@@ -18,7 +18,7 @@ $user_requires_mfa = $mfa_result['required'];
 // Handle backup code regeneration (admin only)
 if (isset($_POST['regenerate_backup_codes'])) {
   if (!$MFA_SCHEMA_OK) {
-    render_alert_banner("Cannot regenerate backup codes: TOTP schema is not installed in LDAP.", "danger", 15000);
+    render_alert_banner(t('user_mfa.alert_regenerate_schema_missing'), "danger", 15000);
   } else {
     $regenerate_search = ldap_search($ldap_connection, $LDAP['user_dn'], $ldap_search_query);
     if ($regenerate_search) {
@@ -37,10 +37,10 @@ if (isset($_POST['regenerate_backup_codes'])) {
         if (ldap_mod_replace($ldap_connection, $regenerate_dn, $modifications)) {
           // Audit log backup code regeneration
           audit_log('mfa_backup_codes_regenerated', $account_identifier, "Admin regenerated backup codes for user", 'success', $USER_ID);
-          render_alert_banner("New backup codes have been generated. The user should be notified to collect them from their Manage MFA page.");
+          render_alert_banner(t('user_mfa.alert_backup_codes_regenerated'));
         } else {
           audit_log('mfa_backup_codes_regen_failure', $account_identifier, "Failed to regenerate backup codes", 'failure', $USER_ID);
-          render_alert_banner("Failed to regenerate backup codes. Check the logs for more information.", "danger", 15000);
+          render_alert_banner(t('user_mfa.alert_backup_codes_regenerate_failed'), "danger", 15000);
         }
       }
     }

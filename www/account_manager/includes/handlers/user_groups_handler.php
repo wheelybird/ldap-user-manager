@@ -49,7 +49,7 @@ if (isset($_POST["update_member_of"])) {
 
   $not_member_of = array_diff($all_groups, $updated_group_membership);
   $member_of = $updated_group_membership;
-  render_alert_banner("The group membership has been updated.");
+  render_alert_banner(t('user_groups.membership_updated'));
 } else {
   $member_of = $currently_member_of;
 }

@@ -71,7 +71,7 @@ if (isset($_POST['validate_first_code'])) {
   if (totp_validate_code($secret, $code, 1)) {
     echo json_encode(array('valid' => true, 'time_window' => floor(time() / 30)));
   } else {
-    echo json_encode(array('valid' => false, 'message' => 'Code is invalid. Please try again.'));
+    echo json_encode(array('valid' => false, 'message' => t('mfa.invalid_code')));
   }
   exit;
 }
@@ -79,10 +79,10 @@ if (isset($_POST['validate_first_code'])) {
 // Handle final enrolment form submission
 if (isset($_POST['enrol_mfa'])) {
   if ($schema_error) {
-    $error_message = "Multi-factor authentication is currently unavailable due to a configuration issue. Please contact your administrator.";
+    $error_message = t('mfa.unavailable_body');
   }
   elseif (!isset($_POST['code1']) || !isset($_POST['code2']) || !isset($_POST['time_window1'])) {
-    $error_message = "Please complete both verification steps.";
+    $error_message = t('mfa.complete_both_steps');
   }
   else {
     $secret = $_POST['secret'];
@@ -93,11 +93,11 @@ if (isset($_POST['enrol_mfa'])) {
 
     // Verify codes are from different time windows
     if ($time_window1 == $time_window2) {
-      $error_message = "Second code must be from a different time window. Please wait for the code to change.";
+      $error_message = t('mfa.second_code_different_window');
     }
     // Validate second code
     elseif (!totp_validate_code($secret, $code2, 1)) {
-      $error_message = "Second verification code is invalid.";
+      $error_message = t('mfa.invalid_code');
     }
     else {
       // Generate backup codes
@@ -111,7 +111,7 @@ if (isset($_POST['enrol_mfa'])) {
         $totp_status = 'active';
       }
       else {
-        $error_message = "Failed to save MFA configuration to LDAP.";
+        $error_message = t('mfa.save_to_ldap_failed');
       }
     }
   }
@@ -120,7 +120,7 @@ if (isset($_POST['enrol_mfa'])) {
 // Handle disable MFA
 if (isset($_POST['disable_mfa'])) {
   if ($schema_error) {
-    $error_message = "Multi-factor authentication is currently unavailable due to a configuration issue. Please contact your administrator.";
+    $error_message = t('mfa.unavailable_body');
   }
   elseif (totp_disable($ldap_connection, $user_dn)) {
     // Audit log MFA disabled
@@ -129,7 +129,7 @@ if (isset($_POST['disable_mfa'])) {
     $totp_status = 'disabled';
   }
   else {
-    $error_message = "Failed to disable MFA.";
+    $error_message = t('mfa.disable_failed');
   }
 }
 
@@ -141,7 +141,7 @@ if (isset($_POST['start_enrolment'])) {
   $qr_image_url = totp_get_qr_code_image_url($qr_url);
 }
 
-render_header("Manage Multi-Factor Authentication");
+render_header(t('mfa.title'));
 
 ?>
 
@@ -151,16 +151,16 @@ render_header("Manage Multi-Factor Authentication");
 
       <?php if (isset($_GET['mfa_required'])) { ?>
       <div class="alert alert-danger">
-        <p><strong>Multi-factor authentication is required</strong></p>
-        <p>Your grace period for setting up MFA has expired. You must configure MFA below to continue using this system.</p>
+        <p><strong><?php echo t('mfa.required_title'); ?></strong></p>
+        <p><?php echo t('mfa.required_body'); ?></p>
       </div>
     <?php } ?>
 
     <?php if ($schema_error) { ?>
       <div class="alert alert-warning">
-        <p><strong>MFA is currently unavailable</strong></p>
-        <p>Multi-factor authentication is currently unavailable due to a configuration issue. Please contact your system administrator to resolve this issue.</p>
-        <p><small>You can view your current MFA status below, but enrolment and configuration changes are temporarily disabled.</small></p>
+        <p><strong><?php echo t('mfa.unavailable_title'); ?></strong></p>
+        <p><?php echo t('mfa.unavailable_body'); ?></p>
+        <p><small><?php echo t('mfa.unavailable_hint'); ?></small></p>
       </div>
     <?php } ?>
 
@@ -172,10 +172,10 @@ render_header("Manage Multi-Factor Authentication");
 
     <?php if (isset($success)) { ?>
       <div class="card border-success">
-        <div class="card-header">MFA has been enabled successfully</div>
+        <div class="card-header"><?php echo t('mfa.enabled_title'); ?></div>
         <div class="card-body">
-          <p><strong>Your multi-factor authentication has been enabled.</strong></p>
-          <p>Please save these backup codes in a secure location. You can use them to log in if you lose access to your authenticator app.</p>
+          <p><strong><?php echo t('mfa.enabled_body'); ?></strong></p>
+          <p><?php echo t('mfa.enabled_backup_hint'); ?></p>
 
           <div class="well">
             <?php foreach (totp_format_backup_codes($backup_codes) as $code) { ?>
@@ -184,7 +184,7 @@ render_header("Manage Multi-Factor Authentication");
           </div>
 
           <p class="text-center">
-            <a href="<?php echo url('/home'); ?>" class="btn btn-primary">Return to Home</a>
+            <a href="<?php echo url('/home'); ?>" class="btn btn-primary"><?php echo t('mfa.return_home'); ?></a>
           </p>
         </div>
       </div>
@@ -193,11 +193,11 @@ render_header("Manage Multi-Factor Authentication");
 
     <?php if (isset($success_disable)) { ?>
       <div class="card border-success">
-        <div class="card-header">MFA disabled</div>
+        <div class="card-header"><?php echo t('mfa.disabled_title'); ?></div>
         <div class="card-body">
-          <p>Your multi-factor authentication has been disabled.</p>
+          <p><?php echo t('mfa.disabled_body'); ?></p>
           <p class="text-center">
-            <a href="<?php echo url('/home'); ?>" class="btn btn-primary">Return to Home</a>
+            <a href="<?php echo url('/home'); ?>" class="btn btn-primary"><?php echo t('mfa.return_home'); ?></a>
           </p>
         </div>
       </div>
@@ -206,27 +206,27 @@ render_header("Manage Multi-Factor Authentication");
 
     <div class="card">
       <div class="card-header">
-        <h4 class="card-title">Your multi-factor authentication setting</h4>
+        <h4 class="card-title"><?php echo t('mfa.setting_title'); ?></h4>
       </div>
       <div class="card-body">
 
         <table class="table">
           <tr>
-            <th style="width: 200px;">MFA status:</th>
+            <th style="width: 200px;"><?php echo t('mfa.status'); ?></th>
             <td>
               <?php
                 switch ($totp_status) {
                   case 'active':
-                    echo '<span class="badge bg-success">Active</span>';
+                    echo '<span class="badge bg-success">' . t('mfa.active') . '</span>';
                     break;
                   case 'pending':
-                    echo '<span class="badge bg-warning text-dark">Pending setup</span>';
+                    echo '<span class="badge bg-warning text-dark">' . t('mfa.pending') . '</span>';
                     break;
                   case 'disabled':
-                    echo '<span class="badge bg-secondary">Disabled</span>';
+                    echo '<span class="badge bg-secondary">' . t('mfa.disabled') . '</span>';
                     break;
                   default:
-                    echo '<span class="badge bg-secondary">Not configured</span>';
+                    echo '<span class="badge bg-secondary">' . t('mfa.not_configured') . '</span>';
                 }
               ?>
             </td>
@@ -234,20 +234,20 @@ render_header("Manage Multi-Factor Authentication");
 
           <?php if ($user_requires_mfa) { ?>
             <tr>
-              <th>MFA required:</th>
-              <td><span class="badge bg-info text-dark">Yes</span> (required by group membership)</td>
+              <th><?php echo t('mfa.required'); ?></th>
+              <td><span class="badge bg-info text-dark"><?php echo t('label.yes'); ?></span> (<?php echo t('mfa.yes_group'); ?>)</td>
             </tr>
           <?php } ?>
 
           <?php if ($totp_status == 'active' && $backup_code_count > 0) { ?>
             <tr>
-              <th>Backup Codes:</th>
+              <th><?php echo t('mfa.backup_codes'); ?></th>
               <td>
                 <span class="label <?php echo $backup_code_count < 3 ? 'label-warning' : 'label-info'; ?>">
-                  <?php echo $backup_code_count; ?> remaining
+                  <?php echo t('mfa.remaining', array('count' => $backup_code_count)); ?>
                 </span>
                 <?php if ($backup_code_count < 3) { ?>
-                  <br><small class="text-warning">You're running low on backup codes. Contact an administrator to create new codes.</small>
+                  <br><small class="text-warning"><?php echo t('mfa.low_codes'); ?></small>
                 <?php } ?>
               </td>
             </tr>
@@ -255,14 +255,14 @@ render_header("Manage Multi-Factor Authentication");
 
           <?php if ($grace_period_remaining !== null) { ?>
             <tr>
-              <th>Grace Period:</th>
+              <th><?php echo t('mfa.grace_period'); ?></th>
               <td>
                 <?php if ($grace_period_remaining > 0) { ?>
-                  <span class="badge bg-warning text-dark"><?php echo $grace_period_remaining; ?> days remaining</span>
-                  <br><small>You must set up MFA within <?php echo $grace_period_remaining; ?> days.</small>
+                  <span class="badge bg-warning text-dark"><?php echo t('mfa.days_remaining', array('days' => $grace_period_remaining)); ?></span>
+                  <br><small><?php echo t('mfa.must_setup_days', array('days' => $grace_period_remaining)); ?></small>
                 <?php } else { ?>
-                  <span class="badge bg-danger">Expired</span>
-                  <br><small>Your grace period has expired. Please set up MFA to restore access to services that require it.</small>
+                  <span class="badge bg-danger"><?php echo t('mfa.grace_expired'); ?></span>
+                  <br><small><?php echo t('mfa.grace_expired_hint'); ?></small>
                 <?php } ?>
               </td>
             </tr>
@@ -271,15 +271,15 @@ render_header("Manage Multi-Factor Authentication");
 
         <?php if ($totp_status == 'active') { ?>
           <div class="alert alert-info">
-            <strong>MFA is currently enabled for your account.</strong>
-            <p>When connecting services that require MFA you'll need to use your authenticator app to generate a One-Time Password (OTP).</p>
-            <p>This is a unique six-digit code, and this will change frequently (for example, every 30 seconds).</p>
+            <strong><?php echo t('mfa.enabled_info_title'); ?></strong>
+            <p><?php echo t('mfa.enabled_info_body1'); ?></p>
+            <p><?php echo t('mfa.enabled_info_body2'); ?></p>
           </div>
 
           <form method="POST">
             <div class="text-center">
-              <button type="submit" name="disable_mfa" class="btn btn-danger" <?php if ($schema_error) echo 'disabled title="MFA schema not available"'; ?> onclick="return confirm('Are you sure you want to disable MFA? This will make your account less secure.');">
-                Disable MFA
+              <button type="submit" name="disable_mfa" class="btn btn-danger" <?php if ($schema_error) echo 'disabled title="' . t('mfa.schema_not_available') . '"'; ?> onclick="return confirm(<?php echo json_encode(t('mfa.disable_confirm')); ?>);">
+                <?php echo t('mfa.disable'); ?>
               </button>
             </div>
           </form>
@@ -287,17 +287,17 @@ render_header("Manage Multi-Factor Authentication");
         <?php } elseif (isset($enrolling)) { ?>
 
           <div class="card border-info">
-            <div class="card-header">Enrol in multi-factor authentication</div>
+            <div class="card-header"><?php echo t('mfa.enrol_title'); ?></div>
             <div class="card-body">
 
-              <h4>Step 1: Scan QR code</h4>
-              <p>Use your authenticator app (Google Authenticator, Authy, or similar) to scan this QR code:</p>
+              <h4><?php echo t('mfa.step1'); ?></h4>
+              <p><?php echo t('mfa.step1_body'); ?></p>
 
               <div class="text-center">
                 <div id="qrcode" style="display: inline-block;"></div>
               </div>
 
-              <p class="text-center"><small>Or manually enter this secret: <code><?php echo htmlspecialchars($new_secret); ?></code></small></p>
+              <p class="text-center"><small><?php echo t('mfa.manual_secret'); ?> <code><?php echo htmlspecialchars($new_secret); ?></code></small></p>
 
               <script src="<?php echo url('/js/qrcode.min.js'); ?>"></script>
               <script>
@@ -310,8 +310,8 @@ render_header("Manage Multi-Factor Authentication");
 
               <hr>
 
-              <h4>Step 2: Verify with two consecutive codes</h4>
-              <p id="step-instruction">To ensure your authenticator is set up correctly, please enter the current 6-digit code from your authenticator app:</p>
+              <h4><?php echo t('mfa.step2'); ?></h4>
+              <p id="step-instruction"><?php echo t('mfa.step2_body'); ?></p>
 
               <form method="POST" id="mfa-verification-form">
                 <input type="hidden" name="secret" id="secret" value="<?php echo htmlspecialchars($new_secret); ?>">
@@ -321,7 +321,7 @@ render_header("Manage Multi-Factor Authentication");
                 
                 <div class="row align-items-center mb-3" id="code-input-group">
                   <div class="col-auto">
-                    <label for="code-input" class="col-form-label mb-0">First verification code:</label>
+                    <label for="code-input" class="col-form-label mb-0"><?php echo t('mfa.first_code'); ?></label>
                   </div>
                   <div class="col-auto">
                     <input
@@ -341,14 +341,14 @@ render_header("Manage Multi-Factor Authentication");
                   <div class="w-100"></div>
                   <div class="col">
                     <small class="form-text text-muted" id="code-help">
-                      This is the 6-digit code currently shown in your authenticator app.
+                      <?php echo t('mfa.first_code_help'); ?>
                     </small>
                   </div>
                 </div>
 
                 <div class="row align-items-center mb-3" id="next-code-input-group" style="display: none;">
                   <div class="col-auto">
-                    <label for="next-code-input" class="col-form-label mb-0">Second verification code:</label>
+                    <label for="next-code-input" class="col-form-label mb-0"><?php echo t('mfa.second_code'); ?></label>
                   </div>
                   <div class="col-auto">
                     <input
@@ -367,7 +367,7 @@ render_header("Manage Multi-Factor Authentication");
                   <div class="w-100"></div>
                   <div class="col">
                     <small class="form-text text-muted" id="next-code-help">
-                      Please enter the new code shown in your authenticator app.
+                      <?php echo t('mfa.second_code_help'); ?>
                     </small>
                   </div>
                 </div>
@@ -376,12 +376,12 @@ render_header("Manage Multi-Factor Authentication");
 
                 <div class="text-center">
                   <button type="button" id="verify-button" class="btn btn-primary btn-lg">
-                    Verify first code
+                    <?php echo t('mfa.verify_first'); ?>
                   </button>
                 </div>
                 <div class="text-center">
                   <button type="submit" name="enrol_mfa" id="complete-button" class="btn btn-success btn-lg" style="display: none;">
-                    Complete MFA setup
+                    <?php echo t('mfa.complete_setup'); ?>
                   </button>
                 </div>
               </form>
@@ -399,7 +399,7 @@ render_header("Manage Multi-Factor Authentication");
                       const code = codeInput.value.trim();
 
                       if (code.length !== 6 || !/^[0-9]{6}$/.test(code)) {
-                        showError('Please enter a valid 6-digit code.');
+                        showError(<?php echo json_encode(t('mfa.invalid_code')); ?>);
                         return;
                       }
 
@@ -409,7 +409,7 @@ render_header("Manage Multi-Factor Authentication");
                       const code = codeInput.value.trim();
 
                       if (code.length !== 6 || !/^[0-9]{6}$/.test(code)) {
-                        showError('Please enter a valid 6-digit code.');
+                        showError(<?php echo json_encode(t('mfa.invalid_code')); ?>);
                         return;
                       }
 
@@ -422,7 +422,7 @@ render_header("Manage Multi-Factor Authentication");
                     const button = document.getElementById('verify-button');
 
                     button.disabled = true;
-                    button.textContent = 'Verifying...';
+                    button.textContent = <?php echo json_encode(t('mfa.verifying')); ?>;
 
                     fetch(window.location.href, {
                       method: 'POST',
@@ -441,12 +441,12 @@ render_header("Manage Multi-Factor Authentication");
                         // Hide first input, show second input
                         document.getElementById('code-input-group').style.display = 'none';
                         document.getElementById('next-code-input-group').style.display = 'flex';
-                        document.getElementById('step-instruction').textContent = 'Wait for the code to change in your authenticator app, then enter the new code:';
+                        document.getElementById('step-instruction').textContent = <?php echo json_encode(t('mfa.wait_next_code')); ?>;
 
                         // Focus on second input
                         document.getElementById('next-code-input').focus();
 
-                        button.textContent = 'Verify second code';
+                        button.textContent = <?php echo json_encode(t('mfa.verify_second')); ?>;
                         button.disabled = false;
 
                         step = 2;
@@ -454,13 +454,13 @@ render_header("Manage Multi-Factor Authentication");
                       } else {
                         showError(data.message);
                         button.disabled = false;
-                        button.textContent = 'Verify first code';
+                        button.textContent = <?php echo json_encode(t('mfa.verify_first')); ?>;
                       }
                     })
                     .catch(error => {
-                      showError('An error occurred. Please try again.');
+                      showError(<?php echo json_encode(t('mfa.generic_error')); ?>);
                       button.disabled = false;
-                      button.textContent = 'Verify first code';
+                      button.textContent = <?php echo json_encode(t('mfa.verify_first')); ?>;
                     });
                   }
 
@@ -472,7 +472,7 @@ render_header("Manage Multi-Factor Authentication");
 
                     const finalMessage = document.createElement('div');
                     finalMessage.className = 'alert alert-success';
-                    finalMessage.innerHTML = '<strong>Both codes verified!</strong><br>Click the button below to complete your MFA setup.';
+                    finalMessage.innerHTML = '<strong>' + <?php echo json_encode(t('mfa.both_verified')); ?> + '</strong><br>' + <?php echo json_encode(t('mfa.click_complete')); ?>;
                     document.getElementById('mfa-verification-form').insertBefore(finalMessage, document.getElementById('complete-button'));
                   }
 
@@ -511,30 +511,30 @@ render_header("Manage Multi-Factor Authentication");
 
           <?php if ($user_requires_mfa && $grace_period_remaining !== null && $grace_period_remaining <= 0) { ?>
             <div class="alert alert-danger">
-              <strong>Action required!</strong>
-              <p>Your grace period has expired. You must enable MFA to restore access to services that require it.</p>
+              <strong><?php echo t('mfa.action_required_title'); ?></strong>
+              <p><?php echo t('mfa.action_required_expired'); ?></p>
             </div>
           <?php } elseif ($user_requires_mfa && $grace_period_remaining !== null) { ?>
             <div class="alert alert-warning">
-              <strong>Action Required!</strong>
-              <p>MFA is required for your account. You have <?php echo $grace_period_remaining; ?> days to set it up.</p>
+              <strong><?php echo t('mfa.action_required_title'); ?></strong>
+              <p><?php echo t('mfa.action_required_days', array('days' => $grace_period_remaining)); ?></p>
             </div>
           <?php } ?>
 
-          <p>Multi-factor authentication (MFA) adds an extra layer of security to your account by requiring a code from your mobile device in addition to your password.</p>
+          <p><?php echo t('mfa.intro'); ?></p>
 
-          <h4>How it works:</h4>
+          <h4><?php echo t('mfa.how_works'); ?></h4>
           <ol>
-            <li>Install an authenticator app on your mobile device (Google Authenticator, Authy, or similar)</li>
-            <li>Scan the QR code we'll provide</li>
-            <li>Enter two consecutive codes to verify setup</li>
+            <li><?php echo t('mfa.how_1'); ?></li>
+            <li><?php echo t('mfa.how_2'); ?></li>
+            <li><?php echo t('mfa.how_3'); ?></li>
           </ol>
 
           <form method="POST">
             <div class="text-center">
               <button type="submit" name="start_enrolment" class="btn btn-primary btn-lg"
                 <?php if ($schema_error) echo 'disabled title="MFA schema not available"'; ?>>
-                Set up multi-factor authentication
+                <?php echo t('mfa.setup_button'); ?>
               </button>
             </div>
 

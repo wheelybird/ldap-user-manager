@@ -6,13 +6,13 @@ include_once "web_functions.inc.php";
 
 // Sessions are now initialized automatically in web_functions.inc.php
 
-render_header("$ORGANISATION_NAME - request an account");
+render_header($ORGANISATION_NAME . ' ' . t('request_account.title'));
 
 if ($ACCOUNT_REQUESTS_ENABLED == FALSE) {
 
 ?>
 <div class="container">
- <div class='alert alert-warning'><p class='text-center'>Account requesting is disabled.</p></div>
+ <div class='alert alert-warning'><p class='text-center'><?php echo t('request_account.disabled'); ?></p></div>
 </div>
 <?php
 
@@ -26,18 +26,18 @@ if($_POST) {
   $error_messages = array();
 
   if(! isset($_POST['validate']) or strcasecmp($_POST['validate'], $_SESSION['proof_of_humanity']) != 0) {
-    array_push($error_messages, "The validation text didn't match the image.");
+    array_push($error_messages, t('request_account.validation_mismatch'));
   }
 
   if (! isset($_POST['firstname']) or $_POST['firstname'] == "") {
-    array_push($error_messages, "You didn't enter your first name.");
+    array_push($error_messages, t('request_account.missing_firstname'));
   }
   else {
     $firstname=trim($_POST['firstname']);
   }
 
   if (! isset($_POST['lastname']) or $_POST['lastname'] == "") {
-    array_push($error_messages, "You didn't enter your first name.");
+    array_push($error_messages, t('request_account.missing_lastname'));
   }
   else {
     $lastname=trim($_POST['lastname']);
@@ -55,7 +55,7 @@ if($_POST) {
   if (count($error_messages) > 0) { ?>
     <div class="container">
      <div class="alert alert-danger" role="alert">
-      The request couldn't be sent because:
+      <?php echo t('request_account.failed_prefix'); ?>
       <p>
       <ul>
         <?php
@@ -95,9 +95,9 @@ EoT;
          <div class="row justify-content-center">
            <div class="col-sm-6">
              <div class="card border-success">
-             <div class="card-header">Thank you</div>
+             <div class="card-header"><?php echo t('request_account.thank_you'); ?></div>
              <div class="card-body">
-               The request was sent and the administrator will process it as soon as possible.
+               <?php echo t('request_account.sent'); ?>
              </div>
            </div>
            </div>
@@ -109,9 +109,9 @@ EoT;
          <div class="row justify-content-center">
            <div class="col-sm-6">
              <div class="card border-danger">
-             <div class="card-header">Error</div>
+             <div class="card-header"><?php echo t('request_account.error'); ?></div>
              <div class="card-body">
-               Unfortunately the account request wasn't sent because of a technical issue.
+               <?php echo t('request_account.technical_issue'); ?>
              </div>
            </div>
            </div>
@@ -131,60 +131,59 @@ EoT;
 
   <div class="card">
     <div class="card-body">
-    Use this form to send a request for an account to an administrator at <?php print $ORGANISATION_NAME; ?>.
-    If the administrator approves your request they'll get in touch with you to give you your new credentials.
+    <?php echo t('request_account.intro', array('org' => $ORGANISATION_NAME)); ?>
     </div>
   </div>
 
   <div class="card"> 
-   <div class="card-header text-center">Request an account for <?php print $ORGANISATION_NAME; ?></div>
+   <div class="card-header text-center"><?php echo t('request_account.header', array('org' => $ORGANISATION_NAME)); ?></div>
    <div class="card-body text-center">
 
    <form class="form-horizontal" action='' method='post'>
 
     <div class="row mb-3">
-     <label for="firstname" class="col-sm-4 col-form-label text-end">First name</label>
+     <label for="firstname" class="col-sm-4 col-form-label text-end"><?php echo t('request_account.first_name'); ?></label>
      <div class="col-sm-6">
-      <input type="text" class="form-control" id="firstname" name="firstname" placeholder="Required" <?php if (isset($firstname)) { print "value='$firstname'"; } ?>>
+      <input type="text" class="form-control" id="firstname" name="firstname" placeholder="<?php echo t('request_account.required'); ?>" <?php if (isset($firstname)) { print "value='$firstname'"; } ?>>
      </div>
     </div>
 
     <div class="row mb-3">
-     <label for="lastname" class="col-sm-4 col-form-label text-end">Last name</label>
+     <label for="lastname" class="col-sm-4 col-form-label text-end"><?php echo t('request_account.last_name'); ?></label>
      <div class="col-sm-6">
-      <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Required" <?php if (isset($lastname)) { print "value='$lastname'"; } ?>>
+      <input type="text" class="form-control" id="lastname" name="lastname" placeholder="<?php echo t('request_account.required'); ?>" <?php if (isset($lastname)) { print "value='$lastname'"; } ?>>
      </div>
     </div>
 
     <div class="row mb-3">
-     <label for="email" class="col-sm-4 col-form-label text-end">Email</label>
+     <label for="email" class="col-sm-4 col-form-label text-end"><?php echo t('request_account.email'); ?></label>
      <div class="col-sm-6">
       <input type="text" class="form-control" id="email" name="email" <?php if (isset($email)) { print "value='$email'"; } ?>>
      </div>
     </div>
 
     <div class="row mb-3">
-     <label for="Notes" class="col-sm-4 col-form-label text-end">Notes</label>
+     <label for="Notes" class="col-sm-4 col-form-label text-end"><?php echo t('request_account.notes'); ?></label>
      <div class="col-sm-6">
-      <textarea class="form-control" id="notes" name="notes" placeholder="Enter any extra information you think the administrator might need to know."><?php if (isset($notes)) { print $notes; } ?></textarea>
+      <textarea class="form-control" id="notes" name="notes" placeholder="<?php echo t('request_account.notes_placeholder'); ?>"><?php if (isset($notes)) { print $notes; } ?></textarea>
      </div>
     </div>
 
     <div class="row mb-3">
-     <label for="validate" class="col-sm-4 col-form-label text-end">Validation</label>
+     <label for="validate" class="col-sm-4 col-form-label text-end"><?php echo t('request_account.validation'); ?></label>
      <div class="col-sm-6">
       <span class="center-block">
         <img src="human.php" class="human-check" alt="Non-human detection">
         <button type="button" class="btn btn-secondary btn-sm" onclick="document.querySelector('.human-check').src = 'human.php?' + Date.now()">
-         <span class="bi bi-arrow-clockwise"></span> Refresh
+         <span class="bi bi-arrow-clockwise"></span> <?php echo t('request_account.refresh'); ?>
         </button>
       </span>
-      <input type="text" class="form-control center-block" id="validate" name="validate" placeholder="Enter the characters from the image">
+      <input type="text" class="form-control center-block" id="validate" name="validate" placeholder="<?php echo t('request_account.validation_placeholder'); ?>">
      </div>
     </div>
 
     <div class="text-center mb-3">
-     <button type="submit" class="btn btn-secondary">Send request</button>
+     <button type="submit" class="btn btn-secondary"><?php echo t('request_account.submit'); ?></button>
     </div>
    
    </form>

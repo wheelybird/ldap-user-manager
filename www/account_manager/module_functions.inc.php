@@ -22,10 +22,10 @@ function render_submenu() {
 
   // Submodule display names (optional - if not set, ucwords of key is used)
   $submodule_names = array(
-    'users' => 'Users',
-    'groups' => 'Groups',
-    'mfa_status' => 'MFA status',
-    'audit_logs' => 'Audit logs'
+    'users' => t('submenu.users'),
+    'groups' => t('submenu.groups'),
+    'mfa_status' => t('submenu.mfa_status'),
+    'audit_logs' => t('submenu.audit_logs')
   );
 
   ?>

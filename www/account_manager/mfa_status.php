@@ -8,7 +8,7 @@ include_once "totp_functions.inc.php";
 include_once "module_functions.inc.php";
 set_page_access("admin");
 
-render_header("$ORGANISATION_NAME account manager - MFA Status");
+render_header($ORGANISATION_NAME . ' ' . t('mfa_status.title'));
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -28,9 +28,9 @@ if (isset($_POST['disable_user_mfa'])) {
       $user_dn = $user_entry[0]['dn'];
 
       if (totp_disable($ldap_connection, $user_dn)) {
-        render_alert_banner("MFA disabled for user <strong>$username</strong>.");
+        render_alert_banner(t('mfa_status.alert_disabled', array('username' => htmlspecialchars($username))));
       } else {
-        render_alert_banner("Failed to disable MFA for user <strong>$username</strong>.", "danger", 15000);
+        render_alert_banner(t('mfa_status.alert_disable_failed', array('username' => htmlspecialchars($username))), "danger", 15000);
       }
     }
   }
@@ -56,9 +56,9 @@ if (isset($_POST['reset_grace_period'])) {
       );
 
       if (ldap_mod_replace($ldap_connection, $user_dn, $modifications)) {
-        render_alert_banner("Grace period reset for user <strong>$username</strong>.");
+        render_alert_banner(t('mfa_status.alert_grace_reset', array('username' => htmlspecialchars($username))));
       } else {
-        render_alert_banner("Failed to reset grace period for user <strong>$username</strong>.", "danger", 15000);
+        render_alert_banner(t('mfa_status.alert_grace_reset_failed', array('username' => htmlspecialchars($username))), "danger", 15000);
       }
     }
   }
@@ -138,7 +138,7 @@ foreach ($people as $username => $attribs) {
 
 <div class="container">
 
-  <h2>MFA status overview</h2>
+  <h2><?php echo t('mfa_status.heading'); ?></h2>
 
   <!-- Statistics Cards -->
   <div class="row" style="margin-bottom: 20px;">
@@ -146,7 +146,7 @@ foreach ($people as $username => $attribs) {
       <div class="card">
         <div class="card-body text-center">
           <h3><?php echo $mfa_stats['total']; ?></h3>
-          <p>Total Users</p>
+          <p><?php echo t('mfa_status.stat_total'); ?></p>
         </div>
       </div>
     </div>
@@ -154,7 +154,7 @@ foreach ($people as $username => $attribs) {
       <div class="card border-success">
         <div class="card-body text-center">
           <h3><?php echo $mfa_stats['active']; ?></h3>
-          <p>Active</p>
+          <p><?php echo t('mfa.active'); ?></p>
         </div>
       </div>
     </div>
@@ -162,7 +162,7 @@ foreach ($people as $username => $attribs) {
       <div class="card border-warning">
         <div class="card-body text-center">
           <h3><?php echo $mfa_stats['pending']; ?></h3>
-          <p>Pending</p>
+          <p><?php echo t('mfa_status.pending'); ?></p>
         </div>
       </div>
     </div>
@@ -170,7 +170,7 @@ foreach ($people as $username => $attribs) {
       <div class="card">
         <div class="card-body text-center">
           <h3><?php echo $mfa_stats['not_configured']; ?></h3>
-          <p>Not Configured</p>
+          <p><?php echo t('mfa.not_configured'); ?></p>
         </div>
       </div>
     </div>
@@ -178,7 +178,7 @@ foreach ($people as $username => $attribs) {
       <div class="card border-info">
         <div class="card-body text-center">
           <h3><?php echo $mfa_stats['required']; ?></h3>
-          <p>Required</p>
+          <p><?php echo t('mfa_status.stat_required'); ?></p>
         </div>
       </div>
     </div>
@@ -186,7 +186,7 @@ foreach ($people as $username => $attribs) {
       <div class="card border-danger">
         <div class="card-body text-center">
           <h3><?php echo $mfa_stats['grace_expired']; ?></h3>
-          <p>Grace Expired</p>
+          <p><?php echo t('mfa_status.stat_grace_expired'); ?></p>
         </div>
       </div>
     </div>
@@ -195,25 +195,25 @@ foreach ($people as $username => $attribs) {
   <!-- Configuration Summary -->
   <div class="card">
     <div class="card-header">
-      <h4 class="card-title">MFA configuration</h4>
+      <h4 class="card-title"><?php echo t('mfa_status.config_heading'); ?></h4>
     </div>
     <div class="card-body">
       <table class="table table-condensed">
         <tr>
-          <th style="width: 200px;">MFA Enabled:</th>
-          <td><?php echo $MFA_FEATURE_ENABLED ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'; ?></td>
+          <th style="width: 200px;"><?php echo t('mfa_status.enabled_label'); ?></th>
+          <td><?php echo $MFA_FEATURE_ENABLED ? '<span class="badge bg-success">' . t('label.yes') . '</span>' : '<span class="badge bg-secondary">' . t('label.no') . '</span>'; ?></td>
         </tr>
         <?php if ($MFA_FEATURE_ENABLED && !empty($MFA_REQUIRED_GROUPS)) { ?>
           <tr>
-            <th>Required Groups:</th>
+            <th><?php echo t('mfa_status.required_groups_label'); ?></th>
             <td><?php echo implode(', ', $MFA_REQUIRED_GROUPS); ?></td>
           </tr>
           <tr>
-            <th>Grace Period:</th>
-            <td><?php echo $MFA_GRACE_PERIOD_DAYS; ?> days</td>
+            <th><?php echo t('mfa.grace_period'); ?></th>
+            <td><?php echo $MFA_GRACE_PERIOD_DAYS . ' ' . t('unit.days'); ?></td>
           </tr>
           <tr>
-            <th>TOTP Issuer:</th>
+            <th><?php echo t('mfa_status.totp_issuer_label'); ?></th>
             <td><?php echo htmlspecialchars($MFA_TOTP_ISSUER); ?></td>
           </tr>
         <?php } ?>
@@ -224,19 +224,19 @@ foreach ($people as $username => $attribs) {
   <!-- User List -->
   <div class="card">
     <div class="card-header">
-      <h4 class="card-title">User MFA status</h4>
+      <h4 class="card-title"><?php echo t('mfa_status.user_list_heading'); ?></h4>
     </div>
     <div class="card-body">
-      <input class="form-control" id="search_input" type="text" placeholder="Search users...">
+      <input class="form-control" id="search_input" type="text" placeholder="<?php echo htmlspecialchars(t('mfa_status.search_placeholder')); ?>">
     </div>
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>Username</th>
-          <th>MFA Status</th>
-          <th>Required</th>
-          <th>Grace Period</th>
-          <th>Actions</th>
+          <th><?php echo t('mfa_status.col_username'); ?></th>
+          <th><?php echo t('mfa_status.col_mfa_status'); ?></th>
+          <th><?php echo t('mfa_status.col_required'); ?></th>
+          <th><?php echo t('mfa_status.col_grace_period'); ?></th>
+          <th><?php echo t('mfa_status.col_actions'); ?></th>
         </tr>
       </thead>
       <tbody id="userlist">
@@ -265,25 +265,25 @@ foreach ($people as $username => $attribs) {
                 $status = isset($attribs['mfa_status']) ? $attribs['mfa_status'] : 'none';
                 switch ($status) {
                   case 'active':
-                    echo '<span class="badge bg-success">Active</span>';
+                    echo '<span class="badge bg-success">' . t('mfa.active') . '</span>';
                     break;
                   case 'pending':
-                    echo '<span class="badge bg-warning text-dark">Pending</span>';
+                    echo '<span class="badge bg-warning text-dark">' . t('mfa_status.pending') . '</span>';
                     break;
                   case 'disabled':
-                    echo '<span class="badge bg-secondary">Disabled</span>';
+                    echo '<span class="badge bg-secondary">' . t('mfa.disabled') . '</span>';
                     break;
                   default:
-                    echo '<span class="badge bg-secondary">Not Configured</span>';
+                    echo '<span class="badge bg-secondary">' . t('mfa.not_configured') . '</span>';
                 }
               ?>
             </td>
             <td>
               <?php
                 if (isset($attribs['mfa_required']) && $attribs['mfa_required']) {
-                  echo '<span class="badge bg-info text-dark">Yes</span>';
+                  echo '<span class="badge bg-info text-dark">' . t('label.yes') . '</span>';
                 } else {
-                  echo '<span class="badge bg-secondary">No</span>';
+                  echo '<span class="badge bg-secondary">' . t('label.no') . '</span>';
                 }
               ?>
             </td>
@@ -292,14 +292,14 @@ foreach ($people as $username => $attribs) {
                 if (isset($attribs['grace_days_remaining'])) {
                   $days = $attribs['grace_days_remaining'];
                   if ($days > 3) {
-                    echo '<span class="badge bg-success">' . $days . ' days</span>';
+                    echo '<span class="badge bg-success">' . $days . ' ' . t('unit.days') . '</span>';
                   } elseif ($days > 0) {
-                    echo '<span class="badge bg-warning text-dark">' . $days . ' days</span>';
+                    echo '<span class="badge bg-warning text-dark">' . $days . ' ' . t('unit.days') . '</span>';
                   } else {
-                    echo '<span class="badge bg-danger">Expired</span>';
+                    echo '<span class="badge bg-danger">' . t('mfa.grace_expired') . '</span>';
                   }
                 } else {
-                  echo '<span class="text-muted">N/A</span>';
+                  echo '<span class="text-muted">' . t('label.na') . '</span>';
                 }
               ?>
             </td>
@@ -308,8 +308,8 @@ foreach ($people as $username => $attribs) {
                 <form method="POST" style="display: inline;">
                   <input type="hidden" name="username" value="<?php echo htmlspecialchars($username); ?>">
                   <button type="submit" name="disable_user_mfa" class="btn btn-sm btn-danger"
-                          onclick="return confirm('Disable MFA for <?php echo htmlspecialchars($username); ?>?');">
-                    Disable MFA
+                          onclick="return confirm(<?php echo json_encode(t('mfa_status.disable_confirm', array('username' => $username))); ?>);">
+                    <?php echo t('mfa.disable'); ?>
                   </button>
                 </form>
               <?php } ?>
@@ -318,8 +318,8 @@ foreach ($people as $username => $attribs) {
                 <form method="POST" style="display: inline;">
                   <input type="hidden" name="username" value="<?php echo htmlspecialchars($username); ?>">
                   <button type="submit" name="reset_grace_period" class="btn btn-danger btn-sm"
-                          onclick="return confirm('Reset grace period for <?php echo htmlspecialchars($username); ?>?');">
-                    Reset Grace Period
+                          onclick="return confirm(<?php echo json_encode(t('mfa_status.reset_grace_confirm', array('username' => $username))); ?>);">
+                    <?php echo t('mfa_status.reset_grace_btn'); ?>
                   </button>
                 </form>
               <?php } ?>

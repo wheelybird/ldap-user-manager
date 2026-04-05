@@ -23,10 +23,10 @@ if (isset($_POST['update_account_expiry']) || isset($_POST['remove_account_expir
         // Remove account expiration
         if (account_lifecycle_set_expiry($ldap_connection, $lifecycle_dn, null)) {
           audit_log('account_expiry_removed', $account_identifier, "Admin removed account expiration", 'success', $USER_ID);
-          render_alert_banner("Account expiration has been removed. Account will not expire.");
+          render_alert_banner(t('user_lifecycle.alert_expiry_removed'));
         } else {
           audit_log('account_expiry_remove_failure', $account_identifier, "Failed to remove account expiration", 'failure', $USER_ID);
-          render_alert_banner("Failed to remove account expiration. Check the logs for more information.", "danger", 15000);
+          render_alert_banner(t('user_lifecycle.alert_expiry_remove_failed'), "danger", 15000);
         }
       } elseif (isset($_POST['account_expiry_date']) && !empty($_POST['account_expiry_date'])) {
         // Set account expiration date
@@ -36,13 +36,13 @@ if (isset($_POST['update_account_expiry']) || isset($_POST['remove_account_expir
         if ($expiry_timestamp !== false) {
           if (account_lifecycle_set_expiry($ldap_connection, $lifecycle_dn, $expiry_timestamp)) {
             audit_log('account_expiry_set', $account_identifier, "Admin set account expiration to " . date('Y-m-d', $expiry_timestamp), 'success', $USER_ID);
-            render_alert_banner("Account expiration has been set to " . date('F j, Y', $expiry_timestamp) . ".");
+            render_alert_banner(t('user_lifecycle.alert_expiry_set', array('date' => date('F j, Y', $expiry_timestamp))));
           } else {
             audit_log('account_expiry_set_failure', $account_identifier, "Failed to set account expiration", 'failure', $USER_ID);
-            render_alert_banner("Failed to set account expiration. Check the logs for more information.", "danger", 15000);
+            render_alert_banner(t('user_lifecycle.alert_expiry_set_failed'), "danger", 15000);
           }
         } else {
-          render_alert_banner("Invalid date format. Please use YYYY-MM-DD.", "danger", 15000);
+          render_alert_banner(t('user_lifecycle.alert_invalid_date_format'), "danger", 15000);
         }
       }
     }
@@ -62,10 +62,10 @@ if (isset($_POST['unlock_account'])) {
 
         if (account_lifecycle_unlock($ldap_connection, $unlock_dn)) {
           audit_log('account_unlocked', $account_identifier, "Admin unlocked account", 'success', $USER_ID);
-          render_alert_banner("Account has been unlocked successfully.");
+          render_alert_banner(t('user_lifecycle.alert_unlocked'));
         } else {
           audit_log('account_unlock_failure', $account_identifier, "Failed to unlock account", 'failure', $USER_ID);
-          render_alert_banner("Failed to unlock account. Check the logs for more information.", "danger", 15000);
+          render_alert_banner(t('user_lifecycle.alert_unlock_failed'), "danger", 15000);
         }
       }
     }

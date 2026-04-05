@@ -19,6 +19,8 @@ $FAIL_ICON = "&#9940;";
 
 $JS_EMAIL_REGEX='/^[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}$/u;';
 
+include_once "i18n.inc.php";
+
 ######################################################
 # ERROR HANDLING - Set up custom error/exception handlers
 ######################################################
@@ -101,11 +103,11 @@ function show_generic_error_page($error_details = '') {
   // Display generic error page
   ?>
   <!DOCTYPE html>
-  <html lang="en">
+  <html lang="<?php echo htmlspecialchars(current_ui_language(), ENT_QUOTES, 'UTF-8'); ?>">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Error</title>
+    <title><?php echo t('system_error.title'); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
   </head>
   <body>
@@ -114,21 +116,21 @@ function show_generic_error_page($error_details = '') {
         <div class="col-md-8 col-lg-6">
           <div class="card border-danger">
             <div class="card-header bg-danger text-white text-center">
-              <h4>System Error</h4>
+              <h4><?php echo t('system_error.heading'); ?></h4>
             </div>
             <div class="card-body">
-              <p class="text-center">An unexpected error has occurred. Please try again later.</p>
-              <p class="text-center text-muted">If this problem persists, please contact your system administrator.</p>
+              <p class="text-center"><?php echo t('system_error.message'); ?></p>
+              <p class="text-center text-muted"><?php echo t('system_error.contact'); ?></p>
 
               <?php if ($show_details && !empty($error_details)): ?>
               <div class="alert alert-warning mt-3">
-                <strong>Error Details (development mode):</strong>
+                <strong><?php echo t('system_error.details'); ?></strong>
                 <pre class="mt-2 mb-0" style="font-size: 0.85em; max-height: 300px; overflow-y: auto;"><?php echo htmlspecialchars($error_details); ?></pre>
               </div>
               <?php endif; ?>
 
               <p class="text-center mt-4">
-                <a href="<?php echo url('/'); ?>" class="btn btn-primary">Return to Home</a>
+                <a href="<?php echo url('/'); ?>" class="btn btn-primary"><?php echo t('system_error.return_home'); ?></a>
               </p>
             </div>
           </div>
@@ -243,7 +245,6 @@ function url($path) {
   return $SERVER_PATH . $path;
 
 }
-
 
 ######################################################
 
@@ -450,7 +451,7 @@ function render_header($title="",$menu=TRUE) {
 
  ?>
 <!DOCTYPE html>
-<HTML>
+<HTML lang="<?php print htmlspecialchars(current_ui_language(), ENT_QUOTES, 'UTF-8'); ?>">
 <HEAD>
  <TITLE><?php print "$title"; ?></TITLE>
  <meta charset="utf-8">
@@ -517,6 +518,7 @@ function render_menu() {
         } else {
           $this_module_name = stripslashes(ucwords(preg_replace('/_/',' ',$module)));
         }
+        $this_module_name = t('module.' . $module) ?? $this_module_name;
 
         $show_this_module = TRUE;
         if ($VALIDATED == TRUE) {
@@ -539,6 +541,16 @@ function render_menu() {
        ?>
        </ul>
        <ul class="navbar-nav">
+        <li class="nav-item"><span class="nav-link"><?php print t('label.language'); ?>:</span></li>
+        <?php
+        foreach (language_menu_options(current_ui_language()) as $language_option) {
+          $active_class = $language_option['active'] ? 'active' : '';
+          print '<li class="nav-item"><a class="nav-link ' . $active_class . '" href="' .
+          htmlspecialchars(language_switch_url($language_option['code']), ENT_QUOTES, 'UTF-8') . '">' .
+          htmlspecialchars($language_option['label'], ENT_QUOTES, 'UTF-8') .
+                '</a></li>';
+        }
+        ?>
         <li class="nav-item"><span class="nav-link"><?php if(isset($USER_ID)) { print $USER_ID; } ?></span></li>
        </ul>
      </div>
@@ -1187,17 +1199,17 @@ function render_attribute_fields($attribute,$label,$values_r,$resource_identifie
                }
              }
              elseif ($inputtype == "binary") {
-               $button_text="Browse";
+               $button_text=t('label.file_browse');
                $file_button_action="disabled";
-               $description="Select a file to upload";
+               $description=t('label.file_select');
                $mimetype="";
 
                if (isset($values_r[0])) {
                  $this_file_info = new finfo(FILEINFO_MIME_TYPE);
                  $mimetype = $this_file_info->buffer($values_r[0]);
                  if (strlen($mimetype) > 23) { $mimetype = substr($mimetype,0,19) . "..."; }
-                 $description="Download $mimetype file (" . human_readable_filesize(strlen($values_r[0])) . ")";
-                 $button_text="Replace file";
+                 $description=t('label.file_download', array('type' => $mimetype, 'size' => human_readable_filesize(strlen($values_r[0]))));
+                 $button_text=t('label.file_replace');
                  if ($resource_identifier != "") {
                    $this_url="//{$_SERVER['HTTP_HOST']}{$THIS_MODULE_PATH}/download.php?resource_identifier={$resource_identifier}&attribute={$attribute}";
                    $file_button_action="onclick=\"window.open('$this_url','_blank');\"";
@@ -1240,7 +1252,7 @@ function render_attribute_fields($attribute,$label,$values_r,$resource_identifie
               <div class="form-check">
                 <input <?php if (isset($tabindex)) { ?>tabindex="<?php print $tabindex; ?>" <?php } ?>type="checkbox" class="form-check-input" id="<?php print $attribute; ?>" name="<?php print $attribute; ?>" value="TRUE" <?php if ($is_checked) { print 'checked'; } ?> <?php if ($onkeyup != "") { print "onchange=\"$onkeyup\""; } ?>>
                 <label class="form-check-label" for="<?php print $attribute; ?>">
-                  Enable
+                  <?php print t('label.enable'); ?>
                 </label>
               </div>
             <?php
@@ -1282,7 +1294,7 @@ function render_alert_banner($message,$alert_class="success",$timeout=4000) {
     </script>
     <div class="container alert-banner-container">
      <div class="alert alert-<?php print $alert_class; ?> alert-dismissible fade show" role="alert">
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<?php print t('label.close'); ?>"></button>
       <p class="text-center"><?php print $message; ?></p>
      </div>
     </div>

@@ -15,8 +15,7 @@ if (isset($_GET['logged_out'])) {
 ?>
 <div class="container">
  <div class="alert alert-warning">
-  <p class="text-center">You've been automatically logged out because you've been inactive for over
-  <?php print $SESSION_TIMEOUT; ?> minutes. Click on the 'Log in' link to get back into the system.</p>
+  <p class="text-center"><?php print t('login.logged_out', array('minutes' => $SESSION_TIMEOUT)); ?></p>
  </div>
 </div>
 <?php
@@ -252,7 +251,7 @@ if (isset($_POST["user_id"]) and isset($_POST["password"])) {
 }
 else {
 
- render_header("$ORGANISATION_NAME account manager - log in");
+ render_header($ORGANISATION_NAME . ' ' . t('login.title'));
 
  ?>
 <div class="container">
@@ -260,24 +259,24 @@ else {
   <div class="col-md-8">
 
    <div class="card">
-   <div class="card-header text-center">Log in</div>
+  <div class="card-header text-center"><?php print t('login.card_title'); ?></div>
    <div class="card-body text-center">
 
    <?php if (isset($display_unauth)) { ?>
    <div class="alert alert-warning">
-    Please log in to continue
+    <?php print t('login.continue'); ?>
    </div>
    <?php } ?>
 
    <?php if (isset($display_logged_out)) { ?>
    <div class="alert alert-warning">
-    You were logged out because your session expired. Log in again to continue.
+    <?php print t('login.session_expired'); ?>
    </div>
    <?php } ?>
 
    <?php if (isset($_GET["invalid"])) { ?>
    <div class="alert alert-warning">
-    The username and/or password are unrecognised.
+    <?php print t('login.invalid'); ?>
    </div>
    <?php } ?>
 
@@ -292,7 +291,7 @@ else {
     </div>
 
     <div class="row mb-3">
-     <label for="password" class="col-sm-4 col-form-label text-end">Password</label>
+     <label for="password" class="col-sm-4 col-form-label text-end"><?php print t('login.password'); ?></label>
      <div class="col-sm-6">
       <input type="password" class="form-control" id="confirm" name="password">
      </div>
@@ -300,12 +299,12 @@ else {
 
     <?php if ($PASSWORD_RESET_ENABLED == TRUE && $EMAIL_SENDING_ENABLED == TRUE) { ?>
     <div class="text-center mb-3">
-      <a href="<?php echo url('/password_reset/request.php'); ?>">Forgot password?</a>
+      <a href="<?php echo url('/password_reset/request.php'); ?>"><?php echo t('login.forgot_password'); ?></a>
     </div>
     <?php } ?>
 
     <div class="text-center mb-3">
-     <button type="submit" class="btn btn-secondary">Log in</button>
+     <button type="submit" class="btn btn-secondary"><?php print t('login.submit'); ?></button>
     </div>
 
    </form>

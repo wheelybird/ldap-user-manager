@@ -28,17 +28,17 @@ if (!defined('LDAP_USER_MANAGER')) {
   ?>
 
   <div class="row mb-3" id="password_div">
-   <label for="password_field" class="col-sm-3 col-form-label text-end">Password</label>
+    <label for="password_field" class="col-sm-3 col-form-label text-end"><?php print t('user_details.password'); ?></label>
    <div class="col-sm-6">
     <input type="password" class="form-control" id="password_field" name="password" onkeyup="back_to_hidden('password_field','confirm'); check_if_we_should_enable_sending_email();">
    </div>
    <div class="col-sm-3">
-    <input type="button" class="btn btn-secondary btn-sm" id="password_generator" onclick="random_password(); check_if_we_should_enable_sending_email();" value="Generate password">
+    <input type="button" class="btn btn-secondary btn-sm" id="password_generator" onclick="random_password(); check_if_we_should_enable_sending_email();" value="<?php print t('user_details.generate_password'); ?>">
    </div>
   </div>
 
   <div class="row mb-3" id="confirm_div">
-   <label for="confirm" class="col-sm-3 col-form-label text-end">Confirm</label>
+    <label for="confirm" class="col-sm-3 col-form-label text-end"><?php print t('user_details.confirm'); ?></label>
    <div class="col-sm-6">
     <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
    </div>
@@ -48,14 +48,14 @@ if (!defined('LDAP_USER_MANAGER')) {
   <div class="row mb-3" id="send_email_div">
     <label for="send_email" class="col-sm-3 col-form-label"> </label>
     <div class="col-sm-6">
-      <input type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  Email the updated credentials to the user?
+      <input type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" disabled>  <?php print t('user_details.email_updated_credentials'); ?>
     </div>
   </div>
 <?php } ?>
 
 
   <div class="row mb-3">
-    <p align='center'><button type="submit" class="btn btn-secondary">Update account details</button></p>
+    <p align='center'><button type="submit" class="btn btn-secondary"><?php print t('user_details.update_account_details'); ?></button></p>
   </div>
 
 </form>
@@ -63,7 +63,7 @@ if (!defined('LDAP_USER_MANAGER')) {
 <?php if ($PASSWORD_POLICY_ENABLED) { ?>
 <!-- Password Requirements Checklist -->
 <div class="card mt-3">
-  <div class="card-header"><small><strong>Password requirements</strong></small></div>
+  <div class="card-header"><small><strong><?php print t('user_details.password_requirements'); ?></strong></small></div>
   <div class="card-body" id="PasswordRequirements">
     <!-- Requirements will be dynamically inserted here -->
   </div>
@@ -75,4 +75,4 @@ if (!defined('LDAP_USER_MANAGER')) {
 </div>
 <?php } ?>
 
-<div><p align='center'><sup>&ast;</sup>The account identifier.  Changing this will change the full <strong>DN</strong>.</p></div>
+<div><p align='center'><sup>&ast;</sup><?php print t('user_details.account_identifier_note'); ?></p></div>

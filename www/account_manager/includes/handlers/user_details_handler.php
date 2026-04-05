@@ -155,10 +155,10 @@ if (isset($_POST['update_account'])) {
 
       $sent_email = send_email($mail[0], $full_name, $mail_subject, $mail_body);
       if ($sent_email) {
-        $sent_email_message .= "  An email was sent to {$mail[0]}.";
+        $sent_email_message = '  ' . t('show_user.alert_email_sent', array('email' => $mail[0]));
       }
       else {
-        $sent_email_message .= "  Unfortunately the email wasn't sent; check the logs for more information.";
+        $sent_email_message = '  ' . t('show_user.alert_email_failed');
       }
     }
 
@@ -208,13 +208,13 @@ if (isset($_POST['update_account'])) {
     $update_fields = array_keys($to_update);
     $update_details = "Updated fields: " . implode(', ', $update_fields);
     audit_log('user_updated', $account_identifier, $update_details, 'success', $USER_ID);
-    render_alert_banner("The account has been updated.  $sent_email_message");
+    render_alert_banner(t('show_user.alert_updated', array('email_message' => $sent_email_message)));
   }
   else {
     // Audit log failed update
     $error_msg = ldap_error($ldap_connection);
     audit_log('user_update_failure', $account_identifier, "Failed to update user: {$error_msg}", 'failure', $USER_ID);
-    render_alert_banner("There was a problem updating the account.  Check the logs for more information.","danger",15000);
+    render_alert_banner(t('show_user.alert_update_failed'),"danger",15000);
   }
 }
 

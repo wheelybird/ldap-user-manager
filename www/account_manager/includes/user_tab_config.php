@@ -28,7 +28,7 @@ function get_user_tabs_config($context) {
   $tabs = [
     'details' => [
       'id' => 'details',
-      'label' => 'Details',
+      'label' => t('tabs.user.details'),
       'icon' => 'bi-person-badge',
       'tab_file' => 'tabs/user_details_tab.php',
       'handler_file' => 'handlers/user_details_handler.php',
@@ -37,7 +37,7 @@ function get_user_tabs_config($context) {
     ],
     'mfa' => [
       'id' => 'mfa',
-      'label' => 'MFA Status',
+      'label' => t('tabs.user.mfa_status'),
       'icon' => 'bi-shield-lock',
       'tab_file' => 'tabs/user_mfa_tab.php',
       'handler_file' => 'handlers/user_mfa_handler.php',
@@ -46,7 +46,7 @@ function get_user_tabs_config($context) {
     ],
     'password' => [
       'id' => 'password',
-      'label' => 'Password Status',
+      'label' => t('tabs.user.password_status'),
       'icon' => 'bi-key',
       'tab_file' => 'tabs/user_password_tab.php',
       'handler_file' => null, // No separate handler needed
@@ -55,7 +55,7 @@ function get_user_tabs_config($context) {
     ],
     'lifecycle' => [
       'id' => 'lifecycle',
-      'label' => 'Account Lifecycle',
+      'label' => t('tabs.user.account_lifecycle'),
       'icon' => 'bi-arrow-repeat',
       'tab_file' => 'tabs/user_lifecycle_tab.php',
       'handler_file' => 'handlers/user_lifecycle_handler.php',
@@ -64,7 +64,7 @@ function get_user_tabs_config($context) {
     ],
     'groups' => [
       'id' => 'groups',
-      'label' => 'Groups',
+      'label' => t('tabs.user.groups'),
       'icon' => 'bi-people',
       'tab_file' => 'tabs/user_groups_tab.php',
       'handler_file' => 'handlers/user_groups_handler.php',
