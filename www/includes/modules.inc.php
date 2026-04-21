@@ -18,15 +18,15 @@
 
  #Module display names (optional - if not set, directory name is used)
  $MODULE_NAMES = array(
-                    'log_in'          => 'Log In',
-                    'home'            => 'Home',
-                    'user_profile'    => 'My profile',
-                    'change_password' => 'Change password',
-                    'account_manager' => 'Account manager',
-                    'system_config'   => 'System config',
-                    'log_out'         => 'Log Out',
-                    'request_account' => 'Request account',
-                    'manage_mfa'      => 'Manage MFA',
+                    'log_in'          => t('module.log_in'),
+                    'home'            => t('module.home'),
+                    'user_profile'    => t('module.user_profile'),
+                    'change_password' => t('module.change_password'),
+                    'account_manager' => t('module.account_manager'),
+                    'system_config'   => t('module.system_config'),
+                    'log_out'         => t('module.log_out'),
+                    'request_account' => t('module.request_account'),
+                    'manage_mfa'      => t('module.manage_mfa'),
                   );
 
 if ($MFA_FEATURE_ENABLED == TRUE) {

@@ -18,7 +18,7 @@ if ($PASSWORD_RESET_ENABLED != TRUE) {
 
 // Check if email sending is enabled
 if ($EMAIL_SENDING_ENABLED != TRUE) {
-  die("Email sending is not configured. Password reset requires email functionality.");
+  die(t('password_reset.email_not_configured'));
 }
 
 $request_sent = FALSE;
@@ -142,7 +142,7 @@ if (isset($_POST['request_reset'])) {
   }
 }
 
-render_header("Reset your $ORGANISATION_NAME password");
+render_header(t('password_reset.page_title', array('org' => $ORGANISATION_NAME)));
 
 ?>
 <div class="container">
@@ -151,23 +151,23 @@ render_header("Reset your $ORGANISATION_NAME password");
 
 if ($rate_limited) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center"><strong>Too many requests</strong></p>
-  <p class="text-center">You have exceeded the maximum number of password reset requests. Please try again later.</p>
+  <p class="text-center"><strong><?php echo t('password_reset.request.rate_limited_title'); ?></strong></p>
+  <p class="text-center"><?php echo t('password_reset.request.rate_limited_body'); ?></p>
  </div>
 <?php }
 
 if (isset($invalid_username)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">Please enter a valid username.</p>
+  <p class="text-center"><?php echo t('password_reset.request.invalid_username'); ?></p>
  </div>
 <?php }
 
 if ($request_sent) {  ?>
  <div class="alert alert-success">
-  <p class="text-center"><strong>Password reset email sent</strong></p>
-  <p class="text-center">If an account exists with that username, you will receive a password reset link shortly.</p>
-  <p class="text-center">Please check your email and follow the instructions.</p>
-  <p class="text-center"><small>The reset link will expire in <?php echo isset($PASSWORD_RESET_TOKEN_EXPIRY_MINUTES) ? $PASSWORD_RESET_TOKEN_EXPIRY_MINUTES : 60; ?> minutes.</small></p>
+  <p class="text-center"><strong><?php echo t('password_reset.request.sent_title'); ?></strong></p>
+  <p class="text-center"><?php echo t('password_reset.request.sent_body'); ?></p>
+  <p class="text-center"><?php echo t('password_reset.request.sent_instructions'); ?></p>
+  <p class="text-center"><small><?php echo t('password_reset.request.sent_expiry', array('minutes' => isset($PASSWORD_RESET_TOKEN_EXPIRY_MINUTES) ? $PASSWORD_RESET_TOKEN_EXPIRY_MINUTES : 60)); ?></small></p>
  </div>
 <?php } else { ?>
 
@@ -175,10 +175,10 @@ if ($request_sent) {  ?>
   <div class="col-md-8">
 
    <div class="card">
-    <div class="card-header text-center">Request password reset</div>
+    <div class="card-header text-center"><?php echo t('password_reset.request.card_header'); ?></div>
 
     <ul class="list-group">
-     <li class="list-group-item">Enter your username below to receive a password reset link. The link will be valid for <?php echo isset($PASSWORD_RESET_TOKEN_EXPIRY_MINUTES) ? $PASSWORD_RESET_TOKEN_EXPIRY_MINUTES : 60; ?> minutes.</li>
+     <li class="list-group-item"><?php echo t('password_reset.request.instruction', array('minutes' => isset($PASSWORD_RESET_TOKEN_EXPIRY_MINUTES) ? $PASSWORD_RESET_TOKEN_EXPIRY_MINUTES : 60)); ?></li>
     </ul>
 
     <div class="card-body text-center">
@@ -188,20 +188,20 @@ if ($request_sent) {  ?>
       <input type='hidden' name="request_reset" value="1">
 
       <div class="row mb-3">
-       <label for="username" class="col-sm-3 col-form-label text-end">Username</label>
+       <label for="username" class="col-sm-3 col-form-label text-end"><?php echo t('password_reset.request.username_label'); ?></label>
        <div class="col-sm-6">
         <input type="text" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($username_input); ?>" required autocomplete="username">
        </div>
       </div>
 
       <div class="text-center mb-3">
-        <button type="submit" class="btn btn-secondary">Send reset link</button>
+        <button type="submit" class="btn btn-secondary"><?php echo t('password_reset.request.submit'); ?></button>
       </div>
 
      </form>
 
      <div class="text-center mt-3">
-       <a href="<?php echo url('/log_in'); ?>">Back to login</a>
+       <a href="<?php echo url('/log_in'); ?>"><?php echo t('password_reset.request.back_to_login'); ?></a>
      </div>
 
     </div>

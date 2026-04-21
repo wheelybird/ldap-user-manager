@@ -13,7 +13,7 @@ $attribute_map = $LDAP['default_attribute_map'];
 if (isset($LDAP['account_additional_attributes'])) { $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['account_additional_attributes']); }
 
 if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
-  $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => "Account UID")));
+  $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => t('show_user.label_account_uid'))));
 }
 
 if ( isset($_POST['setup_admin_account']) ) {
@@ -24,19 +24,19 @@ if ( isset($_POST['setup_admin_account']) ) {
   set_page_access("setup");
 
   $completed_action="{$SERVER_PATH}log_in";
-  $page_title="New administrator account";
+  $page_title=t('new_user.page_title_setup');
 
-  render_header("$ORGANISATION_NAME account manager - setup administrator account", FALSE);
+  render_header($ORGANISATION_NAME . ' ' . t('new_user.title_setup'), FALSE);
 
 }
 else {
   set_page_access("admin");
 
   $completed_action="{$THIS_MODULE_PATH}/";
-  $page_title="New account";
+  $page_title=t('new_user.page_title_normal');
   $admin_setup = FALSE;
 
-  render_header("$ORGANISATION_NAME account manager");
+  render_header($ORGANISATION_NAME . ' ' . t('new_user.title_normal'));
   render_submenu();
 }
 
@@ -192,7 +192,7 @@ if (isset($_POST['create_account'])) {
  if (!password_policy_check_strength($password, $password_strength_score)) {
    $password_fails_policy = true;
    if (empty($password_policy_errors)) {
-     $password_policy_errors[] = "Password strength is too weak";
+     $password_policy_errors[] = t('password_policy.error.too_weak');
    }
  }
 
@@ -263,7 +263,7 @@ if (isset($_POST['create_account'])) {
       }
     }
 
-    $creation_message = "The account was created.";
+    $creation_message = t('new_user.creation_created');
 
     if (isset($send_user_email) and $send_user_email == TRUE) {
 
@@ -276,12 +276,12 @@ if (isset($_POST['create_account'])) {
       $mail_subject = parse_mail_text($new_account_mail_subject, $password, $account_identifier, $this_givenname, $this_sn);
 
       $sent_email = send_email($this_mail, $full_name, $mail_subject, $mail_body);
-      $creation_message = "The account was created";
+      $creation_message = t('new_user.creation_created_short');
       if ($sent_email) {
-        $creation_message .= " and an email sent to $this_mail.";
+        $creation_message .= ' ' . t('new_user.creation_email_sent', array('email' => $this_mail));
       }
       else {
-        $creation_message .= " but unfortunately the email wasn't sent.<br>More information will be available in the logs.";
+        $creation_message .= ' ' . t('new_user.creation_email_failed');
       }
     }
 
@@ -290,7 +290,7 @@ if (isset($_POST['create_account'])) {
       if (!$member_add) { ?>
        <div class="container">
         <div class="alert alert-warning">
-         <p class="text-center"><?php print $creation_message; ?> Unfortunately adding it to the admin group failed.</p>
+        <p class="text-center"><?php print $creation_message; ?> <?php print t('new_user.add_admin_group_failed'); ?></p>
         </div>
        </div>
        <?php
@@ -308,7 +308,7 @@ if (isset($_POST['create_account'])) {
     </div>
     <form action='<?php print $completed_action; ?>'>
      <p align="center">
-      <input type='submit' class="btn btn-success" value='Finished'>
+      <input type='submit' class="btn btn-success" value='<?php print t('setup.button.finished'); ?>'>
      </p>
     </form>
    </div>
@@ -323,7 +323,7 @@ if (isset($_POST['create_account'])) {
   ?>
     <div class="container">
      <div class="alert alert-warning">
-      <p class="text-center">Failed to create the account:</p>
+      <p class="text-center"><?php print t('new_user.create_failed'); ?></p>
       <pre>
       <?php
         print $error_msg . "\n";
@@ -345,15 +345,15 @@ if (isset($_POST['create_account'])) {
 }
 
 $errors="";
-if ($invalid_cn) { $errors.="<li>The Common Name is required</li>\n"; }
-if ($invalid_givenname) { $errors.="<li>First Name is required</li>\n"; }
-if ($invalid_sn) { $errors.="<li>Last Name is required</li>\n"; }
-if ($invalid_account_identifier) {  $errors.="<li>The account identifier (" . $attribute_map[$account_attribute]['label'] . ") is invalid.</li>\n"; }
-if ($weak_password) { $errors.="<li>The password is too weak</li>\n"; }
-if ($invalid_password) { $errors.="<li>The password contained invalid characters</li>\n"; }
-if ($invalid_email) { $errors.="<li>The email address is invalid</li>\n"; }
-if ($mismatched_passwords) { $errors.="<li>The passwords are mismatched</li>\n"; }
-if ($invalid_username) { $errors.="<li>The username is invalid</li>\n"; }
+if ($invalid_cn) { $errors.="<li>" . t('new_user.error_cn_required') . "</li>\n"; }
+if ($invalid_givenname) { $errors.="<li>" . t('new_user.error_first_name_required') . "</li>\n"; }
+if ($invalid_sn) { $errors.="<li>" . t('new_user.error_last_name_required') . "</li>\n"; }
+if ($invalid_account_identifier) {  $errors.="<li>" . t('new_user.error_account_identifier_invalid', array('label' => $attribute_map[$account_attribute]['label'])) . "</li>\n"; }
+if ($weak_password) { $errors.="<li>" . t('new_user.error_password_weak') . "</li>\n"; }
+if ($invalid_password) { $errors.="<li>" . t('new_user.error_password_invalid_chars') . "</li>\n"; }
+if ($invalid_email) { $errors.="<li>" . t('new_user.error_email_invalid') . "</li>\n"; }
+if ($mismatched_passwords) { $errors.="<li>" . t('new_user.error_password_mismatch') . "</li>\n"; }
+if ($invalid_username) { $errors.="<li>" . t('new_user.error_username_invalid') . "</li>\n"; }
 if ($password_fails_policy && !empty($password_policy_errors)) {
   foreach ($password_policy_errors as $policy_error) {
     $errors.="<li>" . htmlspecialchars($policy_error) . "</li>\n";
@@ -364,7 +364,7 @@ if ($errors != "") { ?>
 <div class="container">
  <div class="alert alert-warning">
   <p class="text-align: center">
-  There were issues creating the account:
+  <?php print t('new_user.error_summary'); ?>
   <ul>
   <?php print $errors; ?>
   </ul>
@@ -394,8 +394,13 @@ $tabindex=1;
      requireUppercase: <?php echo $PASSWORD_REQUIRE_UPPERCASE ? 'true' : 'false'; ?>,
      requireLowercase: <?php echo $PASSWORD_REQUIRE_LOWERCASE ? 'true' : 'false'; ?>,
      requireNumbers: <?php echo $PASSWORD_REQUIRE_NUMBERS ? 'true' : 'false'; ?>,
-     requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>
-   };
+     requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>,
+     labelMinLength: "<?php echo t('password.requirement.min_length', array('count' => $PASSWORD_MIN_LENGTH)); ?>",
+     labelUppercase: "<?php echo t('password.requirement.uppercase'); ?>",
+     labelLowercase: "<?php echo t('password.requirement.lowercase'); ?>",
+     labelNumber: "<?php echo t('password.requirement.number'); ?>",
+     labelSpecial: "<?php echo t('password.requirement.special'); ?>",
+    };
    initPasswordRequirements('password', window.passwordRequirements);
    <?php } else { ?>
    initPasswordStrength('password');
@@ -478,17 +483,17 @@ $tabindex=1;
      ?>
 
      <div class="row mb-3" id="password_div">
-      <label for="password" class="col-sm-3 col-form-label">Password</label>
+      <label for="password" class="col-sm-3 col-form-label"><?php print t('new_user.password'); ?></label>
       <div class="col-sm-6">
        <input tabindex="<?php print $tabindex+1; ?>" type="text" class="form-control" id="password" name="password" onkeyup="back_to_hidden('password','confirm');">
       </div>
       <div class="col-sm-1">
-       <input tabindex="<?php print $tabindex+3; ?>" type="button" class="btn btn-primary btn-sm" id="password_generator" onclick="random_password();" value="Generate password">
+       <input tabindex="<?php print $tabindex+3; ?>" type="button" class="btn btn-primary btn-sm" id="password_generator" onclick="random_password();" value="<?php print t('new_user.generate_password'); ?>">
       </div>
      </div>
 
      <div class="row mb-3" id="confirm_div">
-      <label for="confirm" class="col-sm-3 col-form-label">Confirm</label>
+      <label for="confirm" class="col-sm-3 col-form-label"><?php print t('new_user.confirm'); ?></label>
       <div class="col-sm-6">
        <input tabindex="<?php print $tabindex+2; ?>" type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
       </div>
@@ -498,13 +503,13 @@ $tabindex=1;
       <div class="row mb-3" id="send_email_div">
        <label for="send_email" class="col-sm-3 col-form-label"> </label>
        <div class="col-sm-6">
-        <input tabindex="<?php print $tabindex+4; ?>" type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" <?php if ($disabled_email_tickbox == TRUE) { print "disabled"; } ?>>  Email these credentials to the user?
+        <input tabindex="<?php print $tabindex+4; ?>" type="checkbox" class="form-check-input" id="send_email_checkbox" name="send_email" <?php if ($disabled_email_tickbox == TRUE) { print "disabled"; } ?>>  <?php print t('new_user.email_credentials'); ?>
        </div>
       </div>
 <?php } ?>
 
      <div class="text-center mb-3">
-       <button tabindex="<?php print $tabindex+5; ?>" type="submit" class="btn btn-warning">Create account</button>
+      <button tabindex="<?php print $tabindex+5; ?>" type="submit" class="btn btn-warning"><?php print t('new_user.create_account'); ?></button>
      </div>
 
     </form>
@@ -512,7 +517,7 @@ $tabindex=1;
     <?php if ($PASSWORD_POLICY_ENABLED) { ?>
     <!-- Password Requirements Checklist -->
     <div class="card mt-3">
-      <div class="card-header"><small><strong>Password requirements</strong></small></div>
+      <div class="card-header"><small><strong><?php print t('new_user.password_requirements'); ?></strong></small></div>
       <div class="card-body" id="PasswordRequirements">
         <!-- Requirements will be dynamically inserted here -->
       </div>
@@ -524,7 +529,7 @@ $tabindex=1;
     </div>
     <?php } ?>
 
-    <div><sup>&ast;</sup>The account identifier</div>
+    <div><sup>&ast;</sup><?php print t('new_user.identifier_note'); ?></div>
 
    </div>
   </div>

@@ -144,11 +144,15 @@ if (isset($_POST['change_password'])) {
         if ($EMAIL_SENDING_ENABLED && $EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE && !empty($ADMIN_EMAIL)) {
           include_once "mail_functions.inc.php";
 
-          $admin_subject = "User password change notification";
-          $admin_body = "User $USER_ID ($full_name) has changed their password.\n\n" .
-                        "Time: " . date('Y-m-d H:i:s T') . "\n" .
-                        "IP Address: " . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown') . "\n\n" .
-                        "This is an automated notification from $ORGANISATION_NAME.";
+          $ip_address = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : t('change_password.admin_notification_unknown_ip');
+          $admin_subject = t('change_password.admin_notification_subject');
+          $admin_body = t('change_password.admin_notification_body', array(
+            'user_id' => $USER_ID,
+            'full_name' => $full_name,
+            'time' => date('Y-m-d H:i:s T'),
+            'ip' => $ip_address,
+            'org' => $ORGANISATION_NAME
+          ));
 
           send_email($ADMIN_EMAIL, 'Administrator', $admin_subject, $admin_body);
         }
@@ -157,15 +161,15 @@ if (isset($_POST['change_password'])) {
 
     ldap_close($ldap_connection);
 
-    render_header("$ORGANISATION_NAME account manager - password changed");
+    render_header(t('change_password.title', array('org' => $ORGANISATION_NAME)));
   ?>
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-8">
         <div class="card border-success">
-          <div class="card-header text-center">Success</div>
+          <div class="card-header text-center"><?php echo t('change_password.success_title'); ?></div>
           <div class="card-body">
-            Your password has been updated
+            <?php echo t('change_password.success_body'); ?>
           </div>
         </div>
       </div>
@@ -179,7 +183,7 @@ if (isset($_POST['change_password'])) {
 
 }
 
-render_header("Change your $ORGANISATION_NAME password");
+render_header(t('change_password.title', array('org' => $ORGANISATION_NAME)));
 
 ?>
 <div class="container">
@@ -187,37 +191,37 @@ render_header("Change your $ORGANISATION_NAME password");
 
 if (isset($not_strong_enough)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">The password wasn't strong enough.</p>
+  <p class="text-center"><?php echo t('change_password.not_strong'); ?></p>
  </div>
 <?php }
 
 if (isset($invalid_chars)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">The password contained invalid characters.</p>
+  <p class="text-center"><?php echo t('change_password.invalid_chars'); ?></p>
  </div>
 <?php }
 
 if (isset($mismatched)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">The passwords didn't match.</p>
+  <p class="text-center"><?php echo t('change_password.mismatch'); ?></p>
  </div>
 <?php }
 
 if (isset($missing_current_password)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">Current password is required.</p>
+  <p class="text-center"><?php echo t('change_password.current_required'); ?></p>
  </div>
 <?php }
 
 if (isset($invalid_current_password)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">Invalid current password.</p>
+  <p class="text-center"><?php echo t('change_password.current_invalid'); ?></p>
  </div>
 <?php }
 
 if (isset($password_in_history)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">Password was used recently and cannot be reused.</p>
+  <p class="text-center"><?php echo t('change_password.in_history'); ?></p>
  </div>
 <?php }
 
@@ -226,9 +230,9 @@ if (isset($ppolicy_error)) {  ?>
   <p class="text-center">
   <?php
   if ($ppolicy_error == "SYSTEM_ERROR") {
-    echo "The password could not be changed due to a system configuration issue. Please contact your administrator.";
+    echo t('change_password.system_error');
   } else {
-    echo "Password policy error: " . htmlspecialchars($ppolicy_error);
+    echo t('change_password.policy_error', array('error' => htmlspecialchars($ppolicy_error)));
   }
   ?>
   </p>
@@ -238,15 +242,15 @@ if (isset($ppolicy_error)) {  ?>
 // Display password expired alert
 if ($password_expired_forced) {  ?>
  <div class="alert alert-danger">
-  <p class="text-center"><strong>Your password has expired.</strong><br>
-  You must change your password to continue using your account.</p>
+  <p class="text-center"><strong><?php echo t('change_password.expired_title'); ?></strong><br>
+  <?php echo t('change_password.expired_body'); ?></p>
  </div>
 <?php }
 // Display password expiry warning (if not already expired)
 elseif ($password_expires_in_days !== null && $password_expires_in_days > 0 && $password_expires_in_days <= $PASSWORD_EXPIRY_WARNING_DAYS) { ?>
  <div class="alert alert-warning">
-  <p class="text-center"><strong>Your password expires in <?php echo $password_expires_in_days; ?> day<?php echo $password_expires_in_days != 1 ? 's' : ''; ?>.</strong><br>
-  Please change it now to avoid being locked out of your account.</p>
+  <p class="text-center"><strong><?php echo t('change_password.expires_in', array('days' => $password_expires_in_days)); ?></strong><br>
+  <?php echo t('change_password.expires_hint'); ?></p>
  </div>
 <?php }
 
@@ -254,10 +258,10 @@ elseif ($password_expires_in_days !== null && $password_expires_in_days > 0 && $
 if ($password_age_days !== null) { ?>
  <div class="alert alert-info">
   <p class="text-center">
-  <strong>Password Information:</strong><br>
-  Last changed: <?php echo $password_changed_formatted; ?> (<?php echo $password_age_days; ?> day<?php echo $password_age_days != 1 ? 's' : ''; ?> ago)
+  <strong><?php echo t('change_password.info_title'); ?></strong><br>
+  <?php echo t('change_password.last_changed', array('date' => $password_changed_formatted, 'days' => $password_age_days)); ?>
   <?php if ($password_expires_in_days !== null && $password_expires_in_days > 0) { ?>
-  <br>Expires: <?php echo date('F j, Y', strtotime($password_changed_time) + ($PASSWORD_EXPIRY_DAYS * 86400)); ?>
+  <br><?php echo t('change_password.expires', array('date' => date('F j, Y', strtotime($password_changed_time) + ($PASSWORD_EXPIRY_DAYS * 86400)))); ?>
   <?php } ?>
   </p>
  </div>
@@ -276,11 +280,10 @@ if ($password_age_days !== null) { ?>
   <div class="col-md-8">
 
    <div class="card">
-   <div class="card-header text-center">Change your password</div>
+  <div class="card-header text-center"><?php echo t('change_password.form_title'); ?></div>
 
    <ul class="list-group">
-    <li class="list-group-item">Use this form to change your <?php print $ORGANISATION_NAME; ?> password.  When you start typing your new password the gauge at the bottom will show its security strength.
-    Enter your password again in the <b>confirm</b> field.  If the passwords don't match then both fields will be bordered with red.</li>
+   <li class="list-group-item"><?php echo t('change_password.form_help', array('org' => $ORGANISATION_NAME)); ?></li>
    </ul>
 
    <div class="card-body text-center">
@@ -292,7 +295,7 @@ if ($password_age_days !== null) { ?>
 
      <?php if ($PPOLICY_ENABLED) { ?>
      <div class="row mb-3">
-      <label for="current_password" class="col-sm-3 col-form-label text-end">Current Password</label>
+      <label for="current_password" class="col-sm-3 col-form-label text-end"><?php echo t('change_password.current'); ?></label>
       <div class="col-sm-6">
        <input type="password" class="form-control" id="current_password" name="current_password" autocomplete="current-password" required>
       </div>
@@ -300,7 +303,7 @@ if ($password_age_days !== null) { ?>
      <?php } ?>
 
      <div class="row mb-3" id="password_div">
-      <label for="password" class="col-sm-3 col-form-label text-end">New Password</label>
+      <label for="password" class="col-sm-3 col-form-label text-end"><?php echo t('change_password.new'); ?></label>
       <div class="col-sm-6">
        <input type="password" class="form-control" id="password" name="password" autocomplete="new-password">
       </div>
@@ -323,14 +326,14 @@ if ($password_age_days !== null) { ?>
      </script>
 
      <div class="row mb-3" id="confirm_div">
-      <label for="password" class="col-sm-3 col-form-label text-end">Confirm</label>
+      <label for="password" class="col-sm-3 col-form-label text-end"><?php echo t('change_password.confirm'); ?></label>
       <div class="col-sm-6">
        <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()">
       </div>
      </div>
 
      <div class="text-center mb-3">
-       <button type="submit" class="btn btn-secondary">Change password</button>
+       <button type="submit" class="btn btn-secondary"><?php echo t('change_password.submit'); ?></button>
      </div>
      
     </form>
@@ -338,7 +341,7 @@ if ($password_age_days !== null) { ?>
     <?php if ($PASSWORD_POLICY_ENABLED) { ?>
     <!-- Password Requirements Checklist -->
     <div class="card mt-3">
-      <div class="card-header"><small><strong>Password requirements</strong></small></div>
+      <div class="card-header"><small><strong><?php echo t('change_password.requirements'); ?></strong></small></div>
       <div class="card-body" id="PasswordRequirements">
         <!-- Requirements will be dynamically inserted here -->
       </div>
@@ -352,7 +355,12 @@ if ($password_age_days !== null) { ?>
           requireUppercase: <?php echo $PASSWORD_REQUIRE_UPPERCASE ? 'true' : 'false'; ?>,
           requireLowercase: <?php echo $PASSWORD_REQUIRE_LOWERCASE ? 'true' : 'false'; ?>,
           requireNumbers: <?php echo $PASSWORD_REQUIRE_NUMBERS ? 'true' : 'false'; ?>,
-          requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>
+          requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>,
+          labelMinLength: "<?php echo t('password.requirement.min_length', array('count' => $PASSWORD_MIN_LENGTH)); ?>",
+          labelUppercase: "<?php echo t('password.requirement.uppercase'); ?>",
+          labelLowercase: "<?php echo t('password.requirement.lowercase'); ?>",
+          labelNumber: "<?php echo t('password.requirement.number'); ?>",
+          labelSpecial: "<?php echo t('password.requirement.special'); ?>",
         };
         initPasswordRequirements('password', window.passwordRequirements);
       });

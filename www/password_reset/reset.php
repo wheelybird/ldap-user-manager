@@ -74,7 +74,7 @@ if (isset($_POST['change_password']) && $token_valid && !isset($locked_out)) {
     if (!password_policy_check_strength($password, $password_strength_score)) {
       $password_fails_policy = true;
       if (empty($password_policy_errors)) {
-        $password_policy_errors[] = "Password strength is too weak";
+        $password_policy_errors[] = t('password_policy.error.too_weak');
       }
     }
   }
@@ -143,17 +143,17 @@ if (isset($_POST['change_password']) && $token_valid && !isset($locked_out)) {
       ldap_close($ldap_connection);
 
       // Redirect to login with success message
-      render_header("$ORGANISATION_NAME - Password reset successful");
+      render_header($ORGANISATION_NAME . ' - ' . t('password_reset.success.title'));
       ?>
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-md-8">
             <div class="card border-success">
-              <div class="card-header text-center bg-success text-white">Password reset successful</div>
+              <div class="card-header text-center bg-success text-white"><?php echo t('password_reset.success.card_header'); ?></div>
               <div class="card-body text-center">
-                <p>Your password has been successfully reset.</p>
-                <p>You can now log in with your new password.</p>
-                <p class="mt-3"><a href="<?php echo url('/log_in'); ?>" class="btn btn-primary">Go to login page</a></p>
+                <p><?php echo t('password_reset.success.body1'); ?></p>
+                <p><?php echo t('password_reset.success.body2'); ?></p>
+                <p class="mt-3"><a href="<?php echo url('/log_in'); ?>" class="btn btn-primary"><?php echo t('password_reset.success.go_to_login'); ?></a></p>
               </div>
             </div>
           </div>
@@ -172,7 +172,7 @@ if (isset($_POST['change_password']) && $token_valid && !isset($locked_out)) {
 
 ldap_close($ldap_connection);
 
-render_header("Reset your $ORGANISATION_NAME password");
+render_header(t('password_reset.page_title', array('org' => $ORGANISATION_NAME)));
 
 ?>
 <script src="<?php print url('/js/password-utils.js'); ?>"></script>
@@ -182,9 +182,9 @@ render_header("Reset your $ORGANISATION_NAME password");
 
 if (isset($locked_out)) {  ?>
  <div class="alert alert-danger">
-  <p class="text-center"><strong>Account temporarily locked</strong></p>
-  <p class="text-center">Too many failed password reset attempts. Please try again later or request a new reset link.</p>
-  <p class="text-center mt-3"><a href="<?php echo url('/password_reset/request.php'); ?>" class="btn btn-secondary">Request new reset link</a></p>
+  <p class="text-center"><strong><?php echo t('password_reset.reset.locked_out_title'); ?></strong></p>
+  <p class="text-center"><?php echo t('password_reset.reset.locked_out_body'); ?></p>
+  <p class="text-center mt-3"><a href="<?php echo url('/password_reset/request.php'); ?>" class="btn btn-secondary"><?php echo t('password_reset.reset.request_new_link'); ?></a></p>
  </div>
 <?php
   render_footer();
@@ -193,10 +193,10 @@ if (isset($locked_out)) {  ?>
 
 if (!$token_valid) {  ?>
  <div class="alert alert-danger">
-  <p class="text-center"><strong>Invalid or expired reset link</strong></p>
-  <p class="text-center">This password reset link is no longer valid. It may have expired or already been used.</p>
-  <p class="text-center">Password reset links expire after <?php echo isset($PASSWORD_RESET_TOKEN_EXPIRY_MINUTES) ? $PASSWORD_RESET_TOKEN_EXPIRY_MINUTES : 60; ?> minutes and can only be used once.</p>
-  <p class="text-center mt-3"><a href="<?php echo url('/password_reset/request.php'); ?>" class="btn btn-secondary">Request new reset link</a></p>
+  <p class="text-center"><strong><?php echo t('password_reset.reset.invalid_token_title'); ?></strong></p>
+  <p class="text-center"><?php echo t('password_reset.reset.invalid_token_body'); ?></p>
+  <p class="text-center"><?php echo t('password_reset.reset.invalid_token_expiry', array('minutes' => isset($PASSWORD_RESET_TOKEN_EXPIRY_MINUTES) ? $PASSWORD_RESET_TOKEN_EXPIRY_MINUTES : 60)); ?></p>
+  <p class="text-center mt-3"><a href="<?php echo url('/password_reset/request.php'); ?>" class="btn btn-secondary"><?php echo t('password_reset.reset.request_new_link'); ?></a></p>
  </div>
 <?php
   render_footer();
@@ -207,25 +207,25 @@ if (!$token_valid) {  ?>
 
 if (isset($not_strong_enough)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">The password wasn't strong enough.</p>
+  <p class="text-center"><?php echo t('password_reset.reset.not_strong'); ?></p>
  </div>
 <?php }
 
 if (isset($invalid_chars)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">The password contained invalid characters.</p>
+  <p class="text-center"><?php echo t('password_reset.reset.invalid_chars'); ?></p>
  </div>
 <?php }
 
 if (isset($mismatched)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center">The passwords didn't match.</p>
+  <p class="text-center"><?php echo t('password_reset.reset.mismatched'); ?></p>
  </div>
 <?php }
 
 if (isset($password_fails_policy)) {  ?>
  <div class="alert alert-warning">
-  <p class="text-center"><strong>Password does not meet requirements:</strong></p>
+  <p class="text-center"><strong><?php echo t('password_reset.reset.fails_policy'); ?></strong></p>
   <ul class="text-start">
    <?php foreach ($password_policy_errors as $error) { ?>
     <li><?php echo htmlspecialchars($error); ?></li>
@@ -236,7 +236,7 @@ if (isset($password_fails_policy)) {  ?>
 
 if (isset($password_change_failed)) {  ?>
  <div class="alert alert-danger">
-  <p class="text-center">Failed to change password. Please try again or contact the administrator.</p>
+  <p class="text-center"><?php echo t('password_reset.reset.change_failed'); ?></p>
  </div>
 <?php }
 
@@ -246,10 +246,10 @@ if (isset($password_change_failed)) {  ?>
   <div class="col-md-8">
 
    <div class="card">
-    <div class="card-header text-center">Reset your password</div>
+    <div class="card-header text-center"><?php echo t('password_reset.reset.card_header'); ?></div>
 
     <ul class="list-group">
-     <li class="list-group-item">Enter your new password below. When you start typing your new password the gauge at the bottom will show its security strength. Enter your password again in the <b>confirm</b> field.</li>
+     <li class="list-group-item"><?php echo t('password_reset.reset.instruction'); ?></li>
     </ul>
 
     <div class="card-body text-center">
@@ -260,7 +260,7 @@ if (isset($password_change_failed)) {  ?>
       <input type='hidden' id="pass_score" value="0" name="pass_score">
 
       <div class="row mb-3" id="password_div">
-       <label for="password" class="col-sm-3 col-form-label text-end">New password</label>
+       <label for="password" class="col-sm-3 col-form-label text-end"><?php echo t('password_reset.reset.new_password_label'); ?></label>
        <div class="col-sm-6">
         <input type="password" class="form-control" id="password" name="password" autocomplete="new-password" required>
        </div>
@@ -283,20 +283,20 @@ if (isset($password_change_failed)) {  ?>
       </script>
 
       <div class="row mb-3" id="confirm_div">
-       <label for="confirm" class="col-sm-3 col-form-label text-end">Confirm password</label>
+       <label for="confirm" class="col-sm-3 col-form-label text-end"><?php echo t('password_reset.reset.confirm_label'); ?></label>
        <div class="col-sm-6">
         <input type="password" class="form-control" id="confirm" name="password_match" onkeyup="check_passwords_match()" required>
        </div>
       </div>
 
       <div class="text-center mb-3">
-        <button type="submit" class="btn btn-primary">Reset password</button>
+        <button type="submit" class="btn btn-primary"><?php echo t('password_reset.reset.submit'); ?></button>
       </div>
 
      </form>
 
      <div class="text-center mt-3">
-       <a href="<?php echo url('/log_in'); ?>">Back to login</a>
+       <a href="<?php echo url('/log_in'); ?>"><?php echo t('password_reset.reset.back_to_login'); ?></a>
      </div>
 
     </div>
@@ -305,7 +305,7 @@ if (isset($password_change_failed)) {  ?>
    <?php if ($PASSWORD_POLICY_ENABLED) { ?>
    <!-- Password Requirements Checklist -->
    <div class="card mt-3">
-     <div class="card-header"><small><strong>Password requirements</strong></small></div>
+     <div class="card-header"><small><strong><?php echo t('password_reset.reset.requirements_header'); ?></strong></small></div>
      <div class="card-body" id="PasswordRequirements">
        <!-- Requirements will be dynamically inserted here -->
      </div>
@@ -319,15 +319,20 @@ if (isset($password_change_failed)) {  ?>
          requireUppercase: <?php echo $PASSWORD_REQUIRE_UPPERCASE ? 'true' : 'false'; ?>,
          requireLowercase: <?php echo $PASSWORD_REQUIRE_LOWERCASE ? 'true' : 'false'; ?>,
          requireNumbers: <?php echo $PASSWORD_REQUIRE_NUMBERS ? 'true' : 'false'; ?>,
-         requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>
-       };
+         requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>,
+         labelMinLength: "<?php echo t('password.requirement.min_length', array('count' => $PASSWORD_MIN_LENGTH)); ?>",
+         labelUppercase: "<?php echo t('password.requirement.uppercase'); ?>",
+         labelLowercase: "<?php echo t('password.requirement.lowercase'); ?>",
+         labelNumber: "<?php echo t('password.requirement.number'); ?>",
+         labelSpecial: "<?php echo t('password.requirement.special'); ?>",
+        };
        initPasswordRequirements('password', window.passwordRequirements);
      });
    </script>
    <?php } else { ?>
    <!-- Password Strength Meter (fallback when policy not enabled) -->
    <div class="card mt-3">
-     <div class="card-header"><small><strong>Password strength</strong></small></div>
+     <div class="card-header"><small><strong><?php echo t('password_reset.reset.strength_header'); ?></strong></small></div>
      <div class="card-body">
        <div class="progress">
          <div id="StrengthProgressBar" class="progress progress-bar"></div>

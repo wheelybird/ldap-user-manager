@@ -22,13 +22,13 @@ if (isset($_POST["admin_password"])) {
 }
 else {
 
- render_header("$ORGANISATION_NAME account manager setup - log in");
+ render_header($ORGANISATION_NAME . ' ' . t('setup.login.title'));
 
  if (isset($_GET["invalid"])) {
  ?>
  <div class="container">
   <div class="alert alert-warning">
-   <p class="text-center">The password was incorrect.</p>
+   <p class="text-center"><?php print t('setup.login.invalid_password'); ?></p>
   </div>
  </div>
  <?php
@@ -38,14 +38,14 @@ else {
   <div class="row justify-content-center">
    <div class="col-md-6 col-lg-4">
     <div class="card">
-     <div class="card-header text-center">Password for <?php print $LDAP['admin_bind_dn']; ?></div>
+     <div class="card-header text-center"><?php print t('setup.login.password_for_dn', array('bind_dn' => $LDAP['admin_bind_dn'])); ?></div>
      <div class="card-body">
       <form action='' method='post'>
        <div class="mb-3">
-        <input type='password' class="form-control" name='admin_password' placeholder='Password' autofocus>
+        <input type='password' class="form-control" name='admin_password' placeholder='<?php print t('setup.login.password_placeholder'); ?>' autofocus>
        </div>
        <div class="d-grid">
-        <input type='submit' class="btn btn-secondary" value='Log in'>
+        <input type='submit' class="btn btn-secondary" value='<?php print t('setup.login.submit'); ?>'>
        </div>
       </form>
      </div>

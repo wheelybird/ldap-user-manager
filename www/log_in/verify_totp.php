@@ -44,7 +44,7 @@ if (isset($_POST['totp_code'])) {
 
   // Validate TOTP code format (6 digits)
   if (!preg_match('/^\d{6}$/', $totp_code)) {
-    $error_message = "Please enter a valid 6-digit code.";
+    $error_message = t('mfa.invalid_code');
   }
   else {
     // Connect to LDAP and get user's TOTP secret
@@ -91,16 +91,16 @@ if (isset($_POST['totp_code'])) {
         else {
           // Invalid TOTP code
           audit_log('mfa_verify_failure', $account_id, 'Invalid TOTP code during login', 'failure', $account_id);
-          $error_message = "Invalid verification code. Please try again.";
+          $error_message = t('verify_totp.error_invalid');
         }
       }
       else {
         // No TOTP secret found
-        $error_message = "MFA configuration error. Please contact your administrator.";
+        $error_message = t('verify_totp.error_config');
       }
     }
     else {
-      $error_message = "Unable to verify code. Please try again.";
+      $error_message = t('verify_totp.error_retry');;
     }
 
     ldap_close($ldap_connection);
@@ -108,7 +108,7 @@ if (isset($_POST['totp_code'])) {
 }
 
 // Render the TOTP validation page
-render_header("$ORGANISATION_NAME account manager - Verify MFA");
+render_header($ORGANISATION_NAME . ' ' . t('verify_totp.title'));
 
 ?>
 <div class="container">
@@ -117,7 +117,7 @@ render_header("$ORGANISATION_NAME account manager - Verify MFA");
 
    <div class="card">
    <div class="card-header text-center">
-     <h5 class="mb-0">Multi-factor authentication</h5>
+     <h5 class="mb-0"><?php echo t('verify_totp.heading'); ?></h5>
    </div>
    <div class="card-body">
 
@@ -128,13 +128,13 @@ render_header("$ORGANISATION_NAME account manager - Verify MFA");
    <?php } ?>
 
    <p class="text-center mb-4">
-     Enter the 6-digit verification code from your authenticator app.
+     <?php echo t('verify_totp.instruction'); ?>
    </p>
 
    <form class="form-horizontal" action="" method="post">
 
     <div class="row mb-3">
-     <label for="totp_code" class="col-sm-4 col-form-label text-end">Verification Code</label>
+     <label for="totp_code" class="col-sm-4 col-form-label text-end"><?php echo t('verify_totp.code_label'); ?></label>
      <div class="col-sm-8">
       <input type="text"
              class="form-control form-control-lg text-center"
@@ -146,19 +146,19 @@ render_header("$ORGANISATION_NAME account manager - Verify MFA");
              autocomplete="one-time-code"
              autofocus
              required>
-      <small class="form-text text-muted">Enter the 6-digit code from your app</small>
+      <small class="form-text text-muted"><?php echo t('verify_totp.code_hint'); ?></small>
      </div>
     </div>
 
     <div class="row mb-3">
      <div class="col-sm-12 text-center">
-      <button type="submit" class="btn btn-primary btn-lg">Verify</button>
+      <button type="submit" class="btn btn-primary btn-lg"><?php echo t('label.verify'); ?></button>
      </div>
     </div>
 
     <div class="row">
      <div class="col-sm-12 text-center">
-      <a href="<?php echo url('/log_in'); ?>" class="btn btn-link">Cancel and log out</a>
+      <a href="<?php echo url('/log_in'); ?>" class="btn btn-link"><?php echo t('verify_totp.cancel'); ?></a>
      </div>
     </div>
 
@@ -167,8 +167,7 @@ render_header("$ORGANISATION_NAME account manager - Verify MFA");
    <hr>
 
    <div class="alert alert-info mb-0">
-    <strong>Note:</strong> This verification code expires in 5 minutes.
-    If you need help, please contact your administrator.
+    <strong><?php echo t('verify_totp.note_label'); ?></strong> <?php echo t('verify_totp.note_body'); ?>
    </div>
 
    </div>

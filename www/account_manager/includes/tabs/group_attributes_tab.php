@@ -32,7 +32,7 @@ if (!defined('LDAP_USER_MANAGER')) {
     <div class="row">
       <div class="col-md-4 offset-md-3">
         <div class="row mb-3">
-          <button id="submit_attributes" class="btn btn-info" <?php if (count($group_members)==0) print 'disabled'; ?> type="submit" tabindex="<?php print $tabindex; ?>">Save</button>
+          <button id="submit_attributes" class="btn btn-info" <?php if (count($group_members)==0) print 'disabled'; ?> type="submit" tabindex="<?php print $tabindex; ?>"><?php print t('group_attributes.save'); ?></button>
         </div>
       </div>
     </div>

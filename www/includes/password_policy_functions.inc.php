@@ -78,31 +78,31 @@ function password_policy_validate($password, &$validation_errors = array()) {
 
   // Check minimum length
   if (strlen($password) < $PASSWORD_MIN_LENGTH) {
-    $validation_errors[] = "Password must be at least {$PASSWORD_MIN_LENGTH} characters long";
+    $validation_errors[] = t('password_policy.error.min_length', array('count' => $PASSWORD_MIN_LENGTH));
     $valid = false;
   }
 
   // Check uppercase requirement
   if ($PASSWORD_REQUIRE_UPPERCASE && !preg_match('/[A-Z]/', $password)) {
-    $validation_errors[] = "Password must contain at least one uppercase letter";
+    $validation_errors[] = t('password_policy.error.uppercase');
     $valid = false;
   }
 
   // Check lowercase requirement
   if ($PASSWORD_REQUIRE_LOWERCASE && !preg_match('/[a-z]/', $password)) {
-    $validation_errors[] = "Password must contain at least one lowercase letter";
+    $validation_errors[] = t('password_policy.error.lowercase');
     $valid = false;
   }
 
   // Check numbers requirement
   if ($PASSWORD_REQUIRE_NUMBERS && !preg_match('/[0-9]/', $password)) {
-    $validation_errors[] = "Password must contain at least one number";
+    $validation_errors[] = t('password_policy.error.number');
     $valid = false;
   }
 
   // Check special characters requirement
   if ($PASSWORD_REQUIRE_SPECIAL && !preg_match('/[^a-zA-Z0-9]/', $password)) {
-    $validation_errors[] = "Password must contain at least one special character";
+    $validation_errors[] = t('password_policy.error.special');
     $valid = false;
   }
 

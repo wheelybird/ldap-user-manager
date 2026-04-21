@@ -27,7 +27,7 @@ function get_group_tabs_config($context, $new_group = false, $group_exists = tru
   $tabs = [
     'members' => [
       'id' => 'members',
-      'label' => 'Members',
+      'label' => t('tabs.group.members'),
       'icon' => 'bi-people',
       'tab_file' => 'tabs/group_members_tab.php',
       'handler_file' => 'handlers/group_members_handler.php',
@@ -36,7 +36,7 @@ function get_group_tabs_config($context, $new_group = false, $group_exists = tru
     ],
     'mfa' => [
       'id' => 'mfa',
-      'label' => 'MFA Settings',
+      'label' => t('tabs.group.mfa_settings'),
       'icon' => 'bi-shield-lock',
       'tab_file' => 'tabs/group_mfa_tab.php',
       'handler_file' => 'handlers/group_mfa_handler.php',
@@ -45,7 +45,7 @@ function get_group_tabs_config($context, $new_group = false, $group_exists = tru
     ],
     'attributes' => [
       'id' => 'attributes',
-      'label' => 'Attributes',
+      'label' => t('tabs.group.attributes'),
       'icon' => 'bi-gear',
       'tab_file' => 'tabs/group_attributes_tab.php',
       'handler_file' => 'handlers/group_attributes_handler.php',

@@ -1,5 +1,7 @@
 <?php
 
+include_once "i18n.inc.php";
+
 /**
  * Configuration registry
  *
@@ -22,78 +24,78 @@
 # Category definitions - groups related configurations together
 $CONFIG_CATEGORIES = array(
   'ldap' => array(
-    'name' => 'LDAP settings',
-    'description' => 'Connection settings and directory structure configuration',
+    'name' => t('config_cat.ldap.name'),
+    'description' => t('config_cat.ldap.desc'),
     'order' => 1,
     'icon' => 'bi-diagram-3'
   ),
   'user_defaults' => array(
-    'name' => 'User account defaults',
-    'description' => 'Default values and behaviour for new user accounts',
+    'name' => t('config_cat.user_defaults.name'),
+    'description' => t('config_cat.user_defaults.desc'),
     'order' => 2,
     'icon' => 'bi-person-gear'
   ),
   'mfa' => array(
-    'name' => 'Multi-factor authentication',
-    'description' => 'TOTP/MFA configuration and enforcement policies',
+    'name' => t('config_cat.mfa.name'),
+    'description' => t('config_cat.mfa.desc'),
     'order' => 3,
     'icon' => 'bi-shield-lock'
   ),
   'user_profile' => array(
-    'name' => 'User profile settings',
-    'description' => 'Self-service user profile and editable attributes',
+    'name' => t('config_cat.user_profile.name'),
+    'description' => t('config_cat.user_profile.desc'),
     'order' => 4,
     'icon' => 'bi-person-badge'
   ),
   'email' => array(
-    'name' => 'Email settings',
-    'description' => 'SMTP configuration and email notifications',
+    'name' => t('config_cat.email.name'),
+    'description' => t('config_cat.email.desc'),
     'order' => 5,
     'icon' => 'bi-envelope'
   ),
   'interface' => array(
-    'name' => 'Interface & branding',
-    'description' => 'Customisation, branding, and user interface settings',
+    'name' => t('config_cat.interface.name'),
+    'description' => t('config_cat.interface.desc'),
     'order' => 6,
     'icon' => 'bi-palette'
   ),
   'security' => array(
-    'name' => 'Session & security',
-    'description' => 'Session management and security settings',
+    'name' => t('config_cat.security.name'),
+    'description' => t('config_cat.security.desc'),
     'order' => 7,
     'icon' => 'bi-shield-check'
   ),
   'audit' => array(
-    'name' => 'Audit logging',
-    'description' => 'Audit trail and activity logging configuration (optional)',
+    'name' => t('config_cat.audit.name'),
+    'description' => t('config_cat.audit.desc'),
     'order' => 8,
     'icon' => 'bi-journal-text',
     'optional' => true
   ),
   'password_policy' => array(
-    'name' => 'Password policy',
-    'description' => 'Password complexity and expiration policies (optional)',
+    'name' => t('config_cat.password_policy.name'),
+    'description' => t('config_cat.password_policy.desc'),
     'order' => 9,
     'icon' => 'bi-key',
     'optional' => true
   ),
   'lifecycle' => array(
-    'name' => 'Account lifecycle',
-    'description' => 'Account expiration and automated management (optional)',
+    'name' => t('config_cat.lifecycle.name'),
+    'description' => t('config_cat.lifecycle.desc'),
     'order' => 10,
     'icon' => 'bi-arrow-repeat',
     'optional' => true
   ),
   'group_mgmt' => array(
-    'name' => 'Advanced group management',
-    'description' => 'Enhanced group management features (optional)',
+    'name' => t('config_cat.group_mgmt.name'),
+    'description' => t('config_cat.group_mgmt.desc'),
     'order' => 11,
     'icon' => 'bi-people',
     'optional' => true
   ),
   'debug' => array(
-    'name' => 'Debug & logging',
-    'description' => 'Debug modes and verbose logging',
+    'name' => t('config_cat.debug.name'),
+    'description' => t('config_cat.debug.desc'),
     'order' => 99,
     'icon' => 'bi-bug'
   )
@@ -107,8 +109,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_URI' => array(
     'category' => 'ldap',
-    'description' => 'LDAP server URI',
-    'help' => 'Format: ldap://hostname:port or ldaps://hostname:port',
+    'description' => t('config.LDAP_URI.desc'),
+    'help' => t('config.LDAP_URI.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => true,
@@ -119,8 +121,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_BASE_DN' => array(
     'category' => 'ldap',
-    'description' => 'LDAP base distinguished name',
-    'help' => 'Example: dc=example,dc=com',
+    'description' => t('config.LDAP_BASE_DN.desc'),
+    'help' => t('config.LDAP_BASE_DN.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => true,
@@ -131,8 +133,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_ADMIN_BIND_DN' => array(
     'category' => 'ldap',
-    'description' => 'Admin bind DN for LDAP operations',
-    'help' => 'Full DN of admin account with write permissions',
+    'description' => t('config.LDAP_ADMIN_BIND_DN.desc'),
+    'help' => t('config.LDAP_ADMIN_BIND_DN.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => true,
@@ -144,8 +146,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_ADMIN_BIND_PWD' => array(
     'category' => 'ldap',
-    'description' => 'Admin bind password',
-    'help' => 'Password for admin bind DN',
+    'description' => t('config.LDAP_ADMIN_BIND_PWD.desc'),
+    'help' => t('config.LDAP_ADMIN_BIND_PWD.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => true,
@@ -157,8 +159,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_USER_OU' => array(
     'category' => 'ldap',
-    'description' => 'Organisational unit for user accounts',
-    'help' => 'OU name only (without base DN)',
+    'description' => t('config.LDAP_USER_OU.desc'),
+    'help' => t('config.LDAP_USER_OU.help'),
     'type' => 'string',
     'default' => 'people',
     'mandatory' => false,
@@ -168,8 +170,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_GROUP_OU' => array(
     'category' => 'ldap',
-    'description' => 'Organisational unit for groups',
-    'help' => 'OU name only (without base DN)',
+    'description' => t('config.LDAP_GROUP_OU.desc'),
+    'help' => t('config.LDAP_GROUP_OU.help'),
     'type' => 'string',
     'default' => 'groups',
     'mandatory' => false,
@@ -179,8 +181,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_ADMINS_GROUP' => array(
     'category' => 'ldap',
-    'description' => 'Group name for administrators',
-    'help' => 'Members of this group have admin access to Luminary',
+    'description' => t('config.LDAP_ADMINS_GROUP.desc'),
+    'help' => t('config.LDAP_ADMINS_GROUP.help'),
     'type' => 'string',
     'default' => 'admins',
     'mandatory' => false,
@@ -190,8 +192,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_ACCOUNT_ATTRIBUTE' => array(
     'category' => 'ldap',
-    'description' => 'Attribute used for user account identifier',
-    'help' => 'Typically uid or cn',
+    'description' => t('config.LDAP_ACCOUNT_ATTRIBUTE.desc'),
+    'help' => t('config.LDAP_ACCOUNT_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'uid',
     'mandatory' => false,
@@ -202,8 +204,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_GROUP_ATTRIBUTE' => array(
     'category' => 'ldap',
-    'description' => 'Attribute used for group identifier',
-    'help' => 'Typically cn',
+    'description' => t('config.LDAP_GROUP_ATTRIBUTE.desc'),
+    'help' => t('config.LDAP_GROUP_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'cn',
     'mandatory' => false,
@@ -214,8 +216,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_REQUIRE_STARTTLS' => array(
     'category' => 'ldap',
-    'description' => 'Require StartTLS for LDAP connections',
-    'help' => 'Encrypts connection to LDAP server',
+    'description' => t('config.LDAP_REQUIRE_STARTTLS.desc'),
+    'help' => t('config.LDAP_REQUIRE_STARTTLS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -225,8 +227,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_IGNORE_CERT_ERRORS' => array(
     'category' => 'ldap',
-    'description' => 'Ignore TLS certificate validation errors',
-    'help' => 'WARNING: Only use for development/testing',
+    'description' => t('config.LDAP_IGNORE_CERT_ERRORS.desc'),
+    'help' => t('config.LDAP_IGNORE_CERT_ERRORS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -236,8 +238,8 @@ $CONFIG_REGISTRY = array(
 
   'FORCE_RFC2307BIS' => array(
     'category' => 'ldap',
-    'description' => 'Force RFC2307bis schema',
-    'help' => 'Use groupOfNames instead of posixGroup',
+    'description' => t('config.FORCE_RFC2307BIS.desc'),
+    'help' => t('config.FORCE_RFC2307BIS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -249,8 +251,8 @@ $CONFIG_REGISTRY = array(
 
   'DEFAULT_USER_GROUP' => array(
     'category' => 'user_defaults',
-    'description' => 'Default primary group for new users',
-    'help' => 'Group name that new users will be added to',
+    'description' => t('config.DEFAULT_USER_GROUP.desc'),
+    'help' => t('config.DEFAULT_USER_GROUP.help'),
     'type' => 'string',
     'default' => 'everybody',
     'mandatory' => false,
@@ -260,8 +262,8 @@ $CONFIG_REGISTRY = array(
 
   'DEFAULT_USER_SHELL' => array(
     'category' => 'user_defaults',
-    'description' => 'Default login shell for new users',
-    'help' => 'Full path to shell binary',
+    'description' => t('config.DEFAULT_USER_SHELL.desc'),
+    'help' => t('config.DEFAULT_USER_SHELL.help'),
     'type' => 'string',
     'default' => '/bin/bash',
     'mandatory' => false,
@@ -272,8 +274,8 @@ $CONFIG_REGISTRY = array(
 
   'USERNAME_FORMAT' => array(
     'category' => 'user_defaults',
-    'description' => 'Username format template',
-    'help' => 'Template variables: {first_name}, {last_name}, {first_name_initial}, {last_name_initial}',
+    'description' => t('config.USERNAME_FORMAT.desc'),
+    'help' => t('config.USERNAME_FORMAT.help'),
     'type' => 'string',
     'default' => '{first_name}-{last_name}',
     'mandatory' => false,
@@ -284,8 +286,8 @@ $CONFIG_REGISTRY = array(
 
   'USERNAME_REGEX' => array(
     'category' => 'user_defaults',
-    'description' => 'Regular expression for username validation',
-    'help' => 'Usernames must match this pattern',
+    'description' => t('config.USERNAME_REGEX.desc'),
+    'help' => t('config.USERNAME_REGEX.help'),
     'type' => 'string',
     'default' => '^[\p{L}\p{N}_.-]{2,64}$',
     'mandatory' => false,
@@ -296,8 +298,8 @@ $CONFIG_REGISTRY = array(
 
   'ENFORCE_USERNAME_VALIDATION' => array(
     'category' => 'user_defaults',
-    'description' => 'Enforce username validation rules',
-    'help' => 'Validate usernames against USERNAME_REGEX',
+    'description' => t('config.ENFORCE_USERNAME_VALIDATION.desc'),
+    'help' => t('config.ENFORCE_USERNAME_VALIDATION.help'),
     'type' => 'boolean',
     'default' => true,
     'mandatory' => false,
@@ -307,8 +309,8 @@ $CONFIG_REGISTRY = array(
 
   'ACCEPT_WEAK_PASSWORDS' => array(
     'category' => 'user_defaults',
-    'description' => 'Allow weak passwords',
-    'help' => 'Skip password strength requirement (not recommended)',
+    'description' => t('config.ACCEPT_WEAK_PASSWORDS.desc'),
+    'help' => t('config.ACCEPT_WEAK_PASSWORDS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -318,8 +320,8 @@ $CONFIG_REGISTRY = array(
 
   'SHOW_POSIX_ATTRIBUTES' => array(
     'category' => 'user_defaults',
-    'description' => 'Show POSIX attributes in forms',
-    'help' => 'Display UID, GID, home directory, shell fields',
+    'description' => t('config.SHOW_POSIX_ATTRIBUTES.desc'),
+    'help' => t('config.SHOW_POSIX_ATTRIBUTES.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -329,8 +331,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_HASH' => array(
     'category' => 'user_defaults',
-    'description' => 'Password hash algorithm',
-    'help' => 'Options: SHA, SSHA, SHA256, SHA512, ARGON2, etc.',
+    'description' => t('config.PASSWORD_HASH.desc'),
+    'help' => t('config.PASSWORD_HASH.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -340,8 +342,8 @@ $CONFIG_REGISTRY = array(
 
   'EMAIL_DOMAIN' => array(
     'category' => 'user_defaults',
-    'description' => 'Email domain for auto-generation',
-    'help' => 'Domain used when auto-generating user email addresses',
+    'description' => t('config.EMAIL_DOMAIN.desc'),
+    'help' => t('config.EMAIL_DOMAIN.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -354,8 +356,8 @@ $CONFIG_REGISTRY = array(
 
   'MFA_FEATURE_ENABLED' => array(
     'category' => 'mfa',
-    'description' => 'Enable MFA management features',
-    'help' => 'Allows creating and managing MFA settings in LDAP. Requires TOTP schema to be installed.',
+    'description' => t('config.MFA_FEATURE_ENABLED.desc'),
+    'help' => t('config.MFA_FEATURE_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -365,8 +367,8 @@ $CONFIG_REGISTRY = array(
 
   'MFA_REQUIRED_GROUPS' => array(
     'category' => 'mfa',
-    'description' => 'Groups that require MFA enrolment',
-    'help' => 'Comma-separated list of group names',
+    'description' => t('config.MFA_REQUIRED_GROUPS.desc'),
+    'help' => t('config.MFA_REQUIRED_GROUPS.help'),
     'type' => 'array',
     'default' => array(),
     'mandatory' => false,
@@ -376,8 +378,8 @@ $CONFIG_REGISTRY = array(
 
   'MFA_GRACE_PERIOD_DAYS' => array(
     'category' => 'mfa',
-    'description' => 'Grace period for MFA enrolment',
-    'help' => 'Days users have to set up MFA after being added to required group',
+    'description' => t('config.MFA_GRACE_PERIOD_DAYS.desc'),
+    'help' => t('config.MFA_GRACE_PERIOD_DAYS.help'),
     'type' => 'integer',
     'default' => 7,
     'mandatory' => false,
@@ -387,8 +389,8 @@ $CONFIG_REGISTRY = array(
 
   'MFA_TOTP_ISSUER' => array(
     'category' => 'mfa',
-    'description' => 'TOTP issuer name',
-    'help' => 'Displayed in authenticator apps (e.g., "Example Ltd")',
+    'description' => t('config.MFA_TOTP_ISSUER.desc'),
+    'help' => t('config.MFA_TOTP_ISSUER.help'),
     'type' => 'string',
     'default' => 'Luminary',
     'mandatory' => false,
@@ -398,8 +400,8 @@ $CONFIG_REGISTRY = array(
 
   'TOTP_SECRET_ATTRIBUTE' => array(
     'category' => 'mfa',
-    'description' => 'LDAP attribute for TOTP secret',
-    'help' => 'Only change if using custom schema',
+    'description' => t('config.TOTP_SECRET_ATTRIBUTE.desc'),
+    'help' => t('config.TOTP_SECRET_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'totpSecret',
     'mandatory' => false,
@@ -410,8 +412,8 @@ $CONFIG_REGISTRY = array(
 
   'TOTP_STATUS_ATTRIBUTE' => array(
     'category' => 'mfa',
-    'description' => 'LDAP attribute for MFA status',
-    'help' => 'Values: none, pending, active, disabled',
+    'description' => t('config.TOTP_STATUS_ATTRIBUTE.desc'),
+    'help' => t('config.TOTP_STATUS_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'totpStatus',
     'mandatory' => false,
@@ -422,8 +424,8 @@ $CONFIG_REGISTRY = array(
 
   'TOTP_ENROLLED_DATE_ATTRIBUTE' => array(
     'category' => 'mfa',
-    'description' => 'LDAP attribute for enrolment date',
-    'help' => 'Used for grace period calculation',
+    'description' => t('config.TOTP_ENROLLED_DATE_ATTRIBUTE.desc'),
+    'help' => t('config.TOTP_ENROLLED_DATE_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'totpEnrolledDate',
     'mandatory' => false,
@@ -434,8 +436,8 @@ $CONFIG_REGISTRY = array(
 
   'TOTP_SCRATCH_CODES_ATTRIBUTE' => array(
     'category' => 'mfa',
-    'description' => 'LDAP attribute for backup codes',
-    'help' => 'Multi-valued attribute for recovery codes',
+    'description' => t('config.TOTP_SCRATCH_CODES_ATTRIBUTE.desc'),
+    'help' => t('config.TOTP_SCRATCH_CODES_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'totpScratchCode',
     'mandatory' => false,
@@ -446,8 +448,8 @@ $CONFIG_REGISTRY = array(
 
   'TOTP_OBJECTCLASS' => array(
     'category' => 'mfa',
-    'description' => 'LDAP objectClass for MFA users',
-    'help' => 'Only change if using custom schema',
+    'description' => t('config.TOTP_OBJECTCLASS.desc'),
+    'help' => t('config.TOTP_OBJECTCLASS.help'),
     'type' => 'string',
     'default' => 'totpUser',
     'mandatory' => false,
@@ -458,8 +460,8 @@ $CONFIG_REGISTRY = array(
 
   'GROUP_MFA_OBJECTCLASS' => array(
     'category' => 'mfa',
-    'description' => 'LDAP objectClass for groups with MFA policies',
-    'help' => 'Auxiliary object class for groups. Use this if not using ldap-totp-schema.',
+    'description' => t('config.GROUP_MFA_OBJECTCLASS.desc'),
+    'help' => t('config.GROUP_MFA_OBJECTCLASS.help'),
     'type' => 'string',
     'default' => 'mfaGroup',
     'mandatory' => false,
@@ -470,8 +472,8 @@ $CONFIG_REGISTRY = array(
 
   'GROUP_MFA_REQUIRED_ATTRIBUTE' => array(
     'category' => 'mfa',
-    'description' => 'LDAP attribute for group MFA requirement flag',
-    'help' => 'Boolean attribute (TRUE/FALSE) indicating if group requires MFA',
+    'description' => t('config.GROUP_MFA_REQUIRED_ATTRIBUTE.desc'),
+    'help' => t('config.GROUP_MFA_REQUIRED_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'mfaRequired',
     'mandatory' => false,
@@ -482,8 +484,8 @@ $CONFIG_REGISTRY = array(
 
   'GROUP_MFA_GRACE_PERIOD_ATTRIBUTE' => array(
     'category' => 'mfa',
-    'description' => 'LDAP attribute for group MFA grace period',
-    'help' => 'Integer attribute for grace period in days',
+    'description' => t('config.GROUP_MFA_GRACE_PERIOD_ATTRIBUTE.desc'),
+    'help' => t('config.GROUP_MFA_GRACE_PERIOD_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'mfaGracePeriodDays',
     'mandatory' => false,
@@ -496,8 +498,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_RESET_ENABLED' => array(
     'category' => 'password_reset',
-    'description' => 'Enable self-service password reset',
-    'help' => 'Allows users to reset forgotten passwords via email verification',
+    'description' => t('config.PASSWORD_RESET_ENABLED.desc'),
+    'help' => t('config.PASSWORD_RESET_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -507,8 +509,8 @@ $CONFIG_REGISTRY = array(
 
   'USE_LDAP_AS_DB' => array(
     'category' => 'password_reset',
-    'description' => 'Store persistent data in LDAP',
-    'help' => 'Store password reset tokens, sessions, and other persistent data in LDAP instead of /tmp. Prevents data loss on ephemeral container restarts and enables horizontal scaling. Requires cn=luminary,ou=applications entry (can be created via admin UI).',
+    'description' => t('config.USE_LDAP_AS_DB.desc'),
+    'help' => t('config.USE_LDAP_AS_DB.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -518,8 +520,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_RESET_TOKEN_EXPIRY_MINUTES' => array(
     'category' => 'password_reset',
-    'description' => 'Password reset token expiry time',
-    'help' => 'Minutes until reset link expires',
+    'description' => t('config.PASSWORD_RESET_TOKEN_EXPIRY_MINUTES.desc'),
+    'help' => t('config.PASSWORD_RESET_TOKEN_EXPIRY_MINUTES.help'),
     'type' => 'integer',
     'default' => 60,
     'mandatory' => false,
@@ -529,8 +531,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_RESET_RATE_LIMIT_REQUESTS' => array(
     'category' => 'password_reset',
-    'description' => 'Maximum reset requests per time window',
-    'help' => 'Maximum number of reset requests allowed per email address',
+    'description' => t('config.PASSWORD_RESET_RATE_LIMIT_REQUESTS.desc'),
+    'help' => t('config.PASSWORD_RESET_RATE_LIMIT_REQUESTS.help'),
     'type' => 'integer',
     'default' => 3,
     'mandatory' => false,
@@ -540,8 +542,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_RESET_RATE_LIMIT_WINDOW_MINUTES' => array(
     'category' => 'password_reset',
-    'description' => 'Rate limit time window',
-    'help' => 'Time window for rate limiting (minutes)',
+    'description' => t('config.PASSWORD_RESET_RATE_LIMIT_WINDOW_MINUTES.desc'),
+    'help' => t('config.PASSWORD_RESET_RATE_LIMIT_WINDOW_MINUTES.help'),
     'type' => 'integer',
     'default' => 60,
     'mandatory' => false,
@@ -551,8 +553,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_RESET_MAX_ATTEMPTS' => array(
     'category' => 'password_reset',
-    'description' => 'Maximum failed validation attempts',
-    'help' => 'Failed attempts before account lockout',
+    'description' => t('config.PASSWORD_RESET_MAX_ATTEMPTS.desc'),
+    'help' => t('config.PASSWORD_RESET_MAX_ATTEMPTS.help'),
     'type' => 'integer',
     'default' => 5,
     'mandatory' => false,
@@ -562,8 +564,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_RESET_LOCKOUT_DURATION_MINUTES' => array(
     'category' => 'password_reset',
-    'description' => 'Account lockout duration',
-    'help' => 'Minutes to lock account after max failed attempts',
+    'description' => t('config.PASSWORD_RESET_LOCKOUT_DURATION_MINUTES.desc'),
+    'help' => t('config.PASSWORD_RESET_LOCKOUT_DURATION_MINUTES.help'),
     'type' => 'integer',
     'default' => 60,
     'mandatory' => false,
@@ -575,8 +577,8 @@ $CONFIG_REGISTRY = array(
 
   'DEFAULT_USER_EDITABLE_ATTRIBUTES' => array(
     'category' => 'user_profile',
-    'description' => 'Built-in user-editable attributes',
-    'help' => 'Default set of attributes users can safely edit',
+    'description' => t('config.DEFAULT_USER_EDITABLE_ATTRIBUTES.desc'),
+    'help' => t('config.DEFAULT_USER_EDITABLE_ATTRIBUTES.help'),
     'type' => 'array',
     'default' => array(
       'telephonenumber',
@@ -594,8 +596,8 @@ $CONFIG_REGISTRY = array(
 
   'USER_EDITABLE_ATTRIBUTES' => array(
     'category' => 'user_profile',
-    'description' => 'Additional user-editable attributes',
-    'help' => 'Comma-separated list of LDAP attributes users can edit',
+    'description' => t('config.USER_EDITABLE_ATTRIBUTES.desc'),
+    'help' => t('config.USER_EDITABLE_ATTRIBUTES.help'),
     'type' => 'array',
     'default' => array(),
     'mandatory' => false,
@@ -605,8 +607,8 @@ $CONFIG_REGISTRY = array(
 
   'ATTRIBUTE_BLACKLIST' => array(
     'category' => 'user_profile',
-    'description' => 'Security blacklist of non-editable attributes',
-    'help' => 'Attributes that users must NEVER be allowed to edit',
+    'description' => t('config.ATTRIBUTE_BLACKLIST.desc'),
+    'help' => t('config.ATTRIBUTE_BLACKLIST.help'),
     'type' => 'array',
     'default' => array(
       'dn', 'uid', 'cn', 'objectclass',
@@ -626,8 +628,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_HOSTNAME' => array(
     'category' => 'email',
-    'description' => 'SMTP server hostname',
-    'help' => 'Email features disabled if not set',
+    'description' => t('config.SMTP_HOSTNAME.desc'),
+    'help' => t('config.SMTP_HOSTNAME.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -638,8 +640,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_HOST_PORT' => array(
     'category' => 'email',
-    'description' => 'SMTP server port',
-    'help' => 'Common: 25 (SMTP), 587 (StartTLS), 465 (SSL)',
+    'description' => t('config.SMTP_HOST_PORT.desc'),
+    'help' => t('config.SMTP_HOST_PORT.help'),
     'type' => 'integer',
     'default' => 25,
     'mandatory' => false,
@@ -649,8 +651,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_USERNAME' => array(
     'category' => 'email',
-    'description' => 'SMTP authentication username',
-    'help' => 'Leave unset if no authentication required',
+    'description' => t('config.SMTP_USERNAME.desc'),
+    'help' => t('config.SMTP_USERNAME.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -661,8 +663,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_PASSWORD' => array(
     'category' => 'email',
-    'description' => 'SMTP authentication password',
-    'help' => 'Consider using SMTP_PASSWORD_FILE with Docker secrets',
+    'description' => t('config.SMTP_PASSWORD.desc'),
+    'help' => t('config.SMTP_PASSWORD.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -674,8 +676,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_USE_TLS' => array(
     'category' => 'email',
-    'description' => 'Use StartTLS for SMTP',
-    'help' => 'Recommended for port 587',
+    'description' => t('config.SMTP_USE_TLS.desc'),
+    'help' => t('config.SMTP_USE_TLS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -685,8 +687,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_USE_SSL' => array(
     'category' => 'email',
-    'description' => 'Use SSL for SMTP',
-    'help' => 'For port 465 (mutually exclusive with TLS)',
+    'description' => t('config.SMTP_USE_SSL.desc'),
+    'help' => t('config.SMTP_USE_SSL.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -696,8 +698,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_HELO_HOST' => array(
     'category' => 'email',
-    'description' => 'SMTP HELO hostname',
-    'help' => 'Hostname to use in HELO/EHLO command',
+    'description' => t('config.SMTP_HELO_HOST.desc'),
+    'help' => t('config.SMTP_HELO_HOST.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -707,8 +709,8 @@ $CONFIG_REGISTRY = array(
 
   'EMAIL_FROM_ADDRESS' => array(
     'category' => 'email',
-    'description' => 'From email address',
-    'help' => 'Email address for outgoing messages',
+    'description' => t('config.EMAIL_FROM_ADDRESS.desc'),
+    'help' => t('config.EMAIL_FROM_ADDRESS.help'),
     'type' => 'string',
     'default' => 'admin@luminary.id',
     'mandatory' => false,
@@ -719,8 +721,8 @@ $CONFIG_REGISTRY = array(
 
   'EMAIL_FROM_NAME' => array(
     'category' => 'email',
-    'description' => 'From name for emails',
-    'help' => 'Display name for outgoing messages',
+    'description' => t('config.EMAIL_FROM_NAME.desc'),
+    'help' => t('config.EMAIL_FROM_NAME.help'),
     'type' => 'string',
     'default' => 'Luminary',
     'mandatory' => false,
@@ -730,8 +732,8 @@ $CONFIG_REGISTRY = array(
 
   'EMAIL_REPLY_TO_ADDRESS' => array(
     'category' => 'email',
-    'description' => 'Reply-to email address',
-    'help' => 'Email address for reply-to header (optional)',
+    'description' => t('config.EMAIL_REPLY_TO_ADDRESS.desc'),
+    'help' => t('config.EMAIL_REPLY_TO_ADDRESS.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -742,8 +744,8 @@ $CONFIG_REGISTRY = array(
 
   'EMAIL_USER_ON_PASSWORD_CHANGE' => array(
     'category' => 'email',
-    'description' => 'Email user on password change',
-    'help' => 'Send notification email to user when their password is changed (by them or admin). Does not include the password.',
+    'description' => t('config.EMAIL_USER_ON_PASSWORD_CHANGE.desc'),
+    'help' => t('config.EMAIL_USER_ON_PASSWORD_CHANGE.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -753,8 +755,8 @@ $CONFIG_REGISTRY = array(
 
   'EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE' => array(
     'category' => 'email',
-    'description' => 'Email admin when user changes password',
-    'help' => 'Send notification to admin email when a user changes their own password (requires ADMIN_EMAIL to be set)',
+    'description' => t('config.EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE.desc'),
+    'help' => t('config.EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -764,8 +766,8 @@ $CONFIG_REGISTRY = array(
 
   'ADMIN_EMAIL' => array(
     'category' => 'email',
-    'description' => 'Administrator email address',
-    'help' => 'Email address for admin notifications (password changes, security alerts, etc.)',
+    'description' => t('config.ADMIN_EMAIL.desc'),
+    'help' => t('config.ADMIN_EMAIL.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -776,8 +778,8 @@ $CONFIG_REGISTRY = array(
 
   'ACCOUNT_REQUESTS_ENABLED' => array(
     'category' => 'email',
-    'description' => 'Enable account request feature',
-    'help' => 'Requires SMTP to be configured',
+    'description' => t('config.ACCOUNT_REQUESTS_ENABLED.desc'),
+    'help' => t('config.ACCOUNT_REQUESTS_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -787,8 +789,8 @@ $CONFIG_REGISTRY = array(
 
   'ACCOUNT_REQUESTS_EMAIL' => array(
     'category' => 'email',
-    'description' => 'Email for account requests',
-    'help' => 'Where account request notifications are sent. Falls back to ADMIN_EMAIL if not set.',
+    'description' => t('config.ACCOUNT_REQUESTS_EMAIL.desc'),
+    'help' => t('config.ACCOUNT_REQUESTS_EMAIL.help'),
     'type' => 'string',
     'default' => null,
     'mandatory' => false,
@@ -801,8 +803,8 @@ $CONFIG_REGISTRY = array(
 
   'ORGANISATION_NAME' => array(
     'category' => 'interface',
-    'description' => 'Organisation name',
-    'help' => 'Displayed throughout the interface',
+    'description' => t('config.ORGANISATION_NAME.desc'),
+    'help' => t('config.ORGANISATION_NAME.help'),
     'type' => 'string',
     'default' => 'Luminary',
     'mandatory' => false,
@@ -812,8 +814,8 @@ $CONFIG_REGISTRY = array(
 
   'SITE_NAME' => array(
     'category' => 'interface',
-    'description' => 'Site name',
-    'help' => 'Displayed in page titles and navigation',
+    'description' => t('config.SITE_NAME.desc'),
+    'help' => t('config.SITE_NAME.help'),
     'type' => 'string',
     'default' => 'Luminary',
     'mandatory' => false,
@@ -823,8 +825,8 @@ $CONFIG_REGISTRY = array(
 
   'SERVER_HOSTNAME' => array(
     'category' => 'interface',
-    'description' => 'Server hostname',
-    'help' => 'Hostname used in URLs',
+    'description' => t('config.SERVER_HOSTNAME.desc'),
+    'help' => t('config.SERVER_HOSTNAME.help'),
     'type' => 'string',
     'default' => 'luminary.id',
     'mandatory' => false,
@@ -834,8 +836,8 @@ $CONFIG_REGISTRY = array(
 
   'SERVER_PATH' => array(
     'category' => 'interface',
-    'description' => 'Server path',
-    'help' => 'Base path for the application (e.g., /luminary/)',
+    'description' => t('config.SERVER_PATH.desc'),
+    'help' => t('config.SERVER_PATH.help'),
     'type' => 'string',
     'default' => '/',
     'mandatory' => false,
@@ -845,10 +847,10 @@ $CONFIG_REGISTRY = array(
 
   'SITE_LOGIN_FIELD_LABEL' => array(
     'category' => 'interface',
-    'description' => 'Login field label',
-    'help' => 'Label for login form username field',
+    'description' => t('config.SITE_LOGIN_FIELD_LABEL.desc'),
+    'help' => t('config.SITE_LOGIN_FIELD_LABEL.help'),
     'type' => 'string',
-    'default' => 'Username',
+    'default' =>  t('login.username'),
     'mandatory' => false,
     'env_var' => 'SITE_LOGIN_FIELD_LABEL',
     'variable' => '$SITE_LOGIN_FIELD_LABEL'
@@ -856,8 +858,8 @@ $CONFIG_REGISTRY = array(
 
   'SITE_LOGIN_LDAP_ATTRIBUTE' => array(
     'category' => 'interface',
-    'description' => 'LDAP attribute for login',
-    'help' => 'Which attribute to use for login authentication',
+    'description' => t('config.SITE_LOGIN_LDAP_ATTRIBUTE.desc'),
+    'help' => t('config.SITE_LOGIN_LDAP_ATTRIBUTE.help'),
     'type' => 'string',
     'default' => 'uid',
     'mandatory' => false,
@@ -868,8 +870,8 @@ $CONFIG_REGISTRY = array(
 
   'CUSTOM_LOGO' => array(
     'category' => 'interface',
-    'description' => 'Custom logo path',
-    'help' => 'Path to custom logo file',
+    'description' => t('config.CUSTOM_LOGO.desc'),
+    'help' => t('config.CUSTOM_LOGO.help'),
     'type' => 'string',
     'default' => false,
     'mandatory' => false,
@@ -879,8 +881,8 @@ $CONFIG_REGISTRY = array(
 
   'CUSTOM_STYLES' => array(
     'category' => 'interface',
-    'description' => 'Custom CSS path',
-    'help' => 'Path to custom stylesheet',
+    'description' => t('config.CUSTOM_STYLES.desc'),
+    'help' => t('config.CUSTOM_STYLES.help'),
     'type' => 'string',
     'default' => false,
     'mandatory' => false,
@@ -890,8 +892,8 @@ $CONFIG_REGISTRY = array(
 
   'PAGINATION_ITEMS_PER_PAGE' => array(
     'category' => 'interface',
-    'description' => 'Items per page for listing pages',
-    'help' => 'Number of users/groups to show per page in account_manager lists',
+    'description' => t('config.PAGINATION_ITEMS_PER_PAGE.desc'),
+    'help' => t('config.PAGINATION_ITEMS_PER_PAGE.help'),
     'type' => 'integer',
     'default' => 50,
     'mandatory' => false,
@@ -903,8 +905,8 @@ $CONFIG_REGISTRY = array(
 
   'SESSION_TIMEOUT' => array(
     'category' => 'security',
-    'description' => 'Session timeout in minutes',
-    'help' => 'Inactive sessions will be logged out',
+    'description' => t('config.SESSION_TIMEOUT.desc'),
+    'help' => t('config.SESSION_TIMEOUT.help'),
     'type' => 'integer',
     'default' => 10,
     'mandatory' => false,
@@ -914,8 +916,8 @@ $CONFIG_REGISTRY = array(
 
   'NO_HTTPS' => array(
     'category' => 'security',
-    'description' => 'Disable HTTPS redirect',
-    'help' => 'WARNING: Only use for development/testing',
+    'description' => t('config.NO_HTTPS.desc'),
+    'help' => t('config.NO_HTTPS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -925,8 +927,8 @@ $CONFIG_REGISTRY = array(
 
   'REMOTE_HTTP_HEADERS_LOGIN' => array(
     'category' => 'security',
-    'description' => 'Enable HTTP header authentication',
-    'help' => 'Login using HTTP headers (e.g., from reverse proxy)',
+    'description' => t('config.REMOTE_HTTP_HEADERS_LOGIN.desc'),
+    'help' => t('config.REMOTE_HTTP_HEADERS_LOGIN.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -938,8 +940,8 @@ $CONFIG_REGISTRY = array(
 
   'AUDIT_ENABLED' => array(
     'category' => 'audit',
-    'description' => 'Enable audit logging',
-    'help' => 'Log all administrative actions to audit trail',
+    'description' => t('config.AUDIT_ENABLED.desc'),
+    'help' => t('config.AUDIT_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -949,8 +951,8 @@ $CONFIG_REGISTRY = array(
 
   'AUDIT_LOG_FILE' => array(
     'category' => 'audit',
-    'description' => 'Audit log destination',
-    'help' => 'Use "stdout" for Docker (default), or full path to file for traditional deployments',
+    'description' => t('config.AUDIT_LOG_FILE.desc'),
+    'help' => t('config.AUDIT_LOG_FILE.help'),
     'type' => 'string',
     'default' => 'stdout',
     'mandatory' => false,
@@ -961,8 +963,8 @@ $CONFIG_REGISTRY = array(
 
   'AUDIT_LOG_RETENTION_DAYS' => array(
     'category' => 'audit',
-    'description' => 'Audit log retention period',
-    'help' => 'Number of days to keep audit logs',
+    'description' => t('config.AUDIT_LOG_RETENTION_DAYS.desc'),
+    'help' => t('config.AUDIT_LOG_RETENTION_DAYS.help'),
     'type' => 'integer',
     'default' => 90,
     'mandatory' => false,
@@ -974,8 +976,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_POLICY_ENABLED' => array(
     'category' => 'password_policy',
-    'description' => 'Enable password policy enforcement',
-    'help' => 'Server-side validation of password requirements. Complexity checks work without additional setup. History/expiry features require OpenLDAP ppolicy overlay.',
+    'description' => t('config.PASSWORD_POLICY_ENABLED.desc'),
+    'help' => t('config.PASSWORD_POLICY_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -985,8 +987,8 @@ $CONFIG_REGISTRY = array(
 
   'PPOLICY_ENABLED' => array(
     'category' => 'password_policy',
-    'description' => 'Enable OpenLDAP ppolicy overlay integration',
-    'help' => 'When enabled, self-service password changes use Password Modify Extended Operation to allow ppolicy overlay to enforce password history and expiry. Requires STARTTLS or LDAPS to be enabled for security. Only applies to self-service password changes, not admin changes.',
+    'description' => t('config.PPOLICY_ENABLED.desc'),
+    'help' => t('config.PPOLICY_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -996,8 +998,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_MIN_LENGTH' => array(
     'category' => 'password_policy',
-    'description' => 'Minimum password length',
-    'help' => 'Minimum number of characters required',
+    'description' => t('config.PASSWORD_MIN_LENGTH.desc'),
+    'help' => t('config.PASSWORD_MIN_LENGTH.help'),
     'type' => 'integer',
     'default' => 8,
     'mandatory' => false,
@@ -1007,8 +1009,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_REQUIRE_UPPERCASE' => array(
     'category' => 'password_policy',
-    'description' => 'Require uppercase letters',
-    'help' => 'Password must contain at least one uppercase letter',
+    'description' => t('config.PASSWORD_REQUIRE_UPPERCASE.desc'),
+    'help' => t('config.PASSWORD_REQUIRE_UPPERCASE.help'),
     'type' => 'boolean',
     'default' => true,
     'mandatory' => false,
@@ -1018,8 +1020,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_REQUIRE_LOWERCASE' => array(
     'category' => 'password_policy',
-    'description' => 'Require lowercase letters',
-    'help' => 'Password must contain at least one lowercase letter',
+    'description' => t('config.PASSWORD_REQUIRE_LOWERCASE.desc'),
+    'help' => t('config.PASSWORD_REQUIRE_LOWERCASE.help'),
     'type' => 'boolean',
     'default' => true,
     'mandatory' => false,
@@ -1029,8 +1031,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_REQUIRE_NUMBERS' => array(
     'category' => 'password_policy',
-    'description' => 'Require numbers',
-    'help' => 'Password must contain at least one number',
+    'description' => t('config.PASSWORD_REQUIRE_NUMBERS.desc'),
+    'help' => t('config.PASSWORD_REQUIRE_NUMBERS.help'),
     'type' => 'boolean',
     'default' => true,
     'mandatory' => false,
@@ -1040,8 +1042,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_REQUIRE_SPECIAL' => array(
     'category' => 'password_policy',
-    'description' => 'Require special characters',
-    'help' => 'Password must contain at least one special character',
+    'description' => t('config.PASSWORD_REQUIRE_SPECIAL.desc'),
+    'help' => t('config.PASSWORD_REQUIRE_SPECIAL.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1051,8 +1053,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_MIN_SCORE' => array(
     'category' => 'password_policy',
-    'description' => 'Minimum password strength score',
-    'help' => 'Minimum score from 0-4 (from existing strength checker)',
+    'description' => t('config.PASSWORD_MIN_SCORE.desc'),
+    'help' => t('config.PASSWORD_MIN_SCORE.help'),
     'type' => 'integer',
     'default' => 3,
     'mandatory' => false,
@@ -1062,8 +1064,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_HISTORY_COUNT' => array(
     'category' => 'password_policy',
-    'description' => 'Password history count',
-    'help' => 'Number of previous passwords to check (0=disabled). REQUIRES: OpenLDAP ppolicy overlay',
+    'description' => t('config.PASSWORD_HISTORY_COUNT.desc'),
+    'help' => t('config.PASSWORD_HISTORY_COUNT.help'),
     'type' => 'integer',
     'default' => 0,
     'mandatory' => false,
@@ -1073,8 +1075,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_EXPIRY_DAYS' => array(
     'category' => 'password_policy',
-    'description' => 'Password expiry days',
-    'help' => 'Days until password expires (0=never). REQUIRES: OpenLDAP ppolicy overlay',
+    'description' => t('config.PASSWORD_EXPIRY_DAYS.desc'),
+    'help' => t('config.PASSWORD_EXPIRY_DAYS.help'),
     'type' => 'integer',
     'default' => 0,
     'mandatory' => false,
@@ -1084,8 +1086,8 @@ $CONFIG_REGISTRY = array(
 
   'PASSWORD_EXPIRY_WARNING_DAYS' => array(
     'category' => 'password_policy',
-    'description' => 'Password expiry warning period',
-    'help' => 'Days before expiry to show warning',
+    'description' => t('config.PASSWORD_EXPIRY_WARNING_DAYS.desc'),
+    'help' => t('config.PASSWORD_EXPIRY_WARNING_DAYS.help'),
     'type' => 'integer',
     'default' => 7,
     'mandatory' => false,
@@ -1097,8 +1099,8 @@ $CONFIG_REGISTRY = array(
 
   'LIFECYCLE_ENABLED' => array(
     'category' => 'lifecycle',
-    'description' => 'Enable account lifecycle management',
-    'help' => 'Enforces account expiration at login time (no background jobs required)',
+    'description' => t('config.LIFECYCLE_ENABLED.desc'),
+    'help' => t('config.LIFECYCLE_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1108,8 +1110,8 @@ $CONFIG_REGISTRY = array(
 
   'ACCOUNT_EXPIRY_ENABLED' => array(
     'category' => 'lifecycle',
-    'description' => 'Enable account expiration',
-    'help' => 'Automatically disable accounts after expiry date',
+    'description' => t('config.ACCOUNT_EXPIRY_ENABLED.desc'),
+    'help' => t('config.ACCOUNT_EXPIRY_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1119,8 +1121,8 @@ $CONFIG_REGISTRY = array(
 
   'ACCOUNT_INACTIVE_DAYS' => array(
     'category' => 'lifecycle',
-    'description' => 'Account inactivity threshold',
-    'help' => 'Days of inactivity before account is disabled',
+    'description' => t('config.ACCOUNT_INACTIVE_DAYS.desc'),
+    'help' => t('config.ACCOUNT_INACTIVE_DAYS.help'),
     'type' => 'integer',
     'default' => 90,
     'mandatory' => false,
@@ -1130,8 +1132,8 @@ $CONFIG_REGISTRY = array(
 
   'ACCOUNT_EXPIRY_WARNING_DAYS' => array(
     'category' => 'lifecycle',
-    'description' => 'Account expiry warning period',
-    'help' => 'Days before expiry to send warning email',
+    'description' => t('config.ACCOUNT_EXPIRY_WARNING_DAYS.desc'),
+    'help' => t('config.ACCOUNT_EXPIRY_WARNING_DAYS.help'),
     'type' => 'integer',
     'default' => 14,
     'mandatory' => false,
@@ -1141,8 +1143,8 @@ $CONFIG_REGISTRY = array(
 
   'ACCOUNT_CLEANUP_ENABLED' => array(
     'category' => 'lifecycle',
-    'description' => 'Enable automatic account cleanup',
-    'help' => 'Automatically delete expired accounts (use with caution)',
+    'description' => t('config.ACCOUNT_CLEANUP_ENABLED.desc'),
+    'help' => t('config.ACCOUNT_CLEANUP_ENABLED.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1154,8 +1156,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_DEBUG' => array(
     'category' => 'debug',
-    'description' => 'Enable LDAP debug logging',
-    'help' => 'WARNING: May expose sensitive information',
+    'description' => t('config.LDAP_DEBUG.desc'),
+    'help' => t('config.LDAP_DEBUG.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1165,8 +1167,8 @@ $CONFIG_REGISTRY = array(
 
   'LDAP_VERBOSE_CONNECTION_LOGS' => array(
     'category' => 'debug',
-    'description' => 'Verbose LDAP connection logs',
-    'help' => 'Log all LDAP connection details',
+    'description' => t('config.LDAP_VERBOSE_CONNECTION_LOGS.desc'),
+    'help' => t('config.LDAP_VERBOSE_CONNECTION_LOGS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1176,8 +1178,8 @@ $CONFIG_REGISTRY = array(
 
   'SESSION_DEBUG' => array(
     'category' => 'debug',
-    'description' => 'Enable session debug logging',
-    'help' => 'Log session management details',
+    'description' => t('config.SESSION_DEBUG.desc'),
+    'help' => t('config.SESSION_DEBUG.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1187,8 +1189,8 @@ $CONFIG_REGISTRY = array(
 
   'SHOW_ERROR_DETAILS' => array(
     'category' => 'debug',
-    'description' => 'Show detailed error messages',
-    'help' => 'Display full error details in browser (development only). Set to FALSE in production to show generic error pages.',
+    'description' => t('config.SHOW_ERROR_DETAILS.desc'),
+    'help' => t('config.SHOW_ERROR_DETAILS.help'),
     'type' => 'boolean',
     'default' => false,
     'mandatory' => false,
@@ -1198,8 +1200,8 @@ $CONFIG_REGISTRY = array(
 
   'SMTP_LOG_LEVEL' => array(
     'category' => 'debug',
-    'description' => 'SMTP debug level',
-    'help' => '0=off, 1=client, 2=client+server, 3=verbose, 4=very verbose',
+    'description' => t('config.SMTP_LOG_LEVEL.desc'),
+    'help' => t('config.SMTP_LOG_LEVEL.help'),
     'type' => 'integer',
     'default' => 0,
     'mandatory' => false,
@@ -1248,30 +1250,30 @@ $LDAP['group_objectclasses'] = array( 'top', 'posixGroup' );
 
 $LDAP['default_attribute_map'] = array(
   "givenname" => array(
-    "label" => "First name",
+    "label" => t('attr.givenname'),
     "onkeyup" => "update_username(); update_email(); update_cn(); update_homedir(); check_email_validity(document.getElementById('mail').value);",
     "required" => TRUE,
   ),
   "sn" => array(
-    "label" => "Last name",
+    "label" => t('attr.sn'),
     "onkeyup" => "update_username(); update_email(); update_cn(); update_homedir(); check_email_validity(document.getElementById('mail').value);",
     "required" => TRUE,
   ),
   "uid" => array(
-    "label" => "System username",
+    "label" => t('attr.uid'),
     "onkeyup" => "check_entity_name_validity(document.getElementById('uid').value,'uid_div'); update_email(); update_homedir(); check_email_validity(document.getElementById('mail').value);",
   ),
   "cn" => array(
-    "label" => "Common name",
+    "label" => t('attr.cn'),
     "onkeyup" => "auto_cn_update = false;",
   ),
   "mail" => array(
-    "label" => "Email",
+    "label" => t('attr.mail'),
     "onkeyup" => "auto_email_update = false; check_email_validity(document.getElementById('mail').value);",
   )
 );
 
-$LDAP['default_group_attribute_map'] = array( "description" => array("label" => "Description"));
+$LDAP['default_group_attribute_map'] = array( "description" => array("label" => t('groups.col_description')));
 
 // Additional object classes and attributes
 if (getenv('LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES')) {
@@ -1339,9 +1341,9 @@ if ($SHOW_POSIX_ATTRIBUTES != TRUE) {
 } else {
   $LDAP['default_attribute_map']["uidnumber"] = array("label" => "UID");
   $LDAP['default_attribute_map']["gidnumber"] = array("label" => "GID");
-  $LDAP['default_attribute_map']["homedirectory"] = array("label" => "Home directory", "onkeyup" => "auto_homedir_update = false;");
-  $LDAP['default_attribute_map']["loginshell"] = array("label" => "Shell", "default" => $DEFAULT_USER_SHELL);
-  $LDAP['default_group_attribute_map']["gidnumber"] = array("label" => "Group ID number");
+  $LDAP['default_attribute_map']["homedirectory"] = array("label" => t('attr.homedirectory'), "onkeyup" => "auto_homedir_update = false;");
+  $LDAP['default_attribute_map']["loginshell"] = array("label" => t('attr.loginshell'), "default" => $DEFAULT_USER_SHELL);
+  $LDAP['default_group_attribute_map']["gidnumber"] = array("label" => t('attr.gidnumber'));
 }
 
 ##############################################################################
@@ -1662,4 +1664,5 @@ function category_has_changes($category) {
 
   return false;
 }
+
 

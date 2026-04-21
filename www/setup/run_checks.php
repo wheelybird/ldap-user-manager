@@ -9,7 +9,7 @@ include_once "module_functions.inc.php";
 validate_setup_cookie();
 set_page_access("setup");
 
-render_header("$ORGANISATION_NAME account manager setup");
+render_header($ORGANISATION_NAME . ' ' . t('setup.header.title'));
 
 $show_finish_button = TRUE;
 
@@ -32,23 +32,22 @@ $ldap_connection = open_ldap_connection();
     <div class='container'>
 
      <div class="card">
-      <div class="card-header">LDAP connection tests</div>
+      <div class="card-header"><?php print t('setup.card.ldap_connection_tests'); ?></div>
       <div class="card-body">
        <ul class="list-group">
 <?php
 
 #Can we connect?  The open_ldap_connection() function will call die() if we can't.
-print "$li_good Connected to {$LDAP['uri']}</li>\n";
+print $li_good . t('setup.check.connected', array('uri' => $LDAP['uri'])) . "</li>\n";
 
 #TLS?
 if ($LDAP['connection_type'] != "plain") {
- print "$li_good Encrypted connection to {$LDAP['uri']} via {$LDAP['connection_type']}</li>\n";
+ print $li_good . t('setup.check.encrypted_connection', array('uri' => $LDAP['uri'], 'type' => $LDAP['connection_type'])) . "</li>\n";
 }
 else {
- print "$li_warn Unable to connect to {$LDAP['uri']} via StartTLS. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='StartTLS' data-bs-content='";
- print "The connection to the LDAP server works, but encrypted communication can&#39;t be enabled.";
- print "'>What's this?</a></li>\n";
+ print $li_warn . t('setup.check.starttls_unavailable', array('uri' => $LDAP['uri'])) . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.starttls.title') . "' data-bs-content='" . t('setup.popover.starttls.content') . "'>";
+ print t('setup.what_is_this') . "</a></li>\n";
 }
 
 
@@ -58,7 +57,7 @@ else {
      </div>
 
      <div class="card">
-      <div class="card-header">LDAP RFC2307BIS schema check</div>
+      <div class="card-header"><?php print t('setup.card.rfc2307bis_check'); ?></div>
       <div class="card-body">
        <ul class="list-group">
 <?php
@@ -68,23 +67,21 @@ $bis_detected = ldap_detect_rfc2307bis($ldap_connection);
 if ($bis_detected == TRUE) {
 
  if ($LDAP['forced_rfc2307bis'] == TRUE) {
-  print "$li_warn FORCE_RFC2307BIS is set to TRUE which means the user manager skipped auto-detecting the RFC2307BIS schema. This could result in errors when creating groups if your LDAP server hasn't actually got the RFC2307BIS schema available. ";
+  print $li_warn . t('setup.check.rfc2307bis_forced') . " ";
  }
  else {
-  print "$li_good The RFC2307BIS schema appears to be available. ";
+  print $li_good . t('setup.check.rfc2307bis_available') . " ";
  }
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='RFC2307BIS schema' data-bs-content='";
- print "The RFC2307BIS schema enhances posixGroups, allowing you to use \"memberOf\" in LDAP searches.";
- print "'>What's this?</a>";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.rfc2307bis.title') . "' data-bs-content='" . t('setup.popover.rfc2307bis.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
  print "</li>\n";
 
 }
 else {
 
- print "$li_warn The RFC2307BIS schema doesn't appear to be available.<br>\nIf this is incorrect, set FORCE_RFC2307BIS to TRUE, restart the user manager and run the setup again. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='RFC2307BIS' data-bs-content='";
- print "The RFC2307BIS schema enhances posixGroups, allowing for memberOf LDAP searches.";
- print "'>What's this?</a>";
+ print $li_warn . t('setup.check.rfc2307bis_missing') . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.rfc2307bis_short.title') . "' data-bs-content='" . t('setup.popover.rfc2307bis_short.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
  print "</li>\n";
 
 }
@@ -96,7 +93,7 @@ else {
      </div>
 
      <div class="card">
-      <div class="card-header">MFA/TOTP schema check</div>
+      <div class="card-header"><?php print t('setup.card.mfa_totp_check'); ?></div>
       <div class="card-body">
        <ul class="list-group">
 <?php
@@ -148,29 +145,26 @@ if ($MFA_FEATURE_ENABLED == TRUE) {
  }
 
  if ($schema_found && empty($missing_attrs)) {
-  print "$li_good MFA is enabled and the TOTP schema (<strong>$totp_objectclass</strong>) with all required attributes is present. ";
-  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='MFA/TOTP Schema' data-bs-content='";
-  print "The TOTP schema allows users to enrol in multi-factor authentication with time-based one-time passwords stored in LDAP.";
-  print "'>What's this?</a></li>\n";
+  print $li_good . t('setup.check.mfa_schema_present', array('objectclass' => $totp_objectclass)) . " ";
+  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.mfa_schema.title') . "' data-bs-content='" . t('setup.popover.mfa_schema.content') . "'>";
+  print t('setup.what_is_this') . "</a></li>\n";
  }
  elseif ($schema_found && !empty($missing_attrs)) {
-  print "$li_warn MFA is enabled and the object class <strong>$totp_objectclass</strong> exists, but the following attributes are missing: <strong>" . implode(', ', $missing_attrs) . "</strong>.<br>\n";
-  print "MFA will not function until all required attributes are installed. ";
-  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='Missing TOTP Attributes' data-bs-content='";
-  print "The TOTP object class was found but some required attributes are missing from the schema. Install the complete schema from the ldap-totp-schema repository.";
-  print "'>What's this?</a></li>\n";
+  print $li_warn . t('setup.check.mfa_schema_missing_attrs', array('objectclass' => $totp_objectclass, 'attrs' => implode(', ', $missing_attrs))) . "<br>\n";
+  print t('setup.check.mfa_not_functional_until_attrs') . " ";
+  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.mfa_missing_attrs.title') . "' data-bs-content='" . t('setup.popover.mfa_missing_attrs.content') . "'>";
+  print t('setup.what_is_this') . "</a></li>\n";
  }
  else {
-  print "$li_warn MFA is enabled but the TOTP schema (<strong>$totp_objectclass</strong>) is not installed in LDAP.<br>\n";
-  print "MFA will not function until the schema is installed. See the <a href='https://github.com/wheelybird/ldap-totp-schema' target='_blank'>ldap-totp-schema repository</a> for installation instructions. ";
-  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='Missing TOTP Schema' data-bs-content='";
-  print "Multi-factor authentication requires the TOTP schema to store secrets and configuration in LDAP. Without it, users cannot enrol in MFA.";
-  print "'>What's this?</a></li>\n";
+  print $li_warn . t('setup.check.mfa_schema_missing', array('objectclass' => $totp_objectclass)) . "<br>\n";
+  print t('setup.check.mfa_not_functional_until_schema') . " ";
+  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.mfa_missing_schema.title') . "' data-bs-content='" . t('setup.popover.mfa_missing_schema.content') . "'>";
+  print t('setup.what_is_this') . "</a></li>\n";
  }
 
 }
 else {
- print "$li_good MFA features are not enabled (MFA_FEATURE_ENABLED is not set to TRUE).</li>\n";
+ print $li_good . t('setup.check.mfa_disabled') . "</li>\n";
 }
 
 ?>
@@ -179,7 +173,7 @@ else {
      </div>
 
      <div class="card">
-      <div class="card-header">LDAP OU checks</div>
+      <div class="card-header"><?php print t('setup.card.ldap_ou_checks'); ?></div>
       <div class="card-body">
        <ul class="list-group">
 <?php
@@ -190,17 +184,16 @@ $group_result = ldap_get_entries($ldap_connection, $ldap_group_search);
 
 if ($group_result['count'] != 1) {
 
- print "$li_fail The group OU (<strong>{$LDAP['group_dn']}</strong>) doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='{$LDAP['group_dn']}' data-bs-content='";
- print "This is the Organizational Unit (OU) that the groups are stored under.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_group_ou' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_fail . t('setup.check.group_ou_missing', array('group_dn' => $LDAP['group_dn'])) . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . $LDAP['group_dn'] . "' data-bs-content='" . t('setup.popover.group_ou.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_group_ou' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 
 }
 else {
- print "$li_good The group OU (<strong>{$LDAP['group_dn']}</strong>) is present.</li>";
+ print $li_good . t('setup.check.group_ou_present', array('group_dn' => $LDAP['group_dn'])) . "</li>";
 }
 
 $user_filter  = "(&(objectclass=organizationalUnit)(ou={$LDAP['user_ou']}))";
@@ -209,17 +202,16 @@ $user_result = ldap_get_entries($ldap_connection, $ldap_user_search);
 
 if ($user_result['count'] != 1) {
 
- print "$li_fail The user OU (<strong>{$LDAP['user_dn']}</strong>) doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='{$LDAP['user_dn']}' data-bs-content='";
- print "This is the Organisational Unit (OU) that the user accounts are stored under.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_user_ou' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_fail . t('setup.check.user_ou_missing', array('user_dn' => $LDAP['user_dn'])) . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . $LDAP['user_dn'] . "' data-bs-content='" . t('setup.popover.user_ou.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_user_ou' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 
 }
 else {
- print "$li_good The user OU (<strong>{$LDAP['user_dn']}</strong>) is present.</li>";
+ print $li_good . t('setup.check.user_ou_present', array('user_dn' => $LDAP['user_dn'])) . "</li>";
 }
 
 ?>
@@ -228,7 +220,7 @@ else {
      </div>
 
      <div class="card">
-      <div class="card-header">LDAP group and settings</div>
+      <div class="card-header"><?php print t('setup.card.ldap_groups_settings'); ?></div>
       <div class="card-body">
        <ul class="list-group">
 <?php
@@ -239,17 +231,16 @@ $gid_result = ldap_get_entries($ldap_connection, $ldap_gid_search);
 
 if ($gid_result['count'] != 1) {
 
- print "$li_warn The <strong>lastGID</strong> entry doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='cn=lastGID,{$LDAP['base_dn']}' data-bs-content='";
- print "This is used to store the last group ID used when creating a POSIX group.  Without this the highest current group ID is found and incremented, but this might re-use the GID from a deleted group.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_last_gid' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_warn . t('setup.check.last_gid_missing') . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='cn=lastGID,{$LDAP['base_dn']}' data-bs-content='" . t('setup.popover.last_gid.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_last_gid' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 
 }
 else {
- print "$li_good The <strong>lastGID</strong> entry is present.</li>";
+ print $li_good . t('setup.check.last_gid_present') . "</li>";
 }
 
 
@@ -259,17 +250,16 @@ $uid_result = ldap_get_entries($ldap_connection, $ldap_uid_search);
 
 if ($uid_result['count'] != 1) {
 
- print "$li_warn The <strong>lastUID</strong> entry doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='cn=lastUID,{$LDAP['base_dn']}' data-bs-content='";
- print "This is used to store the last user ID used when creating a POSIX account.  Without this the highest current user ID is found and incremented, but this might re-use the UID from a deleted account.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_last_uid' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_warn . t('setup.check.last_uid_missing') . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='cn=lastUID,{$LDAP['base_dn']}' data-bs-content='" . t('setup.popover.last_uid.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_last_uid' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 
 }
 else {
- print "$li_good The <strong>lastUID</strong> entry is present.</li>";
+ print $li_good . t('setup.check.last_uid_present') . "</li>";
 }
 
 
@@ -279,17 +269,16 @@ $defgroup_result = ldap_get_entries($ldap_connection, $ldap_defgroup_search);
 
 if ($defgroup_result['count'] != 1) {
 
- print "$li_warn The default group (<strong>$DEFAULT_USER_GROUP</strong>) doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='Default user group' data-bs-content='";
- print "When we add users we need to assign them a default group ($DEFAULT_USER_GROUP). If this doesn&#39;t exist then a new group will be created to match each user account, which may not be desirable.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_default_group' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_warn . t('setup.check.default_group_missing', array('group' => $DEFAULT_USER_GROUP)) . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.default_group.title') . "' data-bs-content='" . t('setup.popover.default_group.content', array('group' => $DEFAULT_USER_GROUP)) . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_default_group' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 
 }
 else {
- print "$li_good The default user group (<strong>$DEFAULT_USER_GROUP</strong>) is present.</li>";
+ print $li_good . t('setup.check.default_group_present', array('group' => $DEFAULT_USER_GROUP)) . "</li>";
 }
 
 
@@ -299,22 +288,21 @@ $adminsgroup_result = ldap_get_entries($ldap_connection, $ldap_adminsgroup_searc
 
 if ($adminsgroup_result['count'] != 1) {
 
- print "$li_fail The group defining LDAP account administrators (<strong>{$LDAP['admins_group']}</strong>) doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='LDAP account administrators group' data-bs-content='";
- print "Only members of this group ({$LDAP['admins_group']}) will be able to access the account managment section, so it&#39;s definitely something you&#39;ll want to create.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_admins_group' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_fail . t('setup.check.admin_group_missing', array('group' => $LDAP['admins_group'])) . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.admin_group.title') . "' data-bs-content='" . t('setup.popover.admin_group.content', array('group' => $LDAP['admins_group'])) . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_admins_group' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 
 }
 else {
- print "$li_good The LDAP account administrators group (<strong>{$LDAP['admins_group']}</strong>) is present.</li>";
+ print $li_good . t('setup.check.admin_group_present', array('group' => $LDAP['admins_group'])) . "</li>";
 
  $admins = ldap_get_group_members($ldap_connection,$LDAP['admins_group']);
 
  if (count($admins) < 1) {
-  print "$li_fail The LDAP administration group is empty. You can add an admin account in the next section.</li>";
+  print $li_fail . t('setup.check.admin_group_empty') . "</li>";
   $show_finish_button = FALSE;
  }
 }
@@ -334,7 +322,7 @@ else {
 if ($USE_LDAP_AS_DB == TRUE) {
 ?>
      <div class="card">
-      <div class="card-header">LDAP storage for application data</div>
+      <div class="card-header"><?php print t('setup.card.ldap_storage_data'); ?></div>
       <div class="card-body">
        <ul class="list-group">
 <?php
@@ -345,16 +333,15 @@ $ldap_apps_search = ldap_search($ldap_connection, "{$LDAP['base_dn']}", $apps_ou
 $apps_result = ldap_get_entries($ldap_connection, $ldap_apps_search);
 
 if ($apps_result['count'] != 1) {
- print "$li_warn The applications OU (<strong>ou=applications,{$LDAP['base_dn']}</strong>) doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='Applications OU' data-bs-content='";
- print "This organisational unit stores application-specific data entries.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_apps_ou' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_warn . t('setup.check.apps_ou_missing', array('base_dn' => $LDAP['base_dn'])) . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.apps_ou.title') . "' data-bs-content='" . t('setup.popover.apps_ou.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_apps_ou' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 }
 else {
- print "$li_good The applications OU (<strong>ou=applications,{$LDAP['base_dn']}</strong>) is present.</li>";
+ print $li_good . t('setup.check.apps_ou_present', array('base_dn' => $LDAP['base_dn'])) . "</li>";
 }
 
 // Check for cn=luminary entry
@@ -363,16 +350,15 @@ $ldap_luminary_search = ldap_search($ldap_connection, "{$LDAP['base_dn']}", $lum
 $luminary_result = ldap_get_entries($ldap_connection, $ldap_luminary_search);
 
 if ($luminary_result['count'] != 1) {
- print "$li_warn The <strong>cn=luminary</strong> entry doesn't exist. ";
- print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='Luminary application data storage' data-bs-content='";
- print "This entry stores temporary application data such as sessions, password reset tokens, and rate limits when LDAP storage is enabled (USE_LDAP_AS_DB=TRUE). Without it, data will be stored in /tmp and lost on container restart.";
- print "'>What's this?</a>";
- print "<label class='float-end'><input type='checkbox' name='setup_luminary_entry' class='float-end' checked>Create?&nbsp;</label>";
+ print $li_warn . t('setup.check.luminary_entry_missing') . " ";
+ print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.luminary_entry.title') . "' data-bs-content='" . t('setup.popover.luminary_entry.content') . "'>";
+ print t('setup.what_is_this') . "</a>";
+ print "<label class='float-end'><input type='checkbox' name='setup_luminary_entry' class='float-end' checked>" . t('setup.create_checkbox') . "&nbsp;</label>";
  print "</li>\n";
  $show_finish_button = FALSE;
 }
 else {
- print "$li_good The <strong>cn=luminary</strong> application data entry is present.</li>";
+ print $li_good . t('setup.check.luminary_entry_present') . "</li>";
 }
 
 ?>
@@ -384,14 +370,12 @@ else {
 ?>
 <?php
 
-##############
-
 if ($show_finish_button == TRUE) {
 ?>
      </form>
      <div class='mt-3 text-end'>
       <form action="<?php print "{$SERVER_PATH}log_in"; ?>" class="d-inline">
-       <input type='submit' class="btn btn-success" value='Done'>
+       <input type='submit' class="btn btn-success" value='<?php print t('setup.button.done'); ?>'>
       </form>
      </div>
 <?php
@@ -399,7 +383,7 @@ if ($show_finish_button == TRUE) {
 else {
 ?>
      <div class='mt-3 text-end'>
-      <input type='submit' class="btn btn-primary" value='Next >'>
+      <input type='submit' class="btn btn-primary" value='<?php print t('setup.button.next'); ?>'>
      </div>
      </form>
 <?php

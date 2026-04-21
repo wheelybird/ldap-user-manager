@@ -10,7 +10,7 @@ include_once "module_functions.inc.php";
 validate_setup_cookie();
 set_page_access("setup");
 
-render_header("$ORGANISATION_NAME account manager setup");
+render_header($ORGANISATION_NAME . ' ' . t('setup.header.title'));
 
 $ldap_connection = open_ldap_connection();
 
@@ -32,7 +32,7 @@ if (isset($_POST['fix_problems'])) {
 <div class='container'>
 
  <div class="card">
-  <div class="card-header">Updating LDAP...</div>
+  <div class="card-header"><?php print t('setup.update.card_title'); ?></div>
    <div class="card-body">
     <ul class="list-group">
 
@@ -41,11 +41,11 @@ if (isset($_POST['fix_problems'])) {
  if (isset($_POST['setup_group_ou'])) {
   $ou_add = @ ldap_add($ldap_connection, $LDAP['group_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['group_ou'] ));
   if ($ou_add == TRUE) {
-   print "$li_good Created OU <strong>{$LDAP['group_dn']}</strong></li>\n";
+   print $li_good . t('setup.update.created_ou', array('dn' => $LDAP['group_dn'])) . "</li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
-   print "$li_fail Couldn't create {$LDAP['group_dn']}: <pre>$error</pre></li>\n";
+   print $li_fail . t('setup.update.create_failed', array('target' => $LDAP['group_dn'], 'error' => $error)) . "</li>\n";
    $no_errors = FALSE;
   }
  }
@@ -54,11 +54,11 @@ if (isset($_POST['fix_problems'])) {
  if (isset($_POST['setup_user_ou'])) {
   $ou_add = @ ldap_add($ldap_connection, $LDAP['user_dn'], array( 'objectClass' => 'organizationalUnit', 'ou' => $LDAP['user_ou'] ));
   if ($ou_add == TRUE) {
-   print "$li_good Created OU <strong>{$LDAP['user_dn']}</strong></li>\n";
+   print $li_good . t('setup.update.created_ou', array('dn' => $LDAP['user_dn'])) . "</li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
-   print "$li_fail Couldn't create {$LDAP['user_dn']}: <pre>$error</pre></li>\n";
+   print $li_fail . t('setup.update.create_failed', array('target' => $LDAP['user_dn'], 'error' => $error)) . "</li>\n";
    $no_errors = FALSE;
   }
  }
@@ -76,11 +76,11 @@ if (isset($_POST['fix_problems'])) {
   $gid_add = @ ldap_add($ldap_connection, "cn=lastGID,{$LDAP['base_dn']}", $add_lastgid_r);
 
   if ($gid_add == TRUE) {
-   print "$li_good Created <strong>cn=lastGID,{$LDAP['base_dn']}</strong></li>\n";
+   print $li_good . t('setup.update.created_entry', array('dn' => "cn=lastGID,{$LDAP['base_dn']}")) . "</li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
-   print "$li_fail Couldn't create cn=lastGID,{$LDAP['base_dn']}: <pre>$error</pre></li>\n";
+   print $li_fail . t('setup.update.create_failed', array('target' => "cn=lastGID,{$LDAP['base_dn']}", 'error' => $error)) . "</li>\n";
    $no_errors = FALSE;
   }
  }
@@ -98,11 +98,11 @@ if (isset($_POST['fix_problems'])) {
   $uid_add = @ ldap_add($ldap_connection, "cn=lastUID,{$LDAP['base_dn']}", $add_lastuid_r);
 
   if ($uid_add == TRUE) {
-   print "$li_good Created <strong>cn=lastUID,{$LDAP['base_dn']}</strong></li>\n";
+   print $li_good . t('setup.update.created_entry', array('dn' => "cn=lastUID,{$LDAP['base_dn']}")) . "</li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
-   print "$li_fail Couldn't create cn=lastUID,{$LDAP['base_dn']}: <pre>$error</pre></li>\n";
+   print $li_fail . t('setup.update.create_failed', array('target' => "cn=lastUID,{$LDAP['base_dn']}", 'error' => $error)) . "</li>\n";
    $no_errors = FALSE;
   }
  }
@@ -111,13 +111,13 @@ if (isset($_POST['fix_problems'])) {
  if (isset($_POST['setup_default_group'])) {
 
   $group_add = ldap_new_group($ldap_connection,$DEFAULT_USER_GROUP);
-  
+
   if ($group_add == TRUE) {
-   print "$li_good Created default group: <strong>$DEFAULT_USER_GROUP</strong></li>\n";
+   print $li_good . t('setup.update.created_default_group', array('group' => $DEFAULT_USER_GROUP)) . "</li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
-   print "$li_fail Couldn't create default group: <pre>$error</pre></li>\n";
+   print $li_fail . t('setup.update.create_default_group_failed', array('error' => $error)) . "</li>\n";
    $no_errors = FALSE;
   }
  }
@@ -127,11 +127,11 @@ if (isset($_POST['fix_problems'])) {
   $group_add = ldap_new_group($ldap_connection,$LDAP['admins_group']);
 
   if ($group_add == TRUE) {
-   print "$li_good Created LDAP administrators group: <strong>{$LDAP['admins_group']}</strong></li>\n";
+   print $li_good . t('setup.update.created_admin_group', array('group' => $LDAP['admins_group'])) . "</li>\n";
   }
   else {
    $error = ldap_error($ldap_connection);
-   print "$li_fail Couldn't create LDAP administrators group: <pre>$error</pre></li>\n";
+   print $li_fail . t('setup.update.create_admin_group_failed', array('error' => $error)) . "</li>\n";
    $no_errors = FALSE;
   }
  }
@@ -142,15 +142,15 @@ if (isset($_POST['fix_problems'])) {
 
   if ($ldap_storage_created == TRUE) {
    if (isset($_POST['setup_apps_ou'])) {
-    print "$li_good Created OU <strong>ou=applications,{$LDAP['base_dn']}</strong></li>\n";
+    print $li_good . t('setup.update.created_ou', array('dn' => "ou=applications,{$LDAP['base_dn']}")) . "</li>\n";
    }
    if (isset($_POST['setup_luminary_entry'])) {
-    print "$li_good Created <strong>cn=luminary,ou=applications,{$LDAP['base_dn']}</strong></li>\n";
+    print $li_good . t('setup.update.created_entry', array('dn' => "cn=luminary,ou=applications,{$LDAP['base_dn']}")) . "</li>\n";
    }
   }
   else {
    $error = ldap_error($ldap_connection);
-   print "$li_fail Couldn't create LDAP storage entries: <pre>$error</pre></li>\n";
+   print $li_fail . t('setup.update.create_ldap_storage_failed', array('error' => $error)) . "</li>\n";
    $no_errors = FALSE;
   }
  }
@@ -164,16 +164,16 @@ if (isset($_POST['fix_problems'])) {
   <form action="<?php print "{$SERVER_PATH}account_manager/new_user.php"; ?>" method="post">
   <input type="hidden" name="setup_admin_account">
   <?php
-  print "$li_fail The LDAP administration group is empty. ";
-  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='LDAP account administrators' data-bs-content='";
-  print "Only members of this group ({$LDAP['admins_group']}) will be able to access the account managment section, so we need to add people to it.";
-  print "'>What's this?</a>";
-  print "<label class='float-end'><input type='checkbox' name='setup_admin_account' class='float-end' checked>Create a new account and add it to the admin group?&nbsp;</label>";
+  print $li_fail . t('setup.update.admin_group_empty') . " ";
+  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='" . t('setup.popover.admin_group_short.title') . "' data-bs-content='";
+  print t('setup.popover.admin_group.content', array('group' => $LDAP['admins_group'])) . "'>";
+  print t('setup.what_is_this') . "</a>";
+  print "<label class='float-end'><input type='checkbox' name='setup_admin_account' class='float-end' checked>" . t('setup.update.create_admin_account_checkbox') . "&nbsp;</label>";
   print "</li>\n";
   $show_create_admin_button = TRUE;
  }
  else {
-  print "$li_good The LDAP account administrators group (<strong>{$LDAP['admins_group']}</strong>) isn't empty.</li>";
+  print $li_good . t('setup.update.admin_group_not_empty', array('group' => $LDAP['admins_group'])) . "</li>";
  }
 
 
@@ -191,17 +191,17 @@ if (isset($_POST['fix_problems'])) {
  </form>
  <div class='mt-3 text-end'>
   <form action="<?php print $THIS_MODULE_PATH; ?>" class="d-inline">
-   <input type='submit' class="btn btn-success" value='Finished'>
+   <input type='submit' class="btn btn-success" value='<?php print t('setup.button.finished'); ?>'>
   </form>
  </div>
  <?php
   }
   else {
   ?>
-    <div class='mt-3 text-end'>
-    <input type='submit' class="btn btn-warning" value='Create new account >'>
-   </form>
-  </div>
+  <div class='mt-3 text-end'>
+   <input type='submit' class="btn btn-warning" value='<?php print t('setup.button.create_new_account'); ?>'>
+  </form>
+ </div>
   <?php
   }
  }
@@ -210,7 +210,7 @@ if (isset($_POST['fix_problems'])) {
  </form>
  <div class='mt-3 text-start'>
   <form action="<?php print $THIS_MODULE_PATH; ?>/run_checks.php" class="d-inline">
-   <input type='submit' class="btn btn-danger" value='< Re-run setup'>
+   <input type='submit' class="btn btn-danger" value='<?php print t('setup.button.rerun_setup'); ?>'>
   </form>
  </div>
 <?php

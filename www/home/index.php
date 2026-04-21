@@ -28,7 +28,7 @@ if ($MFA_FULLY_OPERATIONAL) {
   $mfa_status = totp_get_user_mfa_status($ldap_connection, $USER_ID, $MFA_REQUIRED_GROUPS, $MFA_GRACE_PERIOD_DAYS);
 }
 
-render_header("$ORGANISATION_NAME account manager");
+render_header($ORGANISATION_NAME . ' ' . t('account_manager.title'));
 
 ?>
 
@@ -36,14 +36,14 @@ render_header("$ORGANISATION_NAME account manager");
 
   <?php if ($mfa_status['needs_setup']): ?>
   <div class="alert alert-warning">
-    <h4><strong>Action required: multi-factor authentication</strong></h4>
+    <h4><strong><?php echo t('home.mfa_required_title'); ?></strong></h4>
     <p>
-      Your account requires multi-factor authentication (MFA) to be set up.
+      <?php echo t('home.mfa_required_body'); ?>
       <?php if ($mfa_status['days_remaining'] !== null): ?>
-        You have <strong><?php echo $mfa_status['days_remaining']; ?> day<?php echo $mfa_status['days_remaining'] != 1 ? 's' : ''; ?> remaining</strong> to complete this setup.
+        <strong><?php echo t('home.mfa_days_remaining', array('days' => $mfa_status['days_remaining'], 'suffix' => $mfa_status['days_remaining'] != 1 ? t('home.day_suffix_plural') : '')); ?></strong>
       <?php endif; ?>
     </p>
-    <p>Please click on "Manage MFA" below to set up your authenticator app.</p>
+    <p><?php echo t('home.mfa_cta'); ?></p>
   </div>
   <?php endif; ?>
 
@@ -53,12 +53,11 @@ render_header("$ORGANISATION_NAME account manager");
     $days_remaining = $_SESSION['password_days_remaining'];
   ?>
   <div class="alert alert-warning">
-    <h4><strong>Password expiry warning</strong></h4>
+    <h4><strong><?php echo t('home.password_expiry_title'); ?></strong></h4>
     <p>
-      Your password expires in <strong><?php echo $days_remaining; ?> day<?php echo $days_remaining != 1 ? 's' : ''; ?></strong>.
-      Please change it now to avoid being locked out of your account.
+      <?php echo t('home.password_expiry_body', array('days' => $days_remaining, 'suffix' => $days_remaining != 1 ? t('home.day_suffix_plural') : '')); ?>
     </p>
-    <a href="<?php echo url('/change_password'); ?>" class="btn btn-warning">Change password now</a>
+    <a href="<?php echo url('/change_password'); ?>" class="btn btn-warning"><?php echo t('home.password_expiry_button'); ?></a>
   </div>
   <?php endif; ?>
 
@@ -68,21 +67,20 @@ render_header("$ORGANISATION_NAME account manager");
     $account_days_remaining = $_SESSION['account_days_remaining'];
   ?>
   <div class="alert alert-danger">
-    <h4><strong>Account expiring soon</strong></h4>
+    <h4><strong><?php echo t('home.account_expiry_title'); ?></strong></h4>
     <p>
-      Your account will expire in <strong><?php echo $account_days_remaining; ?> day<?php echo $account_days_remaining != 1 ? 's' : ''; ?></strong>.
-      Please contact your system administrator to request an account extension.
+      <?php echo t('home.account_expiry_body', array('days' => $account_days_remaining, 'suffix' => $account_days_remaining != 1 ? t('home.day_suffix_plural') : '')); ?>
     </p>
     <?php if (!empty($SUPPORT_EMAIL)): ?>
-    <p><strong>Support Contact:</strong> <a href="mailto:<?php echo htmlspecialchars($SUPPORT_EMAIL); ?>" class="text-white"><u><?php echo htmlspecialchars($SUPPORT_EMAIL); ?></u></a></p>
+    <p><strong><?php echo t('home.support_contact'); ?></strong> <a href="mailto:<?php echo htmlspecialchars($SUPPORT_EMAIL); ?>" class="text-white"><u><?php echo htmlspecialchars($SUPPORT_EMAIL); ?></u></a></p>
     <?php endif; ?>
   </div>
   <?php endif; ?>
 
   <div class="row">
     <div class="col-md-12">
-      <h2>Welcome<?php if(isset($USER_ID)) { echo ', ' . htmlspecialchars($USER_ID); } ?></h2>
-      <p class="lead">Select an option below to manage your account.</p>
+      <h2><?php echo t('home.welcome'); ?><?php if(isset($USER_ID)) { echo ', ' . htmlspecialchars($USER_ID); } ?></h2>
+      <p class="lead"><?php echo t('home.lead'); ?></p>
     </div>
   </div>
 
@@ -92,11 +90,11 @@ render_header("$ORGANISATION_NAME account manager");
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h4>Change password</h4>
+          <h4><?php echo t('home.change_password_title'); ?></h4>
         </div>
         <div class="card-body">
-          <p>Update your account password.</p>
-          <a href="<?php echo url('/change_password'); ?>" class="btn btn-primary">Change password</a>
+          <p><?php echo t('home.change_password_body'); ?></p>
+          <a href="<?php echo url('/change_password'); ?>" class="btn btn-primary"><?php echo t('module.change_password'); ?></a>
         </div>
       </div>
     </div>
@@ -107,19 +105,19 @@ render_header("$ORGANISATION_NAME account manager");
       <div class="card <?php echo $mfa_status['needs_setup'] ? 'border-warning' : ''; ?>">
         <div class="card-header <?php echo $mfa_status['needs_setup'] ? 'bg-warning text-dark' : ''; ?>">
           <h4>
-            Manage MFA
+            <?php echo t('home.manage_mfa_title'); ?>
             <?php if ($mfa_status['needs_setup']): ?>
-              <span class="badge bg-warning text-dark float-end">Required</span>
+              <span class="badge bg-warning text-dark float-end"><?php echo t('home.manage_mfa_required'); ?></span>
             <?php endif; ?>
           </h4>
         </div>
         <div class="card-body">
           <?php if ($mfa_status['needs_setup']): ?>
-            <p><strong>Action required:</strong> Set up multi-factor authentication for your account.</p>
+            <p><?php echo t('home.manage_mfa_action'); ?></p>
           <?php else: ?>
-            <p>Set up or manage multi-factor authentication (MFA) for your account.</p>
+            <p><?php echo t('home.manage_mfa_body'); ?></p>
           <?php endif; ?>
-          <a href="<?php echo url('/manage_mfa'); ?>" class="btn btn-<?php echo $mfa_status['needs_setup'] ? 'warning' : 'primary'; ?>">Manage MFA</a>
+          <a href="<?php echo url('/manage_mfa'); ?>" class="btn btn-<?php echo $mfa_status['needs_setup'] ? 'warning' : 'primary'; ?>"><?php echo t('module.manage_mfa'); ?></a>
         </div>
       </div>
     </div>
@@ -129,11 +127,11 @@ render_header("$ORGANISATION_NAME account manager");
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h4>Account manager</h4>
+          <h4><?php echo t('home.account_manager_title'); ?></h4>
         </div>
         <div class="card-body">
-          <p>Manage user accounts, groups, and system settings.</p>
-          <a href="<?php echo url('/account_manager'); ?>" class="btn btn-success">Account manager</a>
+          <p><?php echo t('home.account_manager_body'); ?></p>
+          <a href="<?php echo url('/account_manager'); ?>" class="btn btn-success"><?php echo t('module.account_manager'); ?></a>
         </div>
       </div>
     </div>
@@ -143,11 +141,11 @@ render_header("$ORGANISATION_NAME account manager");
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h4>System config</h4>
+          <h4><?php echo t('home.system_config_title'); ?></h4>
         </div>
         <div class="card-body">
-          <p>View complete system configuration and settings.</p>
-          <a href="<?php echo url('/system_config'); ?>" class="btn btn-info">System config</a>
+          <p><?php echo t('home.system_config_body'); ?></p>
+          <a href="<?php echo url('/system_config'); ?>" class="btn btn-info"><?php echo t('module.system_config'); ?></a>
         </div>
       </div>
     </div>

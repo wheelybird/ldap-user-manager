@@ -72,7 +72,12 @@ function generatePassword(wordCount, separator, passwordFieldId, confirmFieldId)
     requireUppercase: true,
     requireLowercase: true,
     requireNumbers: true,
-    requireSpecial: false
+    requireSpecial: false,
+    labelMinLength: 'At least 12 characters',
+    labelUppercase: 'At least one uppercase letter (A-Z)',
+    labelLowercase: 'At least one lowercase letter (a-z)',
+    labelNumber: 'At least one number (0-9)',
+    labelSpecial: 'At least one special character (!@#$%^&*)',
   };
 
   const words = [];
@@ -205,7 +210,7 @@ function updatePasswordRequirements(password, requirements) {
     const met = password.length >= requirements.minLength;
     if (met) metCount++;
     checks.push({
-      label: `At least ${requirements.minLength} characters`,
+      label: requirements.labelMinLength,
       met: met
     });
   }
@@ -216,7 +221,7 @@ function updatePasswordRequirements(password, requirements) {
     const met = /[A-Z]/.test(password);
     if (met) metCount++;
     checks.push({
-      label: 'At least one uppercase letter (A-Z)',
+      label: requirements.labelUppercase,
       met: met
     });
   }
@@ -227,7 +232,7 @@ function updatePasswordRequirements(password, requirements) {
     const met = /[a-z]/.test(password);
     if (met) metCount++;
     checks.push({
-      label: 'At least one lowercase letter (a-z)',
+      label: requirements.labelLowercase,
       met: met
     });
   }
@@ -238,7 +243,7 @@ function updatePasswordRequirements(password, requirements) {
     const met = /[0-9]/.test(password);
     if (met) metCount++;
     checks.push({
-      label: 'At least one number (0-9)',
+      label: requirements.labelNumber,
       met: met
     });
   }
@@ -249,7 +254,7 @@ function updatePasswordRequirements(password, requirements) {
     const met = /[^a-zA-Z0-9]/.test(password);
     if (met) metCount++;
     checks.push({
-      label: 'At least one special character (!@#$%^&*)',
+      label: requirements.labelSpecial,
       met: met
     });
   }

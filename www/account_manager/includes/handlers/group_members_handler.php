@@ -36,7 +36,7 @@ if (isset($_POST["update_members"])) {
     if (!$group_add) {
       // Audit log failed group creation
       audit_log('group_create_failure', $group_cn, "Failed to create group", 'failure', $USER_ID);
-      render_alert_banner("There was a problem creating the group.  See the logs for more information.","danger",10000);
+      render_alert_banner(t('groups.alert_create_failed'),"danger",10000);
       $group_exists = FALSE;
       $new_group = TRUE;
     }
@@ -66,12 +66,12 @@ if (isset($_POST["update_members"])) {
         $update_fields = array_keys($to_update);
         $update_details = "Updated fields: " . implode(', ', $update_fields);
         audit_log('group_updated', $group_cn, $update_details, 'success', $USER_ID);
-        render_alert_banner("The group attributes have been updated.");
+        render_alert_banner(t('groups.alert_attributes_updated'));
       }
       else {
         // Audit log failed update
         audit_log('group_update_failure', $group_cn, "Failed to update group attributes", 'failure', $USER_ID);
-        render_alert_banner("There was a problem updating the group attributes.  See the logs for more information.","danger",15000);
+        render_alert_banner(t('groups.alert_attributes_update_failed'),"danger",15000);
       }
 
     }
@@ -97,10 +97,11 @@ if (isset($_POST["update_members"])) {
 
     $rfc2307bis_available = ldap_detect_rfc2307bis($ldap_connection);
     if ($rfc2307bis_available == TRUE and count($group_members) == 0) {
-      render_alert_banner("Groups can't be empty, so the final member hasn't been removed.  You could try deleting the group","danger",15000);
+      render_alert_banner(t('groups.alert_empty_blocked'),"danger",15000);
     }
     else {
-      render_alert_banner("The group has been {$has_been}.");
+      $group_alert_key = ($has_been === 'created') ? 'groups.alert_created' : 'groups.alert_updated';
+      render_alert_banner(t($group_alert_key));
     }
 
   }

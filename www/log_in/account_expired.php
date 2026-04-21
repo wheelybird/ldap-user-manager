@@ -41,7 +41,7 @@ if ($user_search) {
 
 ldap_close($ldap_connection);
 
-render_header("$ORGANISATION_NAME account manager - Account expired");
+render_header($ORGANISATION_NAME . ' ' . t('account_expired.title'));
 
 ?>
 <div class="container">
@@ -51,43 +51,43 @@ render_header("$ORGANISATION_NAME account manager - Account expired");
       <div class="card border-danger">
         <div class="card-header bg-danger text-white text-center">
           <h4 class="card-title mb-0">
-            <i class="bi bi-exclamation-triangle-fill"></i> Account expired
+            <i class="bi bi-exclamation-triangle-fill"></i> <?php echo t('account_expired.heading'); ?>
           </h4>
         </div>
         <div class="card-body">
 
           <div class="alert alert-danger">
-            <h5><strong>Your account has expired and can no longer be used.</strong></h5>
+            <h5><strong><?php echo t('account_expired.body'); ?></strong></h5>
           </div>
 
           <?php if ($expiry_date_formatted): ?>
           <div class="mb-3">
-            <p><strong>Expiration Date:</strong> <?php echo htmlspecialchars($expiry_date_formatted); ?></p>
+            <p><strong><?php echo t('account_expired.expiry_date'); ?></strong> <?php echo htmlspecialchars($expiry_date_formatted); ?></p>
             <?php if ($days_expired !== null): ?>
-            <p><strong>Expired:</strong> <?php echo $days_expired; ?> day<?php echo $days_expired != 1 ? 's' : ''; ?> ago</p>
+            <p><strong><?php echo t('account_expired.expired_label'); ?></strong> <?php echo t('account_expired.expired_ago', array('days' => $days_expired, 'suffix' => ($days_expired != 1 ? 's' : ''))); ?></p>
             <?php endif; ?>
           </div>
           <?php endif; ?>
 
           <div class="mb-3">
-            <h5>What does this mean?</h5>
-            <p>Your account has reached its expiration date and has been disabled. You will not be able to access any services or resources until your account is renewed by an administrator.</p>
+            <h5><?php echo t('account_expired.meaning_title'); ?></h5>
+            <p><?php echo t('account_expired.meaning_body'); ?></p>
           </div>
 
           <div class="mb-3">
-            <h5>What should you do?</h5>
-            <p>Please contact your system administrator to request an account renewal or extension. Provide them with your username: <strong><?php echo htmlspecialchars($USER_ID); ?></strong></p>
+            <h5><?php echo t('account_expired.action_title'); ?></h5>
+            <p><?php echo t('account_expired.action_body', array('username' => htmlspecialchars($USER_ID))); ?></p>
           </div>
 
           <?php if (!empty($SUPPORT_EMAIL)): ?>
           <div class="alert alert-info">
-            <p class="mb-0"><strong>Support Contact:</strong> <a href="mailto:<?php echo htmlspecialchars($SUPPORT_EMAIL); ?>"><?php echo htmlspecialchars($SUPPORT_EMAIL); ?></a></p>
+            <p class="mb-0"><strong><?php echo t('account_expired.support_label'); ?></strong> <a href="mailto:<?php echo htmlspecialchars($SUPPORT_EMAIL); ?>"><?php echo htmlspecialchars($SUPPORT_EMAIL); ?></a></p>
           </div>
           <?php endif; ?>
 
           <div class="text-center mt-4">
             <a href="<?php echo url('/log_out'); ?>" class="btn btn-secondary">
-              <i class="bi bi-box-arrow-right"></i> Log Out
+              <i class="bi bi-box-arrow-right"></i> <?php echo t('module.log_out'); ?>
             </a>
           </div>
 

@@ -16,7 +16,7 @@ define('LDAP_USER_MANAGER', true);
 // Include tab configuration
 include_once __DIR__ . '/includes/user_tab_config.php';
 
-render_header("$ORGANISATION_NAME account manager");
+render_header($ORGANISATION_NAME . ' ' . t('show_user.title'));
 render_submenu();
 
 $invalid_password = FALSE;
@@ -27,19 +27,19 @@ $to_update = array();
 
 if ($SMTP['host'] != "") { $can_send_email = TRUE; } else { $can_send_email = FALSE; }
 
-$LDAP['default_attribute_map']["mail"]  = array("label" => "Email", "onkeyup" => "check_if_we_should_enable_sending_email();");
+$LDAP['default_attribute_map']["mail"]  = array("label" => t('show_user.label_email'), "onkeyup" => "check_if_we_should_enable_sending_email();");
 
 $attribute_map = $LDAP['default_attribute_map'];
 if (isset($LDAP['account_additional_attributes'])) { $attribute_map = ldap_complete_attribute_array($attribute_map,$LDAP['account_additional_attributes']); }
 if (! array_key_exists($LDAP['account_attribute'], $attribute_map)) {
-  $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => "Account UID")));
+  $attribute_r = array_merge($attribute_map, array($LDAP['account_attribute'] => array("label" => t('show_user.label_account_uid'))));
 }
 
 if (!isset($_POST['account_identifier']) and !isset($_GET['account_identifier'])) {
 ?>
  <div class="container">
   <div class="alert alert-danger">
-   <p class="text-center">The account identifier is missing.</p>
+  <p class="text-center"><?php print t('show_user.error_missing_identifier'); ?></p>
   </div>
  </div>
 <?php
@@ -132,7 +132,7 @@ if ($ldap_search) {
    ?>
     <div class="container">
      <div class="alert alert-danger">
-      <p class="text-center">This account doesn't exist.</p>
+      <p class="text-center"><?php print t('show_user.error_not_found'); ?></p>
      </div>
     </div>
    <?php
@@ -146,25 +146,25 @@ if ($ldap_search) {
 
  if ($weak_password) { ?>
   <div class="alert alert-warning">
-   <p class="text-center">The password wasn't strong enough.</p>
+   <p class="text-center"><?php print t('show_user.password_weak'); ?></p>
   </div>
  <?php }
 
  if ($invalid_password) {  ?>
   <div class="alert alert-warning">
-   <p class="text-center">The password contained invalid characters.</p>
+   <p class="text-center"><?php print t('show_user.password_invalid_chars'); ?></p>
   </div>
  <?php }
 
  if ($mismatched_passwords) {  ?>
   <div class="alert alert-warning">
-   <p class="text-center">The passwords didn't match.</p>
+   <p class="text-center"><?php print t('show_user.password_mismatch'); ?></p>
   </div>
  <?php }
 
  if (isset($password_fails_policy) && $password_fails_policy && !empty($password_policy_errors)) { ?>
   <div class="alert alert-warning">
-   <p class="text-center"><strong>Password Policy Errors:</strong></p>
+   <p class="text-center"><strong><?php print t('show_user.password_policy_errors'); ?></strong></p>
    <ul>
     <?php foreach ($password_policy_errors as $policy_error) { ?>
       <li><?php echo htmlspecialchars($policy_error); ?></li>
@@ -175,7 +175,7 @@ if ($ldap_search) {
 
  if (isset($password_in_history) && $password_in_history) { ?>
   <div class="alert alert-warning">
-   <p class="text-center">This password was used recently and cannot be reused.</p>
+   <p class="text-center"><?php print t('show_user.password_reused'); ?></p>
   </div>
  <?php }
 
@@ -203,7 +203,12 @@ if ($ldap_search) {
      requireUppercase: <?php echo $PASSWORD_REQUIRE_UPPERCASE ? 'true' : 'false'; ?>,
      requireLowercase: <?php echo $PASSWORD_REQUIRE_LOWERCASE ? 'true' : 'false'; ?>,
      requireNumbers: <?php echo $PASSWORD_REQUIRE_NUMBERS ? 'true' : 'false'; ?>,
-     requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>
+     requireSpecial: <?php echo $PASSWORD_REQUIRE_SPECIAL ? 'true' : 'false'; ?>,
+     labelMinLength: "<?php echo t('password.requirement.min_length', array('count' => $PASSWORD_MIN_LENGTH)); ?>",
+     labelUppercase: "<?php echo t('password.requirement.uppercase'); ?>",
+     labelLowercase: "<?php echo t('password.requirement.lowercase'); ?>",
+     labelNumber: "<?php echo t('password.requirement.number'); ?>",
+     labelSpecial: "<?php echo t('password.requirement.special'); ?>",
    };
    initPasswordRequirements('password_field', window.passwordRequirements);
    <?php } else { ?>
@@ -429,10 +434,10 @@ if ($ldap_search) {
       <p class="text-muted"><?php print htmlspecialchars(decode_ldap_value($dn), ENT_QUOTES, 'UTF-8'); ?></p>
     </div>
     <div class="col-md-4 text-end">
-      <button class="btn btn-warning" onclick="show_delete_user_button();" <?php if ($account_identifier == $USER_ID) { print "disabled"; }?>>Delete account</button>
+      <button class="btn btn-warning" onclick="show_delete_user_button();" <?php if ($account_identifier == $USER_ID) { print "disabled"; }?>><?php print t('show_user.delete_account'); ?></button>
       <form action="<?php print "{$THIS_MODULE_PATH}"; ?>/index.php" method="post" style="display: inline;">
         <input type="hidden" name="delete_user" value="<?php print urlencode($account_identifier); ?>">
-        <button class="btn btn-danger invisible" id="delete_user">Confirm deletion</button>
+        <button class="btn btn-danger invisible" id="delete_user"><?php print t('show_user.confirm_deletion'); ?></button>
       </form>
     </div>
   </div>
@@ -459,7 +464,7 @@ if ($ldap_search) {
         include $tab_file_path;
       } else {
         echo '      <div class="alert alert-warning">' . "\n";
-        echo '        Tab content not yet implemented: ' . htmlspecialchars($tab['label']) . "\n";
+        echo '        ' . t('tabs.not_implemented', array('label' => $tab['label'])) . "\n";
         echo '      </div>' . "\n";
       }
 

@@ -12,17 +12,17 @@ if (!defined('LDAP_USER_MANAGER')) {
 ?>
 <div class="row">
   <div class="dual-list list-left col-md-5">
-    <strong>Members</strong>
+    <strong><?php print t('group_members.members'); ?></strong>
     <div class="well">
       <div class="select-all-wrapper">
         <input type="checkbox" class="form-check-input selector" id="select_all_left">
-        <label class="form-check-label" for="select_all_left">Select all</label>
+        <label class="form-check-label" for="select_all_left"><?php print t('group_members.select_all'); ?></label>
       </div>
       <div class="row">
         <div class="col-md-12">
           <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="text" name="SearchDualList" class="form-control" placeholder="search" />
+            <input type="text" name="SearchDualList" class="form-control" placeholder="<?php print t('group_members.search'); ?>" />
           </div>
         </div>
       </div>
@@ -52,21 +52,21 @@ if (!defined('LDAP_USER_MANAGER')) {
       <input type="hidden" name="update_members">
       <input type="hidden" name="group_name" value="<?php print urlencode($group_cn); ?>">
       <?php if ($new_group == TRUE) { ?><input type="hidden" name="initialise_group"><?php } ?>
-      <button id="submit_members" class="btn btn-info" <?php if (count($group_members)==0) print 'disabled'; ?> type="submit" onclick="update_form_with_users()"><?php echo $new_group ? 'Create group' : 'Save'; ?></button>
+      <button id="submit_members" class="btn btn-info" <?php if (count($group_members)==0) print 'disabled'; ?> type="submit" onclick="update_form_with_users()"><?php echo $new_group ? t('group_members.create_group') : t('group_members.save'); ?></button>
     </form>
   </div>
 
   <div class="dual-list list-right col-md-5">
-    <strong>Non-members</strong>
+    <strong><?php print t('group_members.non_members'); ?></strong>
     <div class="well">
       <div class="select-all-wrapper">
         <input type="checkbox" class="form-check-input selector" id="select_all_right">
-        <label class="form-check-label" for="select_all_right">Select all</label>
+        <label class="form-check-label" for="select_all_right"><?php print t('group_members.select_all'); ?></label>
       </div>
       <div class="row">
         <div class="col-md-12">
           <div class="input-group">
-            <input type="text" name="SearchDualList" class="form-control" placeholder="search" />
+            <input type="text" name="SearchDualList" class="form-control" placeholder="<?php print t('group_members.search'); ?>" />
             <span class="input-group-text"><i class="bi bi-search"></i></span>
           </div>
         </div>

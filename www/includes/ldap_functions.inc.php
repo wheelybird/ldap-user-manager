@@ -10,8 +10,9 @@ function open_ldap_connection($ldap_bind=TRUE) {
  $ldap_connection = @ ldap_connect($LDAP['uri']);
 
  if (!$ldap_connection) {
-  print "Problem: Can't connect to the LDAP server at {$LDAP['uri']}";
-  die("Can't connect to the LDAP server at {$LDAP['uri']}");
+  $msg = t('ldap.connect_failed', array('uri' => $LDAP['uri']));
+  print $msg;
+  die($msg);
   exit(1);
  }
 
@@ -27,12 +28,12 @@ function open_ldap_connection($ldap_bind=TRUE) {
    if (!preg_match('/^ldap:\/\/127\.0\.0\.([0-9]+)(:[0-9]+)$/', $LDAP['uri'])) { error_log("$log_prefix Failed to start STARTTLS connection to {$LDAP['uri']}: " . ldap_error($ldap_connection),0); }
 
    if ($LDAP["require_starttls"] == TRUE) {
-    print "<div style='position: fixed;bottom: 0;width: 100%;' class='alert alert-danger'>Fatal:  Couldn't create a secure connection to {$LDAP['uri']} and LDAP_REQUIRE_STARTTLS is TRUE.</div>";
+    print "<div style='position: fixed;bottom: 0;width: 100%;' class='alert alert-danger'>" . t('ldap.starttls_required_failed', array('uri' => $LDAP['uri'])) . "</div>";
     exit(0);
    }
    else {
     if ($SENT_HEADERS == TRUE and !preg_match('/^ldap:\/\/localhost(:[0-9]+)?$/', $LDAP['uri']) and !preg_match('/^ldap:\/\/127\.0\.0\.([0-9]+)(:[0-9]+)$/', $LDAP['uri'])) {
-      print "<div style='position: fixed;bottom: 0px;width: 100%;height: 20px;border-bottom:solid 20px yellow;'>WARNING: Insecure LDAP connection to {$LDAP['uri']}</div>";
+      print "<div style='position: fixed;bottom: 0px;width: 100%;height: 20px;border-bottom:solid 20px yellow;'>" . t('ldap.insecure_connection_warning', array('uri' => $LDAP['uri'])) . "</div>";
     }
     ldap_close($ldap_connection);
     $ldap_connection = @ ldap_connect($LDAP['uri']);
@@ -64,7 +65,7 @@ function open_ldap_connection($ldap_bind=TRUE) {
      $this_error = "Failed to bind to {$LDAP['uri']} as {$LDAP['admin_bind_dn']}";
      if ($LDAP_DEBUG == TRUE) { $this_error .= " with password {$LDAP['admin_bind_pwd']}"; }
      $this_error .= ": " . ldap_error($ldap_connection);
-     print "Problem: Failed to bind as {$LDAP['admin_bind_dn']}";
+    print t('ldap.bind_failed', array('bind_dn' => $LDAP['admin_bind_dn']));
      error_log("$log_prefix $this_error",0);
 
      exit(1);
@@ -949,7 +950,7 @@ function ldap_complete_attribute_array($default_attributes,$additional_attribute
           $this_r['label'] = trim($kv[1]);
         }
         else {
-          $this_r['label'] = $attr_name;
+          $this_r['label'] = t('attr.' . $attr_name) ?? $attr_name;
         }
 
         if (isset($kv[2]) and $kv[2] != "") {

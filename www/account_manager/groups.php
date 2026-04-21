@@ -9,7 +9,7 @@ include_once "audit_functions.inc.php";
 include_once "module_functions.inc.php";
 set_page_access("admin");
 
-render_header("$ORGANISATION_NAME account manager");
+render_header($ORGANISATION_NAME . ' ' . t('groups.title'));
 render_submenu();
 
 $ldap_connection = open_ldap_connection();
@@ -32,12 +32,12 @@ if (isset($_POST['delete_group'])) {
  if ($del_group) {
    // Audit log group deletion
    audit_log('group_deleted', $this_group, "Group deleted by admin", 'success', $USER_ID);
-   render_alert_banner("Group <strong>$this_group</strong> was deleted.");
+   render_alert_banner(t('groups.alert_deleted', array('group' => $this_group)));
  }
  else {
    // Audit log failed deletion
    audit_log('group_delete_failure', $this_group, "Failed to delete group", 'failure', $USER_ID);
-   render_alert_banner("Group <strong>$this_group</strong> wasn't deleted.  See the logs for more information.","danger",15000);
+   render_alert_banner(t('groups.alert_delete_failed', array('group' => $this_group)),"danger",15000);
  }
 
 }
@@ -119,18 +119,18 @@ render_js_username_check();
    <div class="col-md-6">
      <form action="<?php print "{$THIS_MODULE_PATH}"; ?>/show_group.php" method="post" class="d-inline">
        <input type="hidden" name="new_group">
-       <button type="button" class="btn btn-light"><?php print number_format($total_groups);?> group<?php if ($total_groups != 1) { print "s"; }?></button>
-       <button id="show_new_group" class="btn btn-secondary" type="button" onclick="show_new_group_form();">New group</button>
-       <input type="text" class="invisible" name="group_name" id="group_name" placeholder="Group name" onkeyup="check_entity_name_validity(document.getElementById('group_name').value,'new_group_div');">
-       <button id="add_group" class="btn btn-primary invisible" type="submit">Add</button>
+       <button type="button" class="btn btn-light"><?php print number_format($total_groups);?> <?php print $total_groups == 1 ? t('groups.count') : t('groups.count_plural'); ?></button>
+       <button id="show_new_group" class="btn btn-secondary" type="button" onclick="show_new_group_form();"><?php print t('groups.new_group'); ?></button>
+       <input type="text" class="invisible" name="group_name" id="group_name" placeholder="<?php print t('groups.group_name_placeholder'); ?>" onkeyup="check_entity_name_validity(document.getElementById('group_name').value,'new_group_div');">
+       <button id="add_group" class="btn btn-primary invisible" type="submit"><?php print t('groups.add'); ?></button>
      </form>
    </div>
    <div class="col-md-6">
      <form action="" method="get" class="d-flex">
-       <input class="form-control me-2" id="search_input" name="filter" type="text" placeholder="Search groups..." value="<?php echo htmlspecialchars($filter); ?>">
-       <button type="submit" class="btn btn-primary">Search</button>
+       <input class="form-control me-2" id="search_input" name="filter" type="text" placeholder="<?php echo t('groups.search_placeholder'); ?>" value="<?php echo htmlspecialchars($filter); ?>">
+       <button type="submit" class="btn btn-primary"><?php echo t('groups.search'); ?></button>
        <?php if (!empty($filter)) { ?>
-         <a href="?" class="btn btn-secondary ms-2">Clear</a>
+         <a href="?" class="btn btn-secondary ms-2"><?php echo t('groups.clear'); ?></a>
        <?php } ?>
      </form>
    </div>
@@ -138,15 +138,15 @@ render_js_username_check();
 
  <?php if (!empty($filter)) { ?>
    <div class="alert alert-info">
-     Showing <?php echo count($groups); ?> of <?php echo number_format($total_groups); ?> groups matching "<?php echo htmlspecialchars($filter); ?>"
+     <?php echo t('groups.showing_matches', array('shown' => count($groups), 'total' => number_format($total_groups), 'filter' => $filter)); ?>
    </div>
  <?php } ?>
 
  <table class="table table-striped">
   <thead>
    <tr>
-     <th style="width: 25%;">Group name</th>
-     <th>Description</th>
+    <th style="width: 25%;"><?php echo t('groups.col_group_name'); ?></th>
+    <th><?php echo t('groups.col_description'); ?></th>
      <?php if ($MFA_FEATURE_ENABLED == TRUE) { ?>
      <th style="width: 1%;" class="text-nowrap"><i class="bi bi-shield-lock"></i> MFA</th>
      <?php } ?>
@@ -168,7 +168,7 @@ foreach ($groups as $group) {
   if ($MFA_FEATURE_ENABLED == TRUE) {
     if ($details['mfa_required']) {
       $grace = $details['mfa_grace_period'] !== null ? $details['mfa_grace_period'] . 'd' : '?';
-      print "   <td class=\"text-nowrap\"><span class=\"badge bg-success\" title=\"Grace period: {$grace}\">Required</span></td>\n";
+      print "   <td class=\"text-nowrap\"><span class=\"badge bg-success\" title=\"" . t('groups.grace_period_title', array('grace' => $grace)) . "\">" . t('groups.mfa_required') . "</span></td>\n";
     } else {
       print "   <td class=\"text-nowrap\"><span class=\"badge bg-secondary\">—</span></td>\n";
     }
@@ -179,7 +179,7 @@ foreach ($groups as $group) {
 
 if (count($groups) == 0) {
   $colspan = $MFA_FEATURE_ENABLED == TRUE ? '3' : '2';
-  print " <tr><td colspan='$colspan' class='text-center text-muted'>No groups found</td></tr>\n";
+  print " <tr><td colspan='$colspan' class='text-center text-muted'>" . t('groups.no_groups') . "</td></tr>\n";
 }
 ?>
   </tbody>
@@ -191,7 +191,7 @@ if (count($groups) == 0) {
      <ul class="pagination justify-content-center">
        <!-- Previous -->
        <li class="page-item <?php if ($page <= 1) echo 'disabled'; ?>">
-         <a class="page-link" href="?page=<?php echo $page - 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>">Previous</a>
+         <a class="page-link" href="?page=<?php echo $page - 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>"><?php echo t('groups.previous'); ?></a>
        </li>
 
        <!-- Page numbers -->
@@ -227,14 +227,13 @@ if (count($groups) == 0) {
 
        <!-- Next -->
        <li class="page-item <?php if ($page >= $total_pages) echo 'disabled'; ?>">
-         <a class="page-link" href="?page=<?php echo $page + 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>">Next</a>
+         <a class="page-link" href="?page=<?php echo $page + 1; ?><?php if (!empty($filter)) echo '&filter=' . urlencode($filter); ?>"><?php echo t('groups.next'); ?></a>
        </li>
      </ul>
    </nav>
 
    <p class="text-center text-muted">
-     Page <?php echo $page; ?> of <?php echo number_format($total_pages); ?>
-     (Showing <?php echo (($page - 1) * $per_page) + 1; ?>-<?php echo min($page * $per_page, $total_groups); ?> of <?php echo number_format($total_groups); ?>)
+     <?php echo t('groups.page_summary', array('page' => $page, 'total_pages' => number_format($total_pages), 'start' => (($page - 1) * $per_page) + 1, 'end' => min($page * $per_page, $total_groups), 'total_groups' => number_format($total_groups))); ?>
    </p>
  <?php } ?>
 </div>
