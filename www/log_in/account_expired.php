@@ -3,7 +3,7 @@
 set_include_path( ".:" . __DIR__ . "/../includes/");
 
 include "web_functions.inc.php";
-include "ldap_functions.inc.php";
+include_once "ldap_functions.inc.php";
 include "account_lifecycle_functions.inc.php";
 
 // Must be logged in to see this page
