@@ -573,10 +573,10 @@ $CONFIG_REGISTRY = array(
 
   // ===== User Profile Settings =====
 
-  'DEFAULT_USER_EDITABLE_ATTRIBUTES' => array(
+  'USER_EDITABLE_ATTRIBUTES' => array(
     'category' => 'user_profile',
-    'description' => 'Built-in user-editable attributes',
-    'help' => 'Default set of attributes users can safely edit',
+    'description' => 'User-editable attributes',
+    'help' => 'Comma-separated list of LDAP attributes users can edit in their profile. If not set, a sensible default list is used.',
     'type' => 'array',
     'default' => array(
       'telephonenumber',
@@ -588,19 +588,8 @@ $CONFIG_REGISTRY = array(
       'sshpublickey'
     ),
     'mandatory' => false,
-    'env_var' => null,
-    'variable' => '$DEFAULT_USER_EDITABLE_ATTRIBUTES'
-  ),
-
-  'USER_EDITABLE_ATTRIBUTES' => array(
-    'category' => 'user_profile',
-    'description' => 'Additional user-editable attributes',
-    'help' => 'Comma-separated list of LDAP attributes users can edit',
-    'type' => 'array',
-    'default' => array(),
-    'mandatory' => false,
     'env_var' => 'USER_EDITABLE_ATTRIBUTES',
-    'variable' => '$ADMIN_USER_EDITABLE_ATTRIBUTES'
+    'variable' => '$USER_EDITABLE_ATTRIBUTES'
   ),
 
   'ATTRIBUTE_BLACKLIST' => array(
@@ -897,6 +886,17 @@ $CONFIG_REGISTRY = array(
     'mandatory' => false,
     'env_var' => 'PAGINATION_ITEMS_PER_PAGE',
     'variable' => '$PAGINATION_ITEMS_PER_PAGE'
+  ),
+
+  'SHOW_POWERED_BY' => array(
+    'category' => 'interface',
+    'description' => 'Show "Powered by Luminary" footer',
+    'help' => 'Display a small attribution footer linking to the Luminary project',
+    'type' => 'boolean',
+    'default' => true,
+    'mandatory' => false,
+    'env_var' => 'SHOW_POWERED_BY',
+    'variable' => '$SHOW_POWERED_BY'
   ),
 
   // ===== Session & Security =====
@@ -1214,6 +1214,17 @@ $CONFIG_REGISTRY = array(
 # Set actual PHP variables from environment, using registry defaults
 ##############################################################################
 
+/**
+ * Check if an environment variable is set to a truthy value.
+ * Accepts TRUE, true, 1, yes, on (case-insensitive) for compatibility
+ * with config files that use parse_ini_file() (which converts TRUE to "1").
+ */
+function env_is_true($env_var_name) {
+  $value = getenv($env_var_name);
+  if ($value === false || $value === '') { return false; }
+  return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+}
+
 $log_prefix = "";
 
 ##############################################################################
@@ -1226,14 +1237,14 @@ $LDAP['admin_bind_dn'] = getenv('LDAP_ADMIN_BIND_DN');
 $LDAP['admin_bind_pwd'] = getenv('LDAP_ADMIN_BIND_PWD');
 $LDAP['connection_type'] = "plain";
 
-$LDAP['require_starttls'] = ((strcasecmp(getenv('LDAP_REQUIRE_STARTTLS'),'TRUE') == 0) ? TRUE : get_config_default('LDAP_REQUIRE_STARTTLS'));
-$LDAP['ignore_cert_errors'] = ((strcasecmp(getenv('LDAP_IGNORE_CERT_ERRORS'),'TRUE') == 0) ? TRUE : get_config_default('LDAP_IGNORE_CERT_ERRORS'));
+$LDAP['require_starttls'] = (env_is_true('LDAP_REQUIRE_STARTTLS') ? TRUE : get_config_default('LDAP_REQUIRE_STARTTLS'));
+$LDAP['ignore_cert_errors'] = (env_is_true('LDAP_IGNORE_CERT_ERRORS') ? TRUE : get_config_default('LDAP_IGNORE_CERT_ERRORS'));
 $LDAP['rfc2307bis_check_run'] = FALSE;
 
 $LDAP['admins_group'] = (getenv('LDAP_ADMINS_GROUP') ? getenv('LDAP_ADMINS_GROUP') : get_config_default('LDAP_ADMINS_GROUP'));
 $LDAP['group_ou'] = (getenv('LDAP_GROUP_OU') ? getenv('LDAP_GROUP_OU') : get_config_default('LDAP_GROUP_OU'));
 $LDAP['user_ou'] = (getenv('LDAP_USER_OU') ? getenv('LDAP_USER_OU') : get_config_default('LDAP_USER_OU'));
-$LDAP['forced_rfc2307bis'] = ((strcasecmp(getenv('FORCE_RFC2307BIS'),'TRUE') == 0) ? TRUE : get_config_default('FORCE_RFC2307BIS'));
+$LDAP['forced_rfc2307bis'] = (env_is_true('FORCE_RFC2307BIS') ? TRUE : get_config_default('FORCE_RFC2307BIS'));
 
 $LDAP['account_attribute'] = (getenv('LDAP_ACCOUNT_ATTRIBUTE') ? getenv('LDAP_ACCOUNT_ATTRIBUTE') : get_config_default('LDAP_ACCOUNT_ATTRIBUTE'));
 $LDAP['group_attribute'] = (getenv('LDAP_GROUP_ATTRIBUTE') ? getenv('LDAP_GROUP_ATTRIBUTE') : get_config_default('LDAP_GROUP_ATTRIBUTE'));
@@ -1312,9 +1323,9 @@ $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_USER_SHELL
 
 // ENFORCE_USERNAME_VALIDATION with backward compatibility for ENFORCE_SAFE_SYSTEM_NAMES
 if (getenv('ENFORCE_USERNAME_VALIDATION') !== false) {
-  $ENFORCE_USERNAME_VALIDATION = ((strcasecmp(getenv('ENFORCE_USERNAME_VALIDATION'),'FALSE') == 0) ? FALSE : TRUE);
+  $ENFORCE_USERNAME_VALIDATION = env_is_true('ENFORCE_USERNAME_VALIDATION');
 } elseif (getenv('ENFORCE_SAFE_SYSTEM_NAMES') !== false) {
-  $ENFORCE_USERNAME_VALIDATION = ((strcasecmp(getenv('ENFORCE_SAFE_SYSTEM_NAMES'),'FALSE') == 0) ? FALSE : TRUE);
+  $ENFORCE_USERNAME_VALIDATION = env_is_true('ENFORCE_SAFE_SYSTEM_NAMES');
 } else {
   $ENFORCE_USERNAME_VALIDATION = get_config_default('ENFORCE_USERNAME_VALIDATION');
 }
@@ -1324,9 +1335,9 @@ $USERNAME_FORMAT = (getenv('USERNAME_FORMAT') ? getenv('USERNAME_FORMAT') : get_
 $USERNAME_REGEX = (getenv('USERNAME_REGEX') ? getenv('USERNAME_REGEX') : get_config_default('USERNAME_REGEX'));
 
 if (getenv('PASSWORD_HASH')) { $PASSWORD_HASH = strtoupper(getenv('PASSWORD_HASH')); }
-$ACCEPT_WEAK_PASSWORDS = ((strcasecmp(getenv('ACCEPT_WEAK_PASSWORDS'),'TRUE') == 0) ? TRUE : get_config_default('ACCEPT_WEAK_PASSWORDS'));
+$ACCEPT_WEAK_PASSWORDS = (env_is_true('ACCEPT_WEAK_PASSWORDS') ? TRUE : get_config_default('ACCEPT_WEAK_PASSWORDS'));
 
-$SHOW_POSIX_ATTRIBUTES = ((strcasecmp(getenv('SHOW_POSIX_ATTRIBUTES'),'TRUE') == 0) ? TRUE : get_config_default('SHOW_POSIX_ATTRIBUTES'));
+$SHOW_POSIX_ATTRIBUTES = (env_is_true('SHOW_POSIX_ATTRIBUTES') ? TRUE : get_config_default('SHOW_POSIX_ATTRIBUTES'));
 
 $min_uid = 2000;
 $min_gid = 2000;
@@ -1348,7 +1359,7 @@ if ($SHOW_POSIX_ATTRIBUTES != TRUE) {
 # Multi-Factor Authentication
 ##############################################################################
 
-$MFA_FEATURE_ENABLED = ((strcasecmp(getenv('MFA_FEATURE_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('MFA_FEATURE_ENABLED'));
+$MFA_FEATURE_ENABLED = (env_is_true('MFA_FEATURE_ENABLED') ? TRUE : get_config_default('MFA_FEATURE_ENABLED'));
 
 // Parse MFA_REQUIRED_GROUPS into array
 $MFA_REQUIRED_GROUPS = array();
@@ -1392,8 +1403,8 @@ $GROUP_MFA_ATTRS = array(
 # Password Reset Settings
 ##############################################################################
 
-$PASSWORD_RESET_ENABLED = ((strcasecmp(getenv('PASSWORD_RESET_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('PASSWORD_RESET_ENABLED'));
-$USE_LDAP_AS_DB = ((strcasecmp(getenv('USE_LDAP_AS_DB'),'TRUE') == 0) ? TRUE : get_config_default('USE_LDAP_AS_DB'));
+$PASSWORD_RESET_ENABLED = (env_is_true('PASSWORD_RESET_ENABLED') ? TRUE : get_config_default('PASSWORD_RESET_ENABLED'));
+$USE_LDAP_AS_DB = (env_is_true('USE_LDAP_AS_DB') ? TRUE : get_config_default('USE_LDAP_AS_DB'));
 
 $PASSWORD_RESET_TOKEN_EXPIRY_MINUTES = (is_numeric(getenv('PASSWORD_RESET_TOKEN_EXPIRY_MINUTES')) ? (int)getenv('PASSWORD_RESET_TOKEN_EXPIRY_MINUTES') : get_config_default('PASSWORD_RESET_TOKEN_EXPIRY_MINUTES'));
 $PASSWORD_RESET_RATE_LIMIT_REQUESTS = (is_numeric(getenv('PASSWORD_RESET_RATE_LIMIT_REQUESTS')) ? (int)getenv('PASSWORD_RESET_RATE_LIMIT_REQUESTS') : get_config_default('PASSWORD_RESET_RATE_LIMIT_REQUESTS'));
@@ -1405,23 +1416,19 @@ $PASSWORD_RESET_LOCKOUT_DURATION_MINUTES = (is_numeric(getenv('PASSWORD_RESET_LO
 # User Profile Settings
 ##############################################################################
 
-// Default user-editable attributes (essential contact info and personal details only)
-$DEFAULT_USER_EDITABLE_ATTRIBUTES = get_config_default('DEFAULT_USER_EDITABLE_ATTRIBUTES');
-
-// Admin-configured additional editable attributes
-$ADMIN_USER_EDITABLE_ATTRIBUTES = array();
+// User-editable attributes - env var overrides the defaults entirely
 if (getenv('USER_EDITABLE_ATTRIBUTES')) {
+  $USER_EDITABLE_ATTRIBUTES = array();
   $attrs = explode(',', getenv('USER_EDITABLE_ATTRIBUTES'));
   foreach ($attrs as $attr) {
     $attr = trim(strtolower($attr));
     if ($attr != '') {
-      $ADMIN_USER_EDITABLE_ATTRIBUTES[] = $attr;
+      $USER_EDITABLE_ATTRIBUTES[] = $attr;
     }
   }
+} else {
+  $USER_EDITABLE_ATTRIBUTES = get_config_default('USER_EDITABLE_ATTRIBUTES');
 }
-
-// Merge default and admin-configured attributes
-$USER_EDITABLE_ATTRIBUTES = array_unique(array_merge($DEFAULT_USER_EDITABLE_ATTRIBUTES, $ADMIN_USER_EDITABLE_ATTRIBUTES));
 
 // Security blacklist: Attributes that users must NEVER be allowed to edit
 $ATTRIBUTE_BLACKLIST = get_config_default('ATTRIBUTE_BLACKLIST');
@@ -1447,8 +1454,8 @@ $SMTP['port'] = (is_numeric(getenv('SMTP_HOST_PORT')) ? getenv('SMTP_HOST_PORT')
 $SMTP['user'] = getenv('SMTP_USERNAME');
 $SMTP['pass'] = getenv('SMTP_PASSWORD');
 
-$SMTP['tls'] = ((strcasecmp(getenv('SMTP_USE_TLS'),'TRUE') == 0) ? TRUE : get_config_default('SMTP_USE_TLS'));
-$SMTP['ssl'] = ((strcasecmp(getenv('SMTP_USE_SSL'),'TRUE') == 0) ? TRUE : get_config_default('SMTP_USE_SSL'));
+$SMTP['tls'] = (env_is_true('SMTP_USE_TLS') ? TRUE : get_config_default('SMTP_USE_TLS'));
+$SMTP['ssl'] = (env_is_true('SMTP_USE_SSL') ? TRUE : get_config_default('SMTP_USE_SSL'));
 $SMTP['helo'] = getenv('SMTP_HELO_HOST');
 
 $EMAIL['from_address'] = (getenv('EMAIL_FROM_ADDRESS') ? getenv('EMAIL_FROM_ADDRESS') : get_config_default('EMAIL_FROM_ADDRESS'));
@@ -1458,11 +1465,11 @@ $EMAIL_DOMAIN = getenv('EMAIL_DOMAIN');
 
 $EMAIL_SENDING_ENABLED = (!empty($SMTP['host']));
 
-$EMAIL_USER_ON_PASSWORD_CHANGE = ((strcasecmp(getenv('EMAIL_USER_ON_PASSWORD_CHANGE'),'TRUE') == 0) ? TRUE : get_config_default('EMAIL_USER_ON_PASSWORD_CHANGE'));
-$EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE = ((strcasecmp(getenv('EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE'),'TRUE') == 0) ? TRUE : get_config_default('EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE'));
+$EMAIL_USER_ON_PASSWORD_CHANGE = (env_is_true('EMAIL_USER_ON_PASSWORD_CHANGE') ? TRUE : get_config_default('EMAIL_USER_ON_PASSWORD_CHANGE'));
+$EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE = (env_is_true('EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE') ? TRUE : get_config_default('EMAIL_ADMIN_ON_USER_PASSWORD_CHANGE'));
 $ADMIN_EMAIL = (getenv('ADMIN_EMAIL') ? getenv('ADMIN_EMAIL') : get_config_default('ADMIN_EMAIL'));
 
-$ACCOUNT_REQUESTS_ENABLED = ((strcasecmp(getenv('ACCOUNT_REQUESTS_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('ACCOUNT_REQUESTS_ENABLED'));
+$ACCOUNT_REQUESTS_ENABLED = (env_is_true('ACCOUNT_REQUESTS_ENABLED') ? TRUE : get_config_default('ACCOUNT_REQUESTS_ENABLED'));
 // Account requests email with fallback to ADMIN_EMAIL
 $ACCOUNT_REQUESTS_EMAIL = getenv('ACCOUNT_REQUESTS_EMAIL');
 if (!$ACCOUNT_REQUESTS_EMAIL) {
@@ -1480,7 +1487,7 @@ $ORGANISATION_NAME = (getenv('ORGANISATION_NAME') ? getenv('ORGANISATION_NAME') 
 $SITE_NAME = (getenv('SITE_NAME') ? getenv('SITE_NAME') : $ORGANISATION_NAME);
 
 $SERVER_HOSTNAME = (getenv('SERVER_HOSTNAME') ? getenv('SERVER_HOSTNAME') : get_config_default('SERVER_HOSTNAME'));
-$NO_HTTPS = ((strcasecmp(getenv('NO_HTTPS'),'TRUE') == 0) ? TRUE : get_config_default('NO_HTTPS'));
+$NO_HTTPS = (env_is_true('NO_HTTPS') ? TRUE : get_config_default('NO_HTTPS'));
 $SERVER_PATH = (getenv('SERVER_PATH') ? getenv('SERVER_PATH') : get_config_default('SERVER_PATH'));
 
 $SITE_LOGIN_LDAP_ATTRIBUTE = (getenv('SITE_LOGIN_LDAP_ATTRIBUTE') ? getenv('SITE_LOGIN_LDAP_ATTRIBUTE') : $LDAP['account_attribute']);
@@ -1490,21 +1497,28 @@ $CUSTOM_LOGO = (getenv('CUSTOM_LOGO') ? getenv('CUSTOM_LOGO') : FALSE);
 $CUSTOM_STYLES = (getenv('CUSTOM_STYLES') ? getenv('CUSTOM_STYLES') : FALSE);
 $PAGINATION_ITEMS_PER_PAGE = (is_numeric(getenv('PAGINATION_ITEMS_PER_PAGE')) ? (int)getenv('PAGINATION_ITEMS_PER_PAGE') : get_config_default('PAGINATION_ITEMS_PER_PAGE'));
 
+// Show "Powered by Luminary" footer - default TRUE, set to FALSE to hide
+if (getenv('SHOW_POWERED_BY') !== false) {
+  $SHOW_POWERED_BY = env_is_true('SHOW_POWERED_BY');
+} else {
+  $SHOW_POWERED_BY = get_config_default('SHOW_POWERED_BY');
+}
+
 ##############################################################################
 # Session & Security
 ##############################################################################
 
 $SESSION_TIMEOUT = (is_numeric(getenv('SESSION_TIMEOUT')) ? (int)getenv('SESSION_TIMEOUT') : get_config_default('SESSION_TIMEOUT'));
-$REMOTE_HTTP_HEADERS_LOGIN = ((strcasecmp(getenv('REMOTE_HTTP_HEADERS_LOGIN'),'TRUE') == 0) ? TRUE : get_config_default('REMOTE_HTTP_HEADERS_LOGIN'));
+$REMOTE_HTTP_HEADERS_LOGIN = (env_is_true('REMOTE_HTTP_HEADERS_LOGIN') ? TRUE : get_config_default('REMOTE_HTTP_HEADERS_LOGIN'));
 
 ##############################################################################
 # Debug & Logging
 ##############################################################################
 
-$LDAP_DEBUG = ((strcasecmp(getenv('LDAP_DEBUG'),'TRUE') == 0) ? TRUE : get_config_default('LDAP_DEBUG'));
-$LDAP_VERBOSE_CONNECTION_LOGS = ((strcasecmp(getenv('LDAP_VERBOSE_CONNECTION_LOGS'),'TRUE') == 0) ? TRUE : get_config_default('LDAP_VERBOSE_CONNECTION_LOGS'));
-$SESSION_DEBUG = ((strcasecmp(getenv('SESSION_DEBUG'),'TRUE') == 0) ? TRUE : get_config_default('SESSION_DEBUG'));
-$SHOW_ERROR_DETAILS = ((strcasecmp(getenv('SHOW_ERROR_DETAILS'),'TRUE') == 0) ? TRUE : get_config_default('SHOW_ERROR_DETAILS'));
+$LDAP_DEBUG = (env_is_true('LDAP_DEBUG') ? TRUE : get_config_default('LDAP_DEBUG'));
+$LDAP_VERBOSE_CONNECTION_LOGS = (env_is_true('LDAP_VERBOSE_CONNECTION_LOGS') ? TRUE : get_config_default('LDAP_VERBOSE_CONNECTION_LOGS'));
+$SESSION_DEBUG = (env_is_true('SESSION_DEBUG') ? TRUE : get_config_default('SESSION_DEBUG'));
+$SHOW_ERROR_DETAILS = (env_is_true('SHOW_ERROR_DETAILS') ? TRUE : get_config_default('SHOW_ERROR_DETAILS'));
 
 $SMTP['debug_level'] = getenv('SMTP_LOG_LEVEL');
 if (!is_numeric($SMTP['debug_level']) or $SMTP['debug_level'] > 4 or $SMTP['debug_level'] < 0) {
@@ -1515,7 +1529,7 @@ if (!is_numeric($SMTP['debug_level']) or $SMTP['debug_level'] > 4 or $SMTP['debu
 # Audit Logging
 ##############################################################################
 
-$AUDIT_ENABLED = ((strcasecmp(getenv('AUDIT_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('AUDIT_ENABLED'));
+$AUDIT_ENABLED = (env_is_true('AUDIT_ENABLED') ? TRUE : get_config_default('AUDIT_ENABLED'));
 $AUDIT_LOG_FILE = (getenv('AUDIT_LOG_FILE') ? getenv('AUDIT_LOG_FILE') : get_config_default('AUDIT_LOG_FILE'));
 $AUDIT_LOG_RETENTION_DAYS = (is_numeric(getenv('AUDIT_LOG_RETENTION_DAYS')) ? (int)getenv('AUDIT_LOG_RETENTION_DAYS') : get_config_default('AUDIT_LOG_RETENTION_DAYS'));
 
@@ -1523,13 +1537,13 @@ $AUDIT_LOG_RETENTION_DAYS = (is_numeric(getenv('AUDIT_LOG_RETENTION_DAYS')) ? (i
 # Password Policy
 ##############################################################################
 
-$PASSWORD_POLICY_ENABLED = ((strcasecmp(getenv('PASSWORD_POLICY_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('PASSWORD_POLICY_ENABLED'));
-$PPOLICY_ENABLED = ((strcasecmp(getenv('PPOLICY_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('PPOLICY_ENABLED'));
+$PASSWORD_POLICY_ENABLED = (env_is_true('PASSWORD_POLICY_ENABLED') ? TRUE : get_config_default('PASSWORD_POLICY_ENABLED'));
+$PPOLICY_ENABLED = (env_is_true('PPOLICY_ENABLED') ? TRUE : get_config_default('PPOLICY_ENABLED'));
 $PASSWORD_MIN_LENGTH = (is_numeric(getenv('PASSWORD_MIN_LENGTH')) ? (int)getenv('PASSWORD_MIN_LENGTH') : get_config_default('PASSWORD_MIN_LENGTH'));
-$PASSWORD_REQUIRE_UPPERCASE = ((strcasecmp(getenv('PASSWORD_REQUIRE_UPPERCASE'),'TRUE') == 0) ? TRUE : get_config_default('PASSWORD_REQUIRE_UPPERCASE'));
-$PASSWORD_REQUIRE_LOWERCASE = ((strcasecmp(getenv('PASSWORD_REQUIRE_LOWERCASE'),'TRUE') == 0) ? TRUE : get_config_default('PASSWORD_REQUIRE_LOWERCASE'));
-$PASSWORD_REQUIRE_NUMBERS = ((strcasecmp(getenv('PASSWORD_REQUIRE_NUMBERS'),'TRUE') == 0) ? TRUE : get_config_default('PASSWORD_REQUIRE_NUMBERS'));
-$PASSWORD_REQUIRE_SPECIAL = ((strcasecmp(getenv('PASSWORD_REQUIRE_SPECIAL'),'TRUE') == 0) ? TRUE : get_config_default('PASSWORD_REQUIRE_SPECIAL'));
+$PASSWORD_REQUIRE_UPPERCASE = (env_is_true('PASSWORD_REQUIRE_UPPERCASE') ? TRUE : get_config_default('PASSWORD_REQUIRE_UPPERCASE'));
+$PASSWORD_REQUIRE_LOWERCASE = (env_is_true('PASSWORD_REQUIRE_LOWERCASE') ? TRUE : get_config_default('PASSWORD_REQUIRE_LOWERCASE'));
+$PASSWORD_REQUIRE_NUMBERS = (env_is_true('PASSWORD_REQUIRE_NUMBERS') ? TRUE : get_config_default('PASSWORD_REQUIRE_NUMBERS'));
+$PASSWORD_REQUIRE_SPECIAL = (env_is_true('PASSWORD_REQUIRE_SPECIAL') ? TRUE : get_config_default('PASSWORD_REQUIRE_SPECIAL'));
 $PASSWORD_MIN_SCORE = (is_numeric(getenv('PASSWORD_MIN_SCORE')) ? (int)getenv('PASSWORD_MIN_SCORE') : get_config_default('PASSWORD_MIN_SCORE'));
 $PASSWORD_HISTORY_COUNT = (is_numeric(getenv('PASSWORD_HISTORY_COUNT')) ? (int)getenv('PASSWORD_HISTORY_COUNT') : get_config_default('PASSWORD_HISTORY_COUNT'));
 $PASSWORD_EXPIRY_DAYS = (is_numeric(getenv('PASSWORD_EXPIRY_DAYS')) ? (int)getenv('PASSWORD_EXPIRY_DAYS') : get_config_default('PASSWORD_EXPIRY_DAYS'));
@@ -1539,11 +1553,11 @@ $PASSWORD_EXPIRY_WARNING_DAYS = (is_numeric(getenv('PASSWORD_EXPIRY_WARNING_DAYS
 # Account Lifecycle
 ##############################################################################
 
-$LIFECYCLE_ENABLED = ((strcasecmp(getenv('LIFECYCLE_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('LIFECYCLE_ENABLED'));
-$ACCOUNT_EXPIRY_ENABLED = ((strcasecmp(getenv('ACCOUNT_EXPIRY_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('ACCOUNT_EXPIRY_ENABLED'));
+$LIFECYCLE_ENABLED = (env_is_true('LIFECYCLE_ENABLED') ? TRUE : get_config_default('LIFECYCLE_ENABLED'));
+$ACCOUNT_EXPIRY_ENABLED = (env_is_true('ACCOUNT_EXPIRY_ENABLED') ? TRUE : get_config_default('ACCOUNT_EXPIRY_ENABLED'));
 $ACCOUNT_INACTIVE_DAYS = (is_numeric(getenv('ACCOUNT_INACTIVE_DAYS')) ? (int)getenv('ACCOUNT_INACTIVE_DAYS') : get_config_default('ACCOUNT_INACTIVE_DAYS'));
 $ACCOUNT_EXPIRY_WARNING_DAYS = (is_numeric(getenv('ACCOUNT_EXPIRY_WARNING_DAYS')) ? (int)getenv('ACCOUNT_EXPIRY_WARNING_DAYS') : get_config_default('ACCOUNT_EXPIRY_WARNING_DAYS'));
-$ACCOUNT_CLEANUP_ENABLED = ((strcasecmp(getenv('ACCOUNT_CLEANUP_ENABLED'),'TRUE') == 0) ? TRUE : get_config_default('ACCOUNT_CLEANUP_ENABLED'));
+$ACCOUNT_CLEANUP_ENABLED = (env_is_true('ACCOUNT_CLEANUP_ENABLED') ? TRUE : get_config_default('ACCOUNT_CLEANUP_ENABLED'));
 
 ##############################################################################
 # HELPER FUNCTIONS

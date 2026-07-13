@@ -417,27 +417,18 @@ Self-service user profile and editable attributes
 
 | Configuration | Type | Default | Environment Variable | Description |
 |--------------|------|---------|---------------------|-------------|
-| Built-in user-editable attributes<br><small>Default set of attributes users can safely edit</small> | 🔢 array | `telephonenumber`, `mobile`, `displayname`, ... | - | Built-in user-editable attributes |
-| Additional user-editable attributes<br><small>Comma-separated list of LDAP attributes users can edit</small> | 🔢 array | `[]` (empty) | `USER_EDITABLE_ATTRIBUTES` | Additional user-editable attributes |
+| User-editable attributes<br><small>Comma-separated list of LDAP attributes users can edit in their profile. If not set, a sensible default list is used.</small> | 🔢 array | `telephonenumber`, `mobile`, `displayname`, ... | `USER_EDITABLE_ATTRIBUTES` | User-editable attributes |
 | Security blacklist of non-editable attributes<br><small>Attributes that users must NEVER be allowed to edit</small> | 🔢 array | `dn`, `uid`, `cn`, ... | - | Security blacklist of non-editable attributes |
 
 ### Details
 
-#### Built-in user-editable attributes
+#### User-editable attributes
 
-Default set of attributes users can safely edit
-
-**Default:** `telephonenumber, mobile, displayname, description, title, jpegphoto, sshpublickey`
-
----
-
-#### Additional user-editable attributes
-
-Comma-separated list of LDAP attributes users can edit
+Comma-separated list of LDAP attributes users can edit in their profile. If not set, a sensible default list is used.
 
 **Environment Variable:** `USER_EDITABLE_ATTRIBUTES`
 
-**Default:** ``
+**Default:** `telephonenumber, mobile, displayname, description, title, jpegphoto, sshpublickey`
 
 ---
 
@@ -626,6 +617,7 @@ Customisation, branding, and user interface settings
 | Custom logo path<br><small>Path to custom logo file</small> | string | `FALSE` | `CUSTOM_LOGO` | Custom logo path |
 | Custom CSS path<br><small>Path to custom stylesheet</small> | string | `FALSE` | `CUSTOM_STYLES` | Custom CSS path |
 | Items per page for listing pages<br><small>Number of users/groups to show per page in account_manager lists</small> | integer | 📝 `50` | `PAGINATION_ITEMS_PER_PAGE` | Items per page for listing pages |
+| Show "Powered by Luminary" footer<br><small>Display a small attribution footer linking to the Luminary project</small> | ✅ boolean | `TRUE` | `SHOW_POWERED_BY` | Show "Powered by Luminary" footer |
 
 ### Details
 
@@ -716,6 +708,16 @@ Number of users/groups to show per page in account_manager lists
 **Environment Variable:** `PAGINATION_ITEMS_PER_PAGE`
 
 **Default:** `50`
+
+---
+
+#### Show "Powered by Luminary" footer
+
+Display a small attribution footer linking to the Luminary project
+
+**Environment Variable:** `SHOW_POWERED_BY`
+
+**Default:** `TRUE`
 
 ---
 
@@ -1134,4 +1136,4 @@ Example:
 ---
 
 *This documentation was automatically generated from the configuration registry.*
-*Last updated: 2025-12-12 19:25:43 UTC*
+*Last updated: 2026-05-22 15:34:07 UTC*

@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.2.0] - 2026-07-13
+
+### Security
+
+- Session and setup-admin passkeys (`generate_passkey()`) are now generated with a cryptographically secure PRNG (`random_bytes()`) instead of `mt_rand()`
+- Password salts (`generate_salt()`) are now generated with `random_int()`; removed a `mt_srand()` reseed that always evaluated to `mt_srand(0)`, which produced predictable salts and corrupted the shared PRNG state
+- Account-request form: the proof-of-humanity check now fails closed when no CAPTCHA has been generated, uses a timing-safe comparison (`hash_equals()`), and consumes the token after each attempt to prevent reuse
+- Account-request form: user-supplied values are now HTML-encoded in the admin notification email and URL-encoded in the account-creation link, and are HTML-encoded when reflected back into the form, preventing HTML/parameter injection and reflected XSS
+- Session and setup cookie passkey comparisons now use `hash_equals()`
+- Docker image: apply latest security patches at build time
+- Docker image: remove build-time dev packages and kernel headers from final image, reducing HIGH CVE count from 46 to 17 (0 CRITICAL)
+- Clean up PHPMailer archive from `/tmp` after extraction
+
+### Fixed
+
+- **[#261](https://github.com/wheelybird/luminary/pull/261)** - Fatal error ("Cannot redeclare `open_ldap_connection()`") on MFA and account-expired login paths caused by duplicate `ldap_functions.inc.php` includes
+- Corrected a string-concatenation typo (`+=` → `.=`) in setup-session debug logging
+- **[#252](https://github.com/wheelybird/luminary/issues/252)** - Boolean configuration values (including `SMTP_USE_SSL`) now accept `TRUE`, `true`, `1>
+
+### Added
+
+- **[#260](https://github.com/wheelybird/luminary/issues/260)** - `USER_EDITABLE_ATTRIBUTES` now sets the definitive list of attributes users can edit in their profile (e.g. `USER_EDITABLE_ATTRIBUTES=jpegphoto`). If not set, sensible defaults are used.
+
+### Changed
+
+- **Breaking:** `USER_EDITABLE_ATTRIBUTES` now replaces the default list rather than adding to it. If you previously set this variable to add extra attributes, you will need to include the defaults you still want. The built-in defaults are: `telephonenumber,mobile,displayname,description,title,jpegphoto,sshpublickey`. For example, if you previously had `USER_EDITABLE_ATTRIBUTES=roomnumber` and want to keep the defaults, change it to `USER_EDITABLE_ATTRIBUTES=telephonenumber,mobile,displayname,description,title,jpegphoto,sshpublickey,roomnumber`.
+- **[#254](https://github.com/wheelybird/luminary/issues/254)** - "Powered by Luminary" footer with link to GitHub project (disable with `SHOW_POWERED_BY=FALSE`)
+
+
 ## [2.1.1] - 2025-12-12
 
 ### Fixed

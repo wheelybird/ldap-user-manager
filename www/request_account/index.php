@@ -25,9 +25,15 @@ if($_POST) {
 
   $error_messages = array();
 
-  if(! isset($_POST['validate']) or strcasecmp($_POST['validate'], $_SESSION['proof_of_humanity']) != 0) {
+  # Fail closed if the CAPTCHA was never generated for this session (an attacker POSTing
+  # directly leaves proof_of_humanity unset; strcasecmp("", NULL) returns 0 and would pass).
+  # Compare in a timing-safe way and consume the token so it can't be replayed.
+  $expected_proof = $_SESSION['proof_of_humanity'] ?? '';
+  $supplied_proof = isset($_POST['validate']) ? (string)$_POST['validate'] : '';
+  if(empty($expected_proof) or ! hash_equals(strtolower($expected_proof), strtolower($supplied_proof))) {
     array_push($error_messages, "The validation text didn't match the image.");
   }
+  unset($_SESSION['proof_of_humanity']);
 
   if (! isset($_POST['firstname']) or $_POST['firstname'] == "") {
     array_push($error_messages, "You didn't enter your first name.");
@@ -72,20 +78,32 @@ if($_POST) {
 
     $mail_subject = "$firstname $lastname has requested an account for $ORGANISATION_NAME.";
 
-$link_url="{$SITE_PROTOCOL}{$SERVER_HOSTNAME}{$SERVER_PATH}account_manager/new_user.php?account_request&first_name=$firstname&last_name=$lastname&email=$email";
+    # URL-encode each value placed into the link so a "&" in user input can't smuggle extra
+    # query parameters into the admin's pre-filled new_user.php form.
+    $link_url = "{$SITE_PROTOCOL}{$SERVER_HOSTNAME}{$SERVER_PATH}account_manager/new_user.php?account_request" .
+                "&first_name=" . rawurlencode($firstname) .
+                "&last_name=" . rawurlencode($lastname) .
+                "&email=" . rawurlencode($email ?? '');
 
 if (!isset($email)) { $email = "n/a"; }
 if (!isset($notes)) { $notes = "n/a"; }
 
+    # HTML-encode every user-supplied value placed into the HTML email body (and the href).
+    $firstname_h = htmlspecialchars($firstname, ENT_QUOTES);
+    $lastname_h  = htmlspecialchars($lastname, ENT_QUOTES);
+    $email_h     = htmlspecialchars($email, ENT_QUOTES);
+    $notes_h     = htmlspecialchars($notes, ENT_QUOTES);
+    $link_url_h  = htmlspecialchars($link_url, ENT_QUOTES);
+
     $mail_body = <<<EoT
 A request for an $ORGANISATION_NAME account has been sent:
 <p>
-First name: <b>$firstname</b><br>
-Last name: <b>$lastname</b><br>
-Email: <b>$email</b><br>
-Notes: <pre>$notes</pre><br>
+First name: <b>$firstname_h</b><br>
+Last name: <b>$lastname_h</b><br>
+Email: <b>$email_h</b><br>
+Notes: <pre>$notes_h</pre><br>
 <p>
-<a href="$link_url">Create this account.</a>
+<a href="$link_url_h">Create this account.</a>
 EoT;
 
      include_once "mail_functions.inc.php";
@@ -145,28 +163,28 @@ EoT;
     <div class="row mb-3">
      <label for="firstname" class="col-sm-4 col-form-label text-end">First name</label>
      <div class="col-sm-6">
-      <input type="text" class="form-control" id="firstname" name="firstname" placeholder="Required" <?php if (isset($firstname)) { print "value='$firstname'"; } ?>>
+      <input type="text" class="form-control" id="firstname" name="firstname" placeholder="Required" <?php if (isset($firstname)) { print "value='".htmlspecialchars($firstname, ENT_QUOTES)."'"; } ?>>
      </div>
     </div>
 
     <div class="row mb-3">
      <label for="lastname" class="col-sm-4 col-form-label text-end">Last name</label>
      <div class="col-sm-6">
-      <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Required" <?php if (isset($lastname)) { print "value='$lastname'"; } ?>>
+      <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Required" <?php if (isset($lastname)) { print "value='".htmlspecialchars($lastname, ENT_QUOTES)."'"; } ?>>
      </div>
     </div>
 
     <div class="row mb-3">
      <label for="email" class="col-sm-4 col-form-label text-end">Email</label>
      <div class="col-sm-6">
-      <input type="text" class="form-control" id="email" name="email" <?php if (isset($email)) { print "value='$email'"; } ?>>
+      <input type="text" class="form-control" id="email" name="email" <?php if (isset($email)) { print "value='".htmlspecialchars($email, ENT_QUOTES)."'"; } ?>>
      </div>
     </div>
 
     <div class="row mb-3">
      <label for="Notes" class="col-sm-4 col-form-label text-end">Notes</label>
      <div class="col-sm-6">
-      <textarea class="form-control" id="notes" name="notes" placeholder="Enter any extra information you think the administrator might need to know."><?php if (isset($notes)) { print $notes; } ?></textarea>
+      <textarea class="form-control" id="notes" name="notes" placeholder="Enter any extra information you think the administrator might need to know."><?php if (isset($notes)) { print htmlspecialchars($notes, ENT_QUOTES); } ?></textarea>
      </div>
     </div>
 

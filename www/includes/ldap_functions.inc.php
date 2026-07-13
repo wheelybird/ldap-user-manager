@@ -175,11 +175,13 @@ function generate_salt($length) {
 
  $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./';
 
- mt_srand(intval(microtime()) * 1000000);
-
+ # Draw each character from a CSPRNG. The previous mt_srand(intval(microtime()) * 1000000)
+ # always evaluated to mt_srand(0) (microtime() returns a string starting "0."), which
+ # produced a predictable salt stream and corrupted the shared mt_rand()/rand() state.
+ $max = strlen($permitted_chars) - 1;
  $salt = '';
  while (strlen($salt) < $length) {
-    $salt .= substr($permitted_chars, (rand() % strlen($permitted_chars)), 1);
+    $salt .= $permitted_chars[random_int(0, $max)];
   }
 
  return $salt;

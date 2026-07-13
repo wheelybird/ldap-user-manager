@@ -88,7 +88,7 @@ function custom_exception_handler($exception) {
  */
 function show_generic_error_page($error_details = '') {
   // Check if we should show error details (for development)
-  $show_details = (strcasecmp(getenv('SHOW_ERROR_DETAILS'), 'TRUE') == 0);
+  $show_details = (function_exists('env_is_true') ? env_is_true('SHOW_ERROR_DETAILS') : filter_var(getenv('SHOW_ERROR_DETAILS'), FILTER_VALIDATE_BOOLEAN));
 
   // Clear any output buffers
   if (ob_get_level()) {
@@ -210,10 +210,9 @@ if ($REMOTE_HTTP_HEADERS_LOGIN) {
 
 function generate_passkey() {
 
- $rnd1 = mt_rand(10000000, mt_getrandmax());
- $rnd2 = mt_rand(10000000, mt_getrandmax());
- $rnd3 = mt_rand(10000000, mt_getrandmax());
- return sprintf("%0x",$rnd1) . sprintf("%0x",$rnd2) . sprintf("%0x",$rnd3);
+ # These passkeys gate session and setup-admin access, so they must come from a
+ # cryptographically secure source rather than mt_rand() (a non-CSPRNG).
+ return bin2hex(random_bytes(24)); # 192 bits
 
 }
 
@@ -309,7 +308,7 @@ function validate_passkey_cookie() {
     }
     else {
       list($f_passkey,$f_is_admin,$f_time) = explode(":",$session_file);
-      if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $SESSION_TIMEOUT)) {
+      if (!empty($c_passkey) and hash_equals((string)$f_passkey, (string)$c_passkey) and $this_time < $f_time+(60 * $SESSION_TIMEOUT)) {
         if ($f_is_admin == 1) { $IS_ADMIN = TRUE; }
         $VALIDATED = TRUE;
         $USER_ID=$user_id;
@@ -385,7 +384,7 @@ function validate_setup_cookie() {
   }
   list($f_passkey,$f_time) = explode(":",$session_file);
   $this_time=time();
-  if (!empty($c_passkey) and $f_passkey == $c_passkey and $this_time < $f_time+(60 * $SESSION_TIMEOUT)) {
+  if (!empty($c_passkey) and hash_equals((string)$f_passkey, (string)$c_passkey) and $this_time < $f_time+(60 * $SESSION_TIMEOUT)) {
    $IS_SETUP_ADMIN = TRUE;
    if ( $SESSION_DEBUG == TRUE) {  error_log("$log_prefix Setup session: Cookie and session file values match - VALIDATED ",0); }
    set_setup_cookie();
@@ -394,7 +393,7 @@ function validate_setup_cookie() {
    $this_error="$log_prefix Setup session: setup_cookie was sent by the client and the session file was found at /tmp/ldap_setup, but";
    if (empty($c_passkey)) { $this_error .= " the cookie passkey wasn't set;"; }
    if ($c_passkey != $f_passkey) { $this_error .= " the session file passkey didn't match the cookie passkey;"; }
-   $this_error += " Cookie: {$_COOKIE['setup_cookie']} - Session file contents: $session_file";
+   $this_error .= " Cookie: {$_COOKIE['setup_cookie']} - Session file contents: $session_file";
    error_log($this_error,0);
   }
  }
@@ -554,7 +553,12 @@ function render_footer() {
 
 #Finish rendering an HTML page.
 
-?>
+global $SHOW_POWERED_BY;
+if ($SHOW_POWERED_BY) { ?>
+ <footer class="text-center text-muted py-3 mt-4" style="font-size: 0.8em;">
+   Powered by <a href="https://github.com/wheelybird/luminary" target="_blank" rel="noopener" class="text-muted">Luminary</a>
+ </footer>
+<?php } ?>
  </BODY>
 </HTML>
 <?php
