@@ -34,7 +34,15 @@ fi
 if [ "$LDAP_TLS_CACERT" ]; then
   echo "$LDAP_TLS_CACERT" >/opt/ca.crt
   mkdir -p /etc/ldap
-  sed -i "s/TLS_CACERT.*/TLS_CACERT \/opt\/ca.crt/" /etc/ldap/ldap.conf
+  touch /etc/ldap/ldap.conf
+  #Replace an existing TLS_CACERT directive if present, otherwise append one.
+  #The default ldap.conf has no TLS_CACERT line, so a plain sed replacement would
+  #match nothing and silently leave the CA unconfigured.
+  if grep -qE '^[[:space:]]*TLS_CACERT[[:space:]]' /etc/ldap/ldap.conf; then
+    sed -i "s|^[[:space:]]*TLS_CACERT.*|TLS_CACERT /opt/ca.crt|" /etc/ldap/ldap.conf
+  else
+    echo "TLS_CACERT /opt/ca.crt" >>/etc/ldap/ldap.conf
+  fi
 fi
 
 if [ "${NO_HTTPS,,}" == "true" ]; then

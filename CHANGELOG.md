@@ -7,7 +7,8 @@
 - Session and setup-admin passkeys (`generate_passkey()`) are now generated with a cryptographically secure PRNG (`random_bytes()`) instead of `mt_rand()`
 - Password salts (`generate_salt()`) are now generated with `random_int()`; removed a `mt_srand()` reseed that always evaluated to `mt_srand(0)`, which produced predictable salts and corrupted the shared PRNG state
 - Account-request form: the proof-of-humanity check now fails closed when no CAPTCHA has been generated, uses a timing-safe comparison (`hash_equals()`), and consumes the token after each attempt to prevent reuse
-- Account-request form: user-supplied values are now HTML-encoded in the admin notification email and URL-encoded in the account-creation link, and are HTML-encoded when reflected back into the form, preventing HTML/parameter injection and reflected XSS
+- Account-request form: user-supplied values are now HTML-encoded in the admin notification email and URL-encoded in the account-creation link, and are HTML-encoded when reflected back into the form, preventing HTML/parameter injection and reflected XSS; control characters are also stripped from the email subject header as defence-in-depth against header injection
+- The four issues above (weak PRNG for session/setup passkeys and password salts, the CAPTCHA bypass, and unsanitised account-request input) were reported privately by **red jh0n** — thank you for the responsible disclosure
 - Session and setup cookie passkey comparisons now use `hash_equals()`
 - Docker image: apply latest security patches at build time
 - Docker image: remove build-time dev packages and kernel headers from final image, reducing HIGH CVE count from 46 to 17 (0 CRITICAL)
@@ -16,6 +17,7 @@
 ### Fixed
 
 - **[#261](https://github.com/wheelybird/luminary/pull/261)** - Fatal error ("Cannot redeclare `open_ldap_connection()`") on MFA and account-expired login paths caused by duplicate `ldap_functions.inc.php` includes
+- **[#262](https://github.com/wheelybird/luminary/issues/262)** - `LDAP_TLS_CACERT` / `LDAP_TLS_CACERT_FILE` are now applied on first boot: the entrypoint appends the `TLS_CACERT` directive to `ldap.conf` when none exists (previously a `sed` replacement silently matched nothing, leaving the CA unconfigured)
 - Corrected a string-concatenation typo (`+=` → `.=`) in setup-session debug logging
 - **[#252](https://github.com/wheelybird/luminary/issues/252)** - Boolean configuration values (including `SMTP_USE_SSL`) now accept `TRUE`, `true`, `1>
 

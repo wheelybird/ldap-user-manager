@@ -76,7 +76,12 @@ if($_POST) {
   }
   else {
 
-    $mail_subject = "$firstname $lastname has requested an account for $ORGANISATION_NAME.";
+    # Strip control characters (including CR/LF) from user values placed in the email subject
+    # header, as defence-in-depth against header injection. PHPMailer also sanitises headers,
+    # but we don't rely on that alone.
+    $firstname_s = preg_replace('/[\x00-\x1F\x7F]/', '', $firstname);
+    $lastname_s  = preg_replace('/[\x00-\x1F\x7F]/', '', $lastname);
+    $mail_subject = "$firstname_s $lastname_s has requested an account for $ORGANISATION_NAME.";
 
     # URL-encode each value placed into the link so a "&" in user input can't smuggle extra
     # query parameters into the admin's pre-filled new_user.php form.
