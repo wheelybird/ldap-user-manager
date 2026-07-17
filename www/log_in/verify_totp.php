@@ -3,7 +3,7 @@
 set_include_path( ".:" . __DIR__ . "/../includes/");
 
 include "web_functions.inc.php";
-include "ldap_functions.inc.php";
+include_once "ldap_functions.inc.php";
 include "totp_functions.inc.php";
 include "audit_functions.inc.php";
 
