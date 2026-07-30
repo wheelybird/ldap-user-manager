@@ -277,7 +277,12 @@ $defgroup_filter  = "(&(objectclass=posixGroup)({$LDAP['group_attribute']}={$DEF
 $ldap_defgroup_search = ldap_search($ldap_connection, "{$LDAP['base_dn']}", $defgroup_filter);
 $defgroup_result = ldap_get_entries($ldap_connection, $ldap_defgroup_search);
 
-if ($defgroup_result['count'] != 1) {
+if ($USER_PRIVATE_GROUPS == TRUE) {
+
+ print "$li_good Each user gets a private group, so the default user group isn't needed.</li>";
+
+}
+elseif ($defgroup_result['count'] != 1) {
 
  print "$li_warn The default group (<strong>$DEFAULT_USER_GROUP</strong>) doesn't exist. ";
  print "<a href='#' data-bs-toggle='popover' data-bs-trigger='hover focus' title='Default user group' data-bs-content='";

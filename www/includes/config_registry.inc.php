@@ -264,6 +264,17 @@ $CONFIG_REGISTRY = array(
     'variable' => '$DEFAULT_USER_GROUP'
   ),
 
+  'USER_PRIVATE_GROUPS' => array(
+    'category' => 'user_defaults',
+    'description' => 'Give each user a private group named after them',
+    'help' => 'The group takes the user\'s UID as its GID and is removed with the account. DEFAULT_USER_GROUP is not used',
+    'type' => 'boolean',
+    'default' => false,
+    'mandatory' => false,
+    'env_var' => 'USER_PRIVATE_GROUPS',
+    'variable' => '$USER_PRIVATE_GROUPS'
+  ),
+
   'DEFAULT_USER_SHELL' => array(
     'category' => 'user_defaults',
     'description' => 'Default login shell for new users',
@@ -1348,6 +1359,7 @@ if (getenv('LDAP_GROUP_MEMBERSHIP_USES_UID')) {
 
 $DEFAULT_USER_GROUP = (getenv('DEFAULT_USER_GROUP') ? getenv('DEFAULT_USER_GROUP') : get_config_default('DEFAULT_USER_GROUP'));
 $DEFAULT_USER_SHELL = (getenv('DEFAULT_USER_SHELL') ? getenv('DEFAULT_USER_SHELL') : get_config_default('DEFAULT_USER_SHELL'));
+$USER_PRIVATE_GROUPS = (env_is_true('USER_PRIVATE_GROUPS') ? TRUE : get_config_default('USER_PRIVATE_GROUPS'));
 
 // ENFORCE_USERNAME_VALIDATION with backward compatibility for ENFORCE_SAFE_SYSTEM_NAMES
 if (getenv('ENFORCE_USERNAME_VALIDATION') !== false) {

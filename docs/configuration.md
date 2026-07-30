@@ -172,6 +172,7 @@ Default values and behaviour for new user accounts
 | Configuration | Type | Default | Environment Variable | Description |
 |--------------|------|---------|---------------------|-------------|
 | Default primary group for new users<br><small>Group name that new users will be added to</small> | string | 📝 `everybody` | `DEFAULT_USER_GROUP` | Default primary group for new users |
+| Give each user a private group named after them<br><small>The group takes the user's UID as its GID and is removed with the account. DEFAULT_USER_GROUP is not used</small> | ✅ boolean | `FALSE` | `USER_PRIVATE_GROUPS` | Give each user a private group named after them |
 | Default login shell for new users<br><small>Full path to shell binary</small> | string | 📝 `/bin/bash` | `DEFAULT_USER_SHELL` | Default login shell for new users |
 | Username format template<br><small>Template variables: {first_name}, {last_name}, {first_name_initial}, {last_name_initial}, {first_name:N}, {last_name:N} (first N characters, e.g. {first_name:3}{last_name:5})</small> | string | 📝 `{first_name}-{last_name}` | `USERNAME_FORMAT` | Username format template |
 | Regular expression for username validation<br><small>Usernames must match this pattern</small> | string | 📝 `^[\p{L}\p{N}_.-]{2,64}$` | `USERNAME_REGEX` | Regular expression for username validation |
@@ -190,6 +191,16 @@ Group name that new users will be added to
 **Environment Variable:** `DEFAULT_USER_GROUP`
 
 **Default:** `everybody`
+
+---
+
+#### Give each user a private group named after them
+
+The group takes the user's UID as its GID and is removed with the account. DEFAULT_USER_GROUP is not used
+
+**Environment Variable:** `USER_PRIVATE_GROUPS`
+
+**Default:** `FALSE`
 
 ---
 
@@ -1246,4 +1257,4 @@ Example:
 ---
 
 *This documentation was automatically generated from the configuration registry.*
-*Last updated: 2026-07-28 09:15:24 UTC*
+*Last updated: 2026-07-30 12:51:43 UTC*

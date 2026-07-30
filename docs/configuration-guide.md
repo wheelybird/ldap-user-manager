@@ -8,6 +8,7 @@ This guide provides detailed instructions and examples for configuring Luminary.
 - [Using Docker Secrets](#using-docker-secrets)
 - [Web Server Configuration](#web-server-configuration)
 - [Advanced LDAP Configuration](#advanced-ldap-configuration)
+- [User Private Groups](#user-private-groups)
 - [User Profile Customization](#user-profile-customization)
 - [Username and Display Name Handling](#username-and-display-name-handling)
 - [Email Configuration](#email-configuration)
@@ -284,6 +285,57 @@ docker run \
   -e 'LDAP_GROUP_ADDITIONAL_ATTRIBUTES={"description":"text"}' \
   wheelybird/luminary
 ```
+
+---
+
+## User Private Groups
+
+By default every new account is put into the shared group named by `DEFAULT_USER_GROUP`. The
+alternative is the user-private-group model familiar from `useradd`: each account gets a group of
+its own, named after the user and carrying the user's UID as its GID.
+
+#### `USER_PRIVATE_GROUPS`
+
+```bash
+docker run \
+  -e USER_PRIVATE_GROUPS=TRUE \
+  wheelybird/luminary
+```
+
+The setting is off by default, so existing installations are unaffected. When it is on:
+
+| | Default behaviour | `USER_PRIVATE_GROUPS=TRUE` |
+|---|---|---|
+| Primary group | `DEFAULT_USER_GROUP`, shared by everyone | A group named after the user |
+| Its GID | Next value from `cn=lastGID` | The user's UID |
+| `DEFAULT_USER_GROUP` | Must exist (the setup page offers to create it) | Not used, and not asked for |
+| Deleting the account | Group memberships are cleared | The private group is removed as well |
+
+Because the GID comes from the UID, `cn=lastGID` is not touched when an account is created, so the
+counter that ordinary groups draw from only moves when one of those is added.
+
+That leaves neither counter aware of what the other has handed out, so both sides skip a number
+that some group already holds: a new account takes the next UID that is also free as a GID, and a
+new ordinary group passes over a GID a private one has. Two groups therefore never share a GID —
+whether you draw both kinds of ID from a single range or keep them in separate ones. Nothing is
+assumed about which of the two you do; numbers only move where they would otherwise clash.
+
+The check on the group side runs whether or not this setting is on, because private groups remain
+in the directory after it is switched off again and `cn=lastGID` may sit below them. In a
+directory that has never had any, it cannot change the outcome.
+
+Setting a GID explicitly on the create-user form still wins — the account then joins that group
+instead, and no private group is created.
+
+If you have been leaving `DEFAULT_USER_GROUP` pointing at a group that doesn't exist in order to
+get a group per account, this setting is the deliberate version of that. Luminary falls back to
+creating one either way, but as a fallback the group's GID comes from `cn=lastGID` rather than
+from the UID, and it stays behind when the account is deleted.
+
+**This is a setting for new accounts, not a migration.** Accounts that already exist keep the
+primary group they were created with; switching it on changes nothing about them. Turning it on
+in a directory that has been running on the fallback therefore leaves you with both kinds of
+group side by side — the older ones keeping their `cn=lastGID` numbers.
 
 ---
 

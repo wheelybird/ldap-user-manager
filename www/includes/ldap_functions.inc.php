@@ -736,7 +736,11 @@ function ldap_new_group($ldap_connection,$group_name,$initial_member="",$extra_a
 
      if (!isset($new_group_array["gidnumber"][0]) or !is_numeric($new_group_array["gidnumber"][0])) {
        $highest_gid = ldap_get_highest_id($ldap_connection,'gid');
-       $new_gid = $highest_gid + 1;
+       // A private group takes its GID from a UID without moving cn=lastGID, so the next value
+       // from the counter can be taken already. Checked whether or not USER_PRIVATE_GROUPS is
+       // on: the private groups stay in the directory after it is switched off again, and where
+       // there are none this can't change the outcome anyway (#272)
+       $new_gid = ldap_next_free_gid($ldap_connection,$highest_gid + 1);
        $new_group_array["gidnumber"] = $new_gid;
        $update_gid_store=TRUE;
      }
@@ -886,6 +890,38 @@ function ldap_get_group_name_from_gid($ldap_connection,$gid) {
 
 ##################################
 
+function ldap_next_free_gid($ldap_connection,$wanted_gid) {
+
+ global $log_prefix, $LDAP, $LDAP_DEBUG;
+
+ // A private group's GID comes from a UID rather than from cn=lastGID, so neither counter knows
+ // what the other has handed out and a number can be taken already. Fetch the GIDs in use once
+ // and count up locally, rather than asking the directory per candidate.
+
+ $ldap_search = @ ldap_search($ldap_connection, "{$LDAP['group_dn']}", "(gidNumber=*)", array('gidNumber'));
+ $result = @ ldap_get_entries($ldap_connection, $ldap_search);
+
+ if (!$result) { return $wanted_gid; }
+
+ $taken = array();
+ for ($i = 0; $i < $result['count']; $i++) {
+   if (isset($result[$i]['gidnumber'][0])) { $taken[$result[$i]['gidnumber'][0]] = TRUE; }
+ }
+
+ $asked_for = $wanted_gid;
+ while (isset($taken[$wanted_gid])) { $wanted_gid++; }
+
+ if ($wanted_gid != $asked_for) {
+   error_log("$log_prefix GID $asked_for is already held by a group, using $wanted_gid instead",0);
+ }
+
+ return $wanted_gid;
+
+}
+
+
+##################################
+
 /**
  * Split string by delimiter, respecting tilde escapes
  *
@@ -989,7 +1025,7 @@ function ldap_complete_attribute_array($default_attributes,$additional_attribute
 
 function ldap_new_account($ldap_connection,$account_r) {
 
-  global $log_prefix, $LDAP, $LDAP_DEBUG, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP, $MFA_FEATURE_ENABLED, $MFA_REQUIRED_GROUPS;
+  global $log_prefix, $LDAP, $LDAP_DEBUG, $DEFAULT_USER_SHELL, $DEFAULT_USER_GROUP, $USER_PRIVATE_GROUPS, $MFA_FEATURE_ENABLED, $MFA_REQUIRED_GROUPS;
 
   if (    isset($account_r['givenname'][0])
       and isset($account_r['sn'][0])
@@ -1017,20 +1053,37 @@ function ldap_new_account($ldap_connection,$account_r) {
 
      $account_attributes = array_merge($account_r, $account_attributes);
 
+     $uid_was_generated = FALSE;
+
      if (!isset($account_attributes['uidnumber'][0]) or !is_numeric($account_attributes['uidnumber'][0])) {
        $highest_uid = ldap_get_highest_id($ldap_connection,'uid');
        $account_attributes['uidnumber'][0] = $highest_uid + 1;
+       $uid_was_generated = TRUE;
      }
 
+     $create_private_group = FALSE;
+
      if (!isset($account_attributes['gidnumber'][0]) or !is_numeric($account_attributes['gidnumber'][0])) {
-       $default_gid = ldap_get_gid_of_group($ldap_connection,$DEFAULT_USER_GROUP);
-       if (!is_numeric($default_gid)) {
-         $group_add = ldap_new_group($ldap_connection,$account_identifier,$account_identifier);
-         $account_attributes['gidnumber'][0] = ldap_get_gid_of_group($ldap_connection,$account_identifier);
+       if ($USER_PRIVATE_GROUPS == TRUE) {
+         // The private group's GID is the UID, so the group needn't exist yet to supply one (#272).
+         // The number does have to be free as a GID as well - move a generated UID on if it isn't,
+         // but never one we were given.
+         if ($uid_was_generated == TRUE) {
+           $account_attributes['uidnumber'][0] = ldap_next_free_gid($ldap_connection,$account_attributes['uidnumber'][0]);
+         }
+         $account_attributes['gidnumber'][0] = $account_attributes['uidnumber'][0];
+         $create_private_group = TRUE;
        }
        else {
-        $account_attributes['gidnumber'][0] = $default_gid;
-        $add_to_group = $DEFAULT_USER_GROUP;
+         $default_gid = ldap_get_gid_of_group($ldap_connection,$DEFAULT_USER_GROUP);
+         if (!is_numeric($default_gid)) {
+           $group_add = ldap_new_group($ldap_connection,$account_identifier,$account_identifier);
+           $account_attributes['gidnumber'][0] = ldap_get_gid_of_group($ldap_connection,$account_identifier);
+         }
+         else {
+          $account_attributes['gidnumber'][0] = $default_gid;
+          $add_to_group = $DEFAULT_USER_GROUP;
+         }
        }
      }
      else {
@@ -1048,7 +1101,17 @@ function ldap_new_account($ldap_connection,$account_r) {
 
      if ($add_account) {
        error_log("$log_prefix Created new account: $account_identifier",0);
-       ldap_add_member_to_group($ldap_connection,$add_to_group,$account_identifier);
+
+       if ($create_private_group == TRUE) {
+         // Created after the account so it can hold the user as a real member rather than cn=placeholder
+         $group_add = ldap_new_group($ldap_connection,$account_identifier,$account_identifier,array('gidnumber' => array($account_attributes['gidnumber'][0])));
+         if (! $group_add) {
+           error_log("$log_prefix Create account; couldn't create the private group for $account_identifier - the account has no group of its own",0);
+         }
+       }
+       else {
+         ldap_add_member_to_group($ldap_connection,$add_to_group,$account_identifier);
+       }
 
        $this_uid = fetch_id_stored_in_ldap($ldap_connection,"uid");
        $new_uid = $account_attributes['uidnumber'][0];
@@ -1113,14 +1176,33 @@ function ldap_new_account($ldap_connection,$account_r) {
 
 function ldap_delete_account($ldap_connection,$username) {
 
- global $log_prefix, $LDAP, $LDAP_DEBUG;
+ global $log_prefix, $LDAP, $LDAP_DEBUG, $USER_PRIVATE_GROUPS;
 
  if (isset($username)) {
+
+  // Establish up front whether this account has a private group of its own (#272). Only a group
+  // named after the user AND carrying their UID as its GID is theirs, so an unrelated group that
+  // happens to share the name is left alone.
+  $private_group = FALSE;
+  if ($USER_PRIVATE_GROUPS == TRUE) {
+    $private_gid = ldap_get_gid_of_group($ldap_connection,$username);
+    if (is_numeric($private_gid)) {
+      $uid_query  = "({$LDAP['account_attribute']}=" . ldap_escape($username, "", LDAP_ESCAPE_FILTER) . ")";
+      $uid_search = @ ldap_search($ldap_connection, "{$LDAP['user_dn']}", $uid_query, array('uidNumber'));
+      $uid_result = @ ldap_get_entries($ldap_connection, $uid_search);
+      if (isset($uid_result[0]['uidnumber'][0]) and $uid_result[0]['uidnumber'][0] == $private_gid) {
+        $private_group = TRUE;
+      }
+    }
+  }
 
   // First, remove user from all groups (fixes #215, #169)
   $user_groups = ldap_user_group_membership($ldap_connection, $username);
 
   foreach ($user_groups as $group) {
+    // Skip the private group - it's deleted whole below, and removing the last member of a
+    // groupOfUniqueNames fails, which would log a warning about something that doesn't matter
+    if ($private_group == TRUE and $group == $username) { continue; }
     $removed = ldap_delete_member_from_group($ldap_connection, $group, $username);
     if (!$removed) {
       error_log("$log_prefix Warning: Failed to remove $username from group $group during account deletion",0);
@@ -1147,6 +1229,9 @@ function ldap_delete_account($ldap_connection,$username) {
 
   if ($delete) {
    error_log("$log_prefix Deleted account for $username",0);
+
+   if ($private_group == TRUE) { ldap_delete_group($ldap_connection,$username); }
+
    return TRUE;
   }
   else {
